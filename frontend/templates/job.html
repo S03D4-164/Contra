@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}
+<title>Job</title>
+{% endblock %}
+
+{% block script %}
+<script>
+$(document).ready(
+        function(){
+                $('#resource_table').DataTable({"order":[0, 'desc']});
+        }
+);
+</script>
+{% endblock %}
+
+{% block container %}
+
+<div class="row">
+
+<div id="job" class="col-sm-12">
+<div class="panel panel-primary">
+<div class="panel-heading">
+Job
+</div>
+<div class="panel-body">
+<table id="job_table" class="table table-striped table-hover">
+<thead><tr>
+<th>id</th>
+<th>query</th>
+<th>created_at</th>
+<th>status</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><a class="btn btn-primary" href="/job/{{j.id}}">{{j.id}}</td>
+<td><a class="btn btn-primary" href="/query/{{j.query.id}}">{{j.query.id}}</td>
+<td>{{j.created_at}}</td>
+<td>{{j.status}}</td>
+</tr>
+</tbody>
+</table>
+
+</div><!--.panel-body-->
+
+</div><!--panel-->
+
+</div><!--.job-->
+
+<div id="page" class="col-sm-12">
+
+<div class="panel panel-primary">
+<div class="panel-heading">Page</div>
+<div class="panel-body">
+<table id="page_table" class="table table-striped table-hover ">
+<thead><tr>
+<th>id</th>
+<th>created_at</th>
+<th>url</th>
+<th>http_status</th>
+<th>capture</th>
+</tr></thead>
+<tbody><tr>
+<td><a class="btn btn-primary" href="/page/{{p.id}}">{{p.id}}</td>
+<td>{{p.created_at}}</td>
+<td>{{p.url}}</td>
+<td>{{p.http_status}}</td>
+<td><img src="data:image/png;base64,{{p.capture.b64thumb}}"></td>
+</tr></tbody>
+</table>
+</div><!--.panel-body-->
+
+</div><!--.panel-->
+
+</div><!--.page-->
+
+<div id="resource" class="col-sm-12">
+
+<div class="panel panel-primary">
+<div class="panel-heading">Resource</div>
+<div class="panel-body">
+<table class="table table-striped table-hover " style="table-layout: fixed;">
+<thead><tr>
+<th class="col-sm-1">id</th>
+<th class="col-sm-2">created_at</th>
+<th class="col-sm-1">http_status</th>
+<th class="col-sm-8">url</th>
+</tr></thead>
+<tbody>
+{% for r in resource %}
+<tr>
+<td><a class="btn btn-primary" href="/resource/{{r.id}}">{{r.id}}</td>
+<td>{{r.created_at}}</td>
+<td>{{r.http_status}}</td>
+<td>{{r.url}}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div><!--.panel-body-->
+
+</div><!--.panel-->
+
+</div><!--.resource-->
+
+
+</div><!--.row-->
+
+{% endblock %}

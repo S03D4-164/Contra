@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}
+<title>Progress</title>
+{% endblock %}
+
+{% block script %}
+<script>
+$(document).ready(function(){
+	var load_progress = function(){
+		status = $("div#status").text();
+		if(status == "Processing"){
+		var data = {
+			"job[]":[{% for j in job %}{{j.id}},{% endfor %}]
+		};
+		$.get('/progress/', data, function(result){
+			v = $(result).find("div#view");
+			$("div#view").replaceWith(v);
+		});
+		};
+	};
+	setInterval(load_progress, 3000);
+});
+</script>
+{% endblock %}
+
+{% block container %}
+
+<div id="view" class="row">
+
+<div class="col-sm-4">
+
+<div id="progress" class="panel panel-primary">
+<div class="panel-heading">Status</div>
+<div class="panel-body">
+<div class="row">
+<div id="status" class="col-sm-4">{{status}}</div>
+<div id="loader" class="col-sm-4">
+{% if status != "Finished" %}
+<img src="/static/images/ajax-loader.gif">
+{% endif %}
+</div>
+</div>
+</div><!--.panel-body-->
+</div><!--#progress-->
+
+<div id="job" class="panel panel-primary">
+<div class="panel-heading">
+Job
+</div>
+<div class="panel-body">
+<table class="table table-striped table-hover">
+<thead><tr>
+<th>id</th>
+<th>created_at</th>
+<th>status</th>
+</tr></thead>
+<tbody>{% for j in job %}
+<tr>
+<td class="job_id">{{j.id}}</td>
+<td>{{j.created_at}}</td>
+<td>{{j.status}}</td>
+</tr>
+{% endfor %}</tbody>
+</table>
+
+</div><!--.panel-body-->
+
+</div><!--panel-->
+
+</div><!--.query-->
+
+<div id="page" class="col-sm-8">
+
+<div class="panel panel-primary">
+<div class="panel-heading">
+Page
+</div>
+<div class="panel-body">
+<table class="table table-striped table-hover ">
+<thead>
+<tr>
+<th>id</th>
+<th>created_at</th>
+<th>url</th>
+<th>http_status</th>
+<th>capture</th>
+</tr>
+</thead>
+<tbody>
+{% for p in page %}
+<tr>
+<td><a class="btn btn-primary" href="/page/{{p.id}}">{{p.id}}</td>
+<td>{{p.created_at}}</td>
+<td>{{p.url}}</td>
+<td>{{p.http_status}}</td>
+<td><img src="data:image/png;base64,{{p.capture.b64thumb}}"></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div><!--.panel-body-->
+
+</div><!--.panel-->
+
+</div><!--.page-->
+
+</div><!--.row-->
+
+{% endblock %}

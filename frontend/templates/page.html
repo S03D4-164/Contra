@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}
+<title>Page</title>
+{% endblock %}
+
+{% block container %}
+
+<div class="row">
+
+<div id="page" class="col-sm-12">
+
+<div class="panel panel-primary">
+<div class="panel-heading">
+Page
+</div>
+<div class="panel-body">
+<table class="table table-striped table-hover ">
+<tr>
+<td><a class="btn btn-primary" href="/query/{{p.job.query.id}}">{{p.job.query.id}}</a></td>
+<td><a class="btn btn-primary" href="/job/{{p.job.id}}">{{p.job.id}}</a></td>
+<td><a class="btn btn-primary" href="/page/{{p.id}}">{{p.id}}</a></td>
+<td>{{p.created_at}}</td>
+<td>{{p.url}}</td>
+<td>{{p.http_status}}</td>
+</tr>
+</table>
+{% if capture %}
+<table class="table">
+<tr>
+<td>{{capture.path}}</td>
+<td>{{capture.commit}}</td>
+</tr>
+</table>
+<div class="row">
+<div class="col-sm-3"></div>
+<div id="capture" style="height:50%;over-flow:hidden;" class="col-sm-6">
+<a href="data:image/png;base64,{{capture.base64}}"}>
+<img src="data:image/png;base64,{{capture.base64}}" style="width:100%;border:solid thin lightgrey;margin: 0 auto;">
+</a>
+</div>
+<div class="col-sm-3"></div>
+</div>
+{% endif %}
+</div><!--.panel-body-->
+</div><!--.panel-->
+
+</div><!--.page-->
+
+<div id="headers" class="col-sm-12">
+
+<div class="panel panel-primary">
+<div class="panel-heading">
+Header
+</div>
+<div class="panel-body">
+<pre>
+{% for k,v in headers.items %}{{k}}: {{v}}
+{% endfor %}
+</pre>
+</div>
+</div><!--.panel-->
+
+</div><!--.headers-->
+
+<div id="content" class="col-sm-12">
+
+<div class="panel panel-primary">
+<div class="panel-heading">
+Content
+</div>
+<div class="panel-body">
+<table class="table">
+<tr><th>id</th><td>{{p.content.id}}</td></tr>
+<tr><th>created_at</th><td>{{p.content.created_at}}</td></tr>
+<tr><th>path</th><td>{{p.content.path}}</td></tr>
+<tr><th>commit</th><td>{{p.content.commit}}</td></tr>
+</table>
+<pre>{{p.content.content}}</pre>
+</div>
+</div><!--.panel-->
+
+</div><!--.content-->
+
+</div><!--.row-->
+
+{% endblock %}

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+{% block title %}
+<title></title>
+{% endblock %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="/static/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="/static/js/jquery.js"></script>
+<script type="text/javascript" charset="utf8" src="/static/js/jquery.dataTables.js"></script>
+<link rel="stylesheet" href="/static/css/bootstrap.min.css">
+<link rel="stylesheet" href="/static/css/bootstrap-theme.min.css">
+<script src="/static/js/bootstrap.min.js"></script>
+
+{% block script %}
+{% endblock %}
+</head>
+
+<body>
+
+<div class="container">
+
+{% block header %}
+<div class="page-header">
+<ul class="nav nav-tabs">
+<li><a href="/">Top</a></li>
+<button type="button" class="btn btn-info pull-right" data-toggle="modal" data-target="#register_form">Register URL</button>
+</ul>
+</div><!--header-->
+{% endblock %}
+
+<div id="register_form" class="modal" role="dialog">
+<div class="modal-dialog">
+<div class="modal-content">
+      
+<div class="modal-header">
+<button type="button" class="close" data-dismiss="modal">&times;</button>
+<h4 class="modal-title">Register URL</h4>
+</div><!--.modal-header-->
+
+<div class="modal-body">
+<form method="post" action="/">{% csrf_token %}
+<table class="table">
+{{form.as_table}}
+</table>
+<input type="submit" class="btn" name="submit" value="submit">
+</form>
+</div><!--.modal-body-->
+
+</div><!--.modal-content-->
+</div><!--.modal-dialog-->
+</div><!--.register_form-->
+
+{% block container %}
+{% endblock %}
+
+</div>
+
+</body>
+
+</html>
