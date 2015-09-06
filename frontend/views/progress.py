@@ -33,6 +33,7 @@ def main(request, jobs):
 	print status
 
 	rc = RequestContext(request, {
+		'form': QueryForm(),
 		'job': job,
 		'page': page,
 		'status': status,

@@ -36,6 +36,7 @@ $(document).ready(
 <td>{{q.input}}</td>
 <td>
 <form method="post">{% csrf_token %}
+<button type="button" class="btn btn-info " data-toggle="modal" data-target="#modal_run">Run</button>
 <button type="button" class="btn btn-info " data-toggle="modal" data-target="#modal_delete">Delete</button>
 </form>
 </td>
@@ -43,6 +44,24 @@ $(document).ready(
 </table>
 </div><!--.panel-body-->
 </div><!--.panel-->
+
+<div id="modal_run" class="modal" role="dialog">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header">
+<button type="button" class="close" data-dismiss="modal">&times;</button>
+<h4 class="modal-title">Run Query</h4>
+</div><!--.modal-header-->
+<div class="modal-body">
+Are you sure?
+<form method="post" action="/query/{{q.id}}" >{% csrf_token %}
+<input type="submit" class="btn" name="run" value="run">
+</form>
+</div><!--.modal-body-->
+</div><!--.modal-content-->
+</div><!--.modal-dialog-->
+</div><!--#modal_run-->
+
 
 <div id="modal_delete" class="modal" role="dialog">
 <div class="modal-dialog">

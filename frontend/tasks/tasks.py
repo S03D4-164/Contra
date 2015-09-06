@@ -2,7 +2,7 @@ from ..celery import app
 from ..forms import *
 from ..models import *
 
-from .urlparse import parse_url
+from .parse_task import parse_url
 from .repository import *
 
 import requests, pickle, gzip, hashlib, chardet, base64, re
@@ -14,8 +14,8 @@ def execute_job(jid, retry=0):
 	job = Job.objects.get(pk=jid)
 	job.status = "Started"
 	job.save()
-	api="http://localhost:8000/api/ghosthug/"
-	#api="http://localhost:8000/api/docker/"
+	#api="http://localhost:8000/api/local/ghost/"
+	api="http://localhost:8000/api/docker/ghost/"
 	container = "3b1887ea522d113ce97d55ce05e148fa7c8b938f79ecf4a1f99ef153886a4deb"
 
 	job.status = "Parsing Input"
@@ -159,7 +159,7 @@ def save_resource(data, jid, is_page=False, capture=None):
 				url = u,
 				http_status = data["http_status"],
 				content = c,
-				headers = data["headers"],
+				#headers = data["headers"],
 				is_page = is_page,
 			)
 		except Exception as e:
@@ -201,7 +201,7 @@ def save_capture(capture, d):
 			c, created = Capture.objects.get_or_create(
 				path = path,
 				commit = commit,
-				md5 = hashlib.md5(capture).hexdigest(),
+				#md5 = hashlib.md5(capture).hexdigest(),
 				base64 = base64.b64encode(capture),
 				b64thumb = base64.b64encode(thumb),
 			)
@@ -215,7 +215,7 @@ def save_capture(capture, d):
 			except:
 				c, created = Capture.objects.get_or_create(
 					path = path,
-					md5 = hashlib.md5(capture).hexdigest(),
+					#md5 = hashlib.md5(capture).hexdigest(),
 					base64 = base64.b64encode(capture),
 					b64thumb = base64.b64encode(thumb),
 				)

@@ -4,6 +4,7 @@ from django.template import RequestContext
 from ..forms import *
 from ..models import *
 from ..tasks.tasks import *
+from progress import main as progress
 
 import requests, pickle, gzip, hashlib, chardet, base64
 from sh import git
@@ -17,7 +18,9 @@ def view(request, id):
 				query = query,
 				status = "Created",
 			)
-			execute_job(job.id)
+			execute_job.delay(job.id)
+                        rc = progress(request, [job.id])
+                        return render_to_response("progress.html", rc) 
 		elif "delete" in request.POST:
 			query.delete()
 			return redirect("/")

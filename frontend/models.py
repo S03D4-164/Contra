@@ -60,16 +60,21 @@ class Content(models.Model):
 class Capture(models.Model):
 	path = models.FilePathField(path=os.path.abspath(os.path.dirname(__file__)))
 	commit = models.CharField(max_length=200, blank=True, null=True)
-	md5 = models.CharField(max_length=200, blank=True, null=True)
+	#md5 = models.CharField(max_length=200, blank=True, null=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	base64 = models.TextField(blank=True, null=True)
 	b64thumb = models.TextField(blank=True, null=True)
+
+#class Headers(models.Model):
+#	serialized = models.TextField(blank=True, null=True)
+#	created_at = models.DateTimeField(auto_now_add=True)
 
 class Resource(models.Model):
 	#url = models.URLField(max_length=20000)
 	url = models.ForeignKey(URL, blank=True, null=True)
 	http_status = models.PositiveSmallIntegerField(blank=True, null=True)
 	headers = models.TextField(blank=True, null=True)
+	#headers = models.ManyToManyField(Headers)
 	#content = models.TextField(blank=True, null=True)
 	content = models.ForeignKey(Content, blank=True, null=True)
 	is_page = models.BooleanField(default=False)
@@ -77,3 +82,9 @@ class Resource(models.Model):
 	job = models.ForeignKey(Job, blank=True, null=True)
 	capture = models.ForeignKey(Capture, blank=True, null=True)
 
+class Analysis(models.Model):
+	object_id = models.CharField(max_length=200, blank=True, null=True)
+	url = models.ForeignKey(URL, blank=True, null=True)
+	content = models.ForeignKey(Content, blank=True, null=True)
+	result = models.TextField(blank=True, null=True)
+	created_at = models.DateTimeField(auto_now_add=True)

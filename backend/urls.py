@@ -1,9 +1,10 @@
 from django.conf.urls import include, url
 from django.contrib import admin
-import dockerapi, views
+from apis import *
 
 urlpatterns = [
     url(r'admin/', include(admin.site.urls)),
-    url(r'docker/$', dockerapi.api),
-    url(r'ghosthug/$', views.api),
+    url(r'local/ghost/$', local_api.ghost_api),
+    url(r'docker/ghost/$', docker_api.ghost_api),
+    #url(r'docker/thug/$', docker_api.thug_api),
 ]

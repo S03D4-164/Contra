@@ -1,3 +1,3 @@
 import tasks
-import urlparse
+import parse_task
 import repository
