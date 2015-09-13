@@ -8,6 +8,7 @@
 <script>
 $(document).ready(
         function(){
+		$('a.colorbox').colorbox({'photo':true});
                 $('#query_table').DataTable({"order":[0, 'desc']});
                 $('#job_table').DataTable({"order":[0, 'desc']});
                 $('#page_table').DataTable({"order":[0, 'desc']});
@@ -104,7 +105,9 @@ $(document).ready(
 <td>{{p.created_at}}</td>
 <td>{{p.http_status}}</td>
 <td>{{p.url}}</td>
-<td><img src="data:image/png;base64,{{p.capture.b64thumb}}"></td>
+<td>
+<a class="colorbox" href="/{{p.capture.path}}" >
+<img src="data:image/png;base64,{{p.capture.b64thumb}}"></a></td>
 </tr>
 {% endfor %}</tbody>
 </table>
@@ -161,9 +164,9 @@ $(document).ready(
 <div class="panel-body">
 <table id="url_table" class="table table-striped table-hover " style="table-layout: fixed;">
 <thead><tr>
-<th >id</th>
-<th >created_at</th>
-<th >url</th>
+<th class="col-sm-1">id</th>
+<th class="col-sm-2">created_at</th>
+<th class="col-sm-9">url</th>
 </tr></thead>
 <tbody>{% for u in url %}
 <tr>
@@ -230,6 +233,12 @@ $(document).ready(
 <div id="ua" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>
 <div class="panel-body">
+<div>
+<form method="post">{% csrf_token %}
+{{uaform}}
+<input type="submit" name="create_ua" value="Create">
+</form>
+</div>
 <table id="ua_table" class="table table-striped table-hover ">
 <thead><tr>
 <th>id</th>

@@ -42,7 +42,7 @@ $(document).ready(function(){
 </div>
 </div>
 </div><!--.panel-body-->
-</div><!--#progress-->
+</div><!--progress-->
 
 <div id="job" class="panel panel-primary">
 <div class="panel-heading">
@@ -57,7 +57,7 @@ Job
 </tr></thead>
 <tbody>{% for j in job %}
 <tr>
-<td class="job_id">{{j.id}}</td>
+<td class="job_id"><a class"btn btn-primary" href="/job/{{j.id}}">{{j.id}}</a></td>
 <td>{{j.created_at}}</td>
 <td>{{j.status}}</td>
 </tr>
@@ -94,7 +94,9 @@ Page
 <td>{{p.created_at}}</td>
 <td>{{p.url}}</td>
 <td>{{p.http_status}}</td>
-<td><img src="data:image/png;base64,{{p.capture.b64thumb}}"></td>
+<td>
+<a class="colorbox" href="/{{p.capture.path}}">
+<img src="data:image/png;base64,{{p.capture.b64thumb}}"></a></td>
 </tr>
 {% endfor %}
 </tbody>

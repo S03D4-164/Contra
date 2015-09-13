@@ -4,7 +4,7 @@ import os
 
 class UserAgent(models.Model):
 	name = models.CharField(max_length=200)
-	strings = models.CharField(max_length=200)
+	strings = models.CharField(max_length=2000)
 	created_at = models.DateTimeField(auto_now_add=True)
         def __unicode__(self):
                 return self.name
@@ -79,7 +79,8 @@ class Resource(models.Model):
 	content = models.ForeignKey(Content, blank=True, null=True)
 	is_page = models.BooleanField(default=False)
 	created_at = models.DateTimeField(auto_now_add=True)
-	job = models.ForeignKey(Job, blank=True, null=True)
+	#job = models.ForeignKey(Job, blank=True, null=True)
+	job = models.ManyToManyField(Job)
 	capture = models.ForeignKey(Capture, blank=True, null=True)
 
 class Analysis(models.Model):

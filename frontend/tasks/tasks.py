@@ -14,8 +14,8 @@ def execute_job(jid, retry=0):
 	job = Job.objects.get(pk=jid)
 	job.status = "Started"
 	job.save()
-	#api="http://localhost:8000/api/local/ghost/"
-	api="http://localhost:8000/api/docker/ghost/"
+	api="http://localhost:8000/api/local/ghost/"
+	#api="http://localhost:8000/api/docker/ghost/"
 	container = "3b1887ea522d113ce97d55ce05e148fa7c8b938f79ecf4a1f99ef153886a4deb"
 
 	job.status = "Parsing Input"
@@ -30,32 +30,47 @@ def execute_job(jid, retry=0):
 	}
 	job.status = "Sending Request to API"
 	job.save()
-	r = requests.get(api, params=payload)
-	job.status = "Got Response from API"
+	r = requests.get(api, params=payload, stream=True)
+	print r.status_code
+	job.status = "Got Response from API: " + str(r.status_code)
 	job.save()
-
-	data = None
-	if r.content:
-		pkl = gzip.GzipFile(mode='rb',fileobj=StringIO(r.content))
-		data = pickle.load(pkl)
-		job.status = "Parsing Response from API"
-		job.save()
+	s = None
+	if r.status_code == 200:
+		block_size = 65536
+		progress = 0
+		s = StringIO()
+		for chunk in r.iter_content(chunk_size=block_size):
+			progress +=  len(chunk)
+			job.status = "Reading Response: " + str(progress) + " bytes"
+			job.save()
+			#print progress
+			s.write(chunk)
+		s.seek(0)
+	if s:
+		#with open("tmp.pkl","wb") as t:
+		#	t.write(s.getvalue())
 		#try:
-		parse_data(data, jid)
+		if True:
+			#pkl = gzip.GzipFile(mode='rb',fileobj=StringIO(r.content))
+			data = pickle.load(s)
+			job.status = "Parsing Response Content"
+			job.save()
+			parse_data(data, jid)
 		"""
 		except Exception as e:
 			job.status = "Error: " + str(e)
 			job.save()
 		"""
-			
 	else:
 		retry = retry + 1
+		print retry
 		if retry < 2:
 			job.status = "Retry"
 			job.save()
 			execute_job(jid, retry=retry)
-		job.status = "Error: No Content in Response"
-		job.save()
+		else:
+			job.status = "Error: No Content in Response"
+			job.save()
 
 def get_savedir(uid):
 	u = URL.objects.get(pk=uid)
@@ -135,6 +150,8 @@ def save_resource(data, jid, is_page=False, capture=None):
 				commit = commit,
 				path = path,
 			)
+			if c:
+				print "content committed: " + path
 		else:
 			try:
 				c = Content.objects.get(
@@ -142,15 +159,17 @@ def save_resource(data, jid, is_page=False, capture=None):
 					md5 = md5,
 					#path = d["contentpath"],
 				)
+				if c:
+					print "content already exists: " + path
 			except Exception as e:
-				"no commmit and content"
 				#print e
 				c = Content.objects.create(
 					content = decoded,
 					md5 = md5,
 					path = path,
 				)
-		print c
+				if c:
+					print "content not committed but created: " + path
 	rid = None
 	if u and c:
 		r = None
@@ -162,6 +181,11 @@ def save_resource(data, jid, is_page=False, capture=None):
 				#headers = data["headers"],
 				is_page = is_page,
 			)
+			if r:
+				print "resource already exists"
+				if not job in r.job.all():
+					r.job.add(job)
+					r.save()
 		except Exception as e:
 			print(e)
 			r = Resource.objects.create(
@@ -170,26 +194,37 @@ def save_resource(data, jid, is_page=False, capture=None):
 				content = c,
 				headers = data["headers"],
 				is_page = is_page,
-				job = job,
 			)
+			if not job in r.job.all():
+				r.job.add(job)
+				r.save()
 		if r:
 			rid = r.id
 			if is_page and capture and not r.capture:
-				cid = save_capture(capture, d)
+				cid = save_capture(capture, d, rid)
 				c = Capture.objects.get(pk=cid)
 				r.capture = c
 				r.save()
 	return rid
 
-def save_capture(capture, d):
-	cappath = d["contentpath"] + ".png"
-	file = d["appdir"] + "/" + cappath
+def save_capture(capture, d, rid):
+	capdir = d["fullpath"] + "/capture"
+	if not os.path.exists(capdir):
+		os.makedirs(capdir)
+	#cappath = d["contentpath"] + ".png"
+	#file = d["appdir"] + "/" + cappath
+	filename = str(rid) + ".png"
+	file = capdir + "/" + filename
 	with open(file, 'wb') as f:
 		f.write(capture)
 
 	cid = None
 	if os.path.isfile(file):
-		commit = git_commit(d["compath"] + ".png", d["repopath"])
+		#commit = git_commit(d["compath"] + ".png", d["repopath"])
+		compath = d["comdir"] + "/capture/" + filename 
+		commit = git_commit(compath, d["repopath"])
+		#path = cappath.decode("utf-8")
+		cappath = d["contentdir"] + "/capture/" + filename
 		path = cappath.decode("utf-8")
 		im = Image.open(file)
 		im.thumbnail((150,150))
@@ -210,7 +245,8 @@ def save_capture(capture, d):
 			try:
 				c = Capture.objects.get(
 					path = path,
-					md5 = hashlib.md5(capture).hexdigest(),
+					#md5 = hashlib.md5(capture).hexdigest(),
+					base64 = base64.b64encode(capture),
 				)
 			except:
 				c, created = Capture.objects.get_or_create(

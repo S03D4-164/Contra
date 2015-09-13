@@ -11,6 +11,12 @@ from StringIO import StringIO
 
 def view(request, id):
 	job = Job.objects.get(pk=id)
+	page = None
+	try:
+		page = Resource.objects.get(job=job, is_page=True)
+	except:
+		pass
+	resource = Resource.objects.filter(job=job, is_page=False)
 	if request.method == "POST":
 		if "run" in request.POST:
 			j = Job.objects.create(
@@ -18,12 +24,13 @@ def view(request, id):
 				status = "Created",
 			)
 			execute_job(j.id)
+
 	c = RequestContext(request, {
 		'form': QueryForm(),
 		'q': job.query,
 		'j': job,
-		'p': Resource.objects.get(job=job, is_page=True),
-		'resource': Resource.objects.filter(job=job, is_page=False),
+		'p': page,
+		'resource': resource,
 	})
 	return render_to_response("job.html", c) 
 

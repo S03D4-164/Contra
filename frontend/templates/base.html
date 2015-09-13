@@ -14,11 +14,25 @@
 <link rel="stylesheet" href="/static/css/bootstrap.min.css">
 <link rel="stylesheet" href="/static/css/bootstrap-theme.min.css">
 <script src="/static/js/bootstrap.min.js"></script>
-
+<link rel="stylesheet" href="/static/code-prettify/loader/prettify.css">
+<script src="/static/code-prettify/loader/prettify.js"></script>
+<link rel="stylesheet" href="/static/colorbox/colorbox.css">
+<script src="/static/colorbox/jquery.colorbox-min.js"></script>
+<script>
+$(document).ready(
+        function(){
+                $('a.colorbox').colorbox({'photo':true});
+		prettyPrint();
+	}
+);
+</script>
 {% block script %}
 {% endblock %}
 </head>
 
+<!--
+<body onload="prettyPrint()">
+-->
 <body>
 
 <div class="container">
@@ -46,7 +60,7 @@
 <table class="table">
 {{form.as_table}}
 </table>
-<input type="submit" class="btn" name="submit" value="submit">
+<input type="submit" class="btn" name="register" value="submit">
 </form>
 </div><!--.modal-body-->
 

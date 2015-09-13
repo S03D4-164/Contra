@@ -15,29 +15,40 @@
 Page
 </div>
 <div class="panel-body">
-<table class="table table-striped table-hover ">
-<tr>
+<table class="table table-condensed ">
+<thead><tr>
+<!--
+<th>Query</th>
+<th>Job</th>
+-->
+<th>Page</th>
+<th>Created at</th>
+<th>URL</th>
+<th>Status</th>
+</tr></thead>
+<tbody><tr>
+<!--
 <td><a class="btn btn-primary" href="/query/{{p.job.query.id}}">{{p.job.query.id}}</a></td>
 <td><a class="btn btn-primary" href="/job/{{p.job.id}}">{{p.job.id}}</a></td>
+-->
 <td><a class="btn btn-primary" href="/page/{{p.id}}">{{p.id}}</a></td>
 <td>{{p.created_at}}</td>
 <td>{{p.url}}</td>
 <td>{{p.http_status}}</td>
-</tr>
+</tr></tbody>
 </table>
 {% if capture %}
-<table class="table">
-<tr>
-<td>{{capture.path}}</td>
-<td>{{capture.commit}}</td>
-</tr>
-</table>
 <div class="row">
 <div class="col-sm-3"></div>
-<div id="capture" style="height:50%;over-flow:hidden;" class="col-sm-6">
-<a href="data:image/png;base64,{{capture.base64}}"}>
-<img src="data:image/png;base64,{{capture.base64}}" style="width:100%;border:solid thin lightgrey;margin: 0 auto;">
+<div id="capture" class="col-sm-6" >
+<a class="colorbox" href="/{{capture.path}}">
+<img src="data:image/png;base64,{{thumbnail}}" style="border:solid thin lightgrey;display: block;margin: 0 auto;">
 </a>
+<table class="table table-condensed">
+<tr><th>Capture</th><td>{{capture.path}}</td></tr>
+<tr><th>Commit</th><td>{{capture.commit}}</td></tr>
+</table>
+</div>
 </div>
 <div class="col-sm-3"></div>
 </div>
@@ -54,10 +65,8 @@ Page
 Header
 </div>
 <div class="panel-body">
-<pre>
-{% for k,v in headers.items %}{{k}}: {{v}}
-{% endfor %}
-</pre>
+<pre class="prettyprint linenums" style="white-space: pre-wrap;">{% for k,v in headers.items %}{{k}}: {{v}}
+{% endfor %}</pre>
 </div>
 </div><!--.panel-->
 
@@ -76,7 +85,7 @@ Content
 <tr><th>path</th><td>{{p.content.path}}</td></tr>
 <tr><th>commit</th><td>{{p.content.commit}}</td></tr>
 </table>
-<pre>{{p.content.content}}</pre>
+<pre class="prettyprint linenums" style="white-space: pre-wrap;">{{p.content.content}}</pre>
 </div>
 </div><!--.panel-->
 
