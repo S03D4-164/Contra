@@ -1,7 +1,10 @@
+#!/usr/bin/env python
+
 from ThugAPI import *
 
 import os, sys
 import logging
+from pprint import pprint
 
 log = logging.getLogger("Thug")
 
@@ -16,18 +19,18 @@ def main(url, output=None):
 	t.disable_honeyagent()
 	t.set_verbose()
 	t.set_debug()
-	t.set_ast_debug()
-	t.set_http_debug()
+	#t.set_ast_debug()
+	#t.set_http_debug()
 	t.set_extensive()
 
 	t.set_file_logging()
 	t.set_json_logging()
 	#t.set_mongodb_address("172.17.42.1:27017")
 	t.log_init(url)
+	logdir = "/home/contra/artifacts/thug"
 	if output:
-		t.set_log_dir("/logs/" + output)
-	else:
-		t.set_log_dir("/logs/thug")
+		logdir = "/home/contra/artifacts/thug/" + output
+	t.set_log_dir(logdir)
 	
 	t.set_no_fetch()
 	t.run_local(url)
@@ -36,18 +39,28 @@ def main(url, output=None):
 	matches = log.URLClassifier.rules.match(url, callback=None)
 	for m in matches:
 		match = matches[m]
-		rule = []
-		tags = []
+		#rule = []
+		#tags = []
 		for i in match:
-			print i
-			rule.append(str(i["rule"]))
+			pprint(i)
+			#rule.append(str(i["rule"]))
+			rule = str(i["rule"])
+			tags = []
 			for tag in i["tags"]:
 				if not tag in tags:
 					tags.append(str(tag))
-		log.ThugLogging.add_behavior_warn("[URL Classifier] URL: %s (Rule: %s, Classification: %s)" % (url, ", ".join(rule), ", ".join(tags), ))
+			strings = []
+			for s in i["strings"]:
+				d = s["data"]
+				if not d in strings:
+					strings.append(d)
+			#log.ThugLogging.add_behavior_warn("[yara matched] %s (Rule: %s, Classification: %s)" % (strings, rule, ", ".join(tags), ))
+			log.ThugLogging.add_behavior_warn(i)
+		#log.ThugLogging.add_behavior_warn("[URL Classifier] URL: %s (Rule: %s, Classification: %s)" % (url, ", ".join(rule), ", ".join(tags), ))
 
 	t.log_event()
-	return log.ThugOpts.analysis_id
+	#log.info(log.ThugOpts.analysis_id)
+	#return log.ThugOpts.analysis_id
 
 if __name__ == '__main__':
 	target = sys.argv[1]

@@ -2,9 +2,13 @@ from ..models import *
 
 import re, hashlib, tldextract
 
+import logging
+from ..logger import getlogger
+logger = getlogger(logging.DEBUG)
+
 def init_parse(url):
-	protocol = url.split(':')[0]
 	port = None
+	protocol = url.split(':')[0]
 	if protocol == "http":
 		port = 80
 	elif protocol == "https":
@@ -42,7 +46,7 @@ def parse_ipv6url(p):
 			)
 			return url
 		except Exception as e:
-			print e
+			logger.error(e)
 	return None
 			
 def parse_ipv4(p):
@@ -65,7 +69,7 @@ def parse_ipv4(p):
 		)
 		return url
 	except Exception as e:
-		print e
+		logger.error(e)
 	return None
 
 def parse_standard(p):
@@ -117,25 +121,23 @@ def parse_datauri(p):
 		)
 		return url
 	except Exception as e:
-		print e
+		logger.error(e)
 	return None
 
 def parse_url(url):
 	u = None
+
 	p = init_parse(url)
-	print p
+	logger.debug(p)
+
 	if p["protocol"]== "data":
-		print "data"
 		u = parse_datauri(p)
 	else:
 		if re.search("[0-9a-f]*:[0-9a-f]*:[0-9a-f]+", p["server"]):
-			print "ipv6"
 			u = parse_ipv6url(p)
 		elif re.search("^[0-9a-f]*:[0-9a-f]*:[0-9a-f]+", p["server"]):
-			print "ipv4"
 			u = parse_ipv4url(p)
 		else:
-			print "standard"
 			u = parse_standard(p)
 	return u
 

@@ -1,14 +1,17 @@
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.contrib import messages
 
 from ..forms import *
 from ..models import *
-from ..tasks.tasks import *
+from ..tasks.ghost_task import *
 from progress import main as progress
 
+from ..logger import getlogger
 import re, logging
+logger = getlogger()
 
-def query_job(form, jobs):
+def query_job(request, form, jobs):
 	input = form.cleaned_data["input"]
 	ua = form.cleaned_data["user_agent"]
 	line = input.splitlines()
@@ -21,29 +24,27 @@ def query_job(form, jobs):
 				)
                         	job = Job.objects.create(
               	               		query = q,
-                              		status = "Created",
+                              		status = "Job Created",
 					user_agent = ua,
               			)
           			execute_job.delay(job.id)
 				jobs.append(job.id)
 			except Exception as e:
-				logger.error(e)
-	return jobs
+				messages.error(request, 'Error: ' + str(e))
+		else:
+			if i:
+				messages.error(request, 'Invalid Input: ' + str(i))
+
+	return request, jobs
 
 def view(request):
-	logger = logging.getLogger(__name__)
-	logger.setLevel(logging.INFO)
-	ch = logging.StreamHandler()
-	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-	ch.setFormatter(formatter)
-	logger.addHandler(ch)
 	form = QueryForm()
 	if request.method == "POST":
 		if "register" in request.POST:
 			form = QueryForm(request.POST)
 			jobs = []
 			if form.is_valid():
-				jobs = query_job(form, jobs)
+				request, jobs = query_job(request, form, jobs)
 			rc = progress(request, jobs)
 			return render_to_response("progress.html", rc) 
 		elif "create_ua" in request.POST:
@@ -53,8 +54,13 @@ def view(request):
 				strings = uaform.cleaned_data["strings"]
 				ua, created = UserAgent.objects.get_or_create(
 					name = name,
-					strings = strings,
 				)
+				if ua and created:
+					ua.strings = strings
+					ua.save()
+					messages.success(request, 'UA created: ' + str(ua.name))
+				elif ua and not created:
+					messages.success(request, 'UA already exists: ' + str(ua.name))
 
 	rc = RequestContext(request, {
 		'form': form,
@@ -68,6 +74,8 @@ def view(request):
 		#'capture': Capture.objects.all(),
 		'ua': UserAgent.objects.all(),
 		'uaform': UserAgentForm(),
+		#'jr': Job_Resource.objects.all(),
+		#'analysis': Analysis.objects.all(),
 	})
 	return render_to_response("index.html", rc) 
 

@@ -3,7 +3,7 @@ from django import forms
 from .models import *
 
 TIMEOUT_CHOICES = (
-    (30, '30s'),
+    #(30, '30s'),
     (60, '1m'),
     (120, '2m'),
     (180, '3m'),

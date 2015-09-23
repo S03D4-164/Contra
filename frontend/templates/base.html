@@ -18,6 +18,7 @@
 <script src="/static/code-prettify/loader/prettify.js"></script>
 <link rel="stylesheet" href="/static/colorbox/colorbox.css">
 <script src="/static/colorbox/jquery.colorbox-min.js"></script>
+{% block script %}
 <script>
 $(document).ready(
         function(){
@@ -26,13 +27,10 @@ $(document).ready(
 	}
 );
 </script>
-{% block script %}
 {% endblock %}
+<link rel="stylesheet" href="/static/css/main.css">
 </head>
 
-<!--
-<body onload="prettyPrint()">
--->
 <body>
 
 <div class="container">
@@ -58,6 +56,10 @@ $(document).ready(
 <div class="modal-body">
 <form method="post" action="/">{% csrf_token %}
 <table class="table">
+<thead><tr>
+<td class="col-md-2"></td>
+<td></td>
+</tr></thead>
 {{form.as_table}}
 </table>
 <input type="submit" class="btn" name="register" value="submit">
@@ -67,6 +69,16 @@ $(document).ready(
 </div><!--.modal-content-->
 </div><!--.modal-dialog-->
 </div><!--.register_form-->
+
+{% if messages %}
+<div class="alert alert-warning">
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+</div>
+{% endif %}
 
 {% block container %}
 {% endblock %}

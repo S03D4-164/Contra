@@ -8,7 +8,7 @@
 
 <div class="row">
 
-<div id="page" class="col-sm-12">
+<div id="page" class="col-md-12">
 
 <div class="panel panel-primary">
 <div class="panel-heading">
@@ -17,40 +17,44 @@ Page
 <div class="panel-body">
 <table class="table table-condensed ">
 <thead><tr>
-<!--
-<th>Query</th>
-<th>Job</th>
--->
-<th>Page</th>
-<th>Created at</th>
+<th  class="col-md-1">Query</th>
+<th  class="col-md-1">Job</th>
+<th  class="col-md-1">Page</th>
+<th class="col-md-2">Created at</th>
 <th>URL</th>
-<th>Status</th>
+<th class="col-md-1">Status</th>
+<th class="col-md-1">size</th>
 </tr></thead>
 <tbody><tr>
-<!--
-<td><a class="btn btn-primary" href="/query/{{p.job.query.id}}">{{p.job.query.id}}</a></td>
-<td><a class="btn btn-primary" href="/job/{{p.job.id}}">{{p.job.id}}</a></td>
--->
+<td><a class="btn btn-primary" href="/query/{{job.query.id}}">{{job.query.id}}</a></td>
+<td><a class="btn btn-primary" href="/job/{{job.id}}">{{job.id}}</a></td>
 <td><a class="btn btn-primary" href="/page/{{p.id}}">{{p.id}}</a></td>
 <td>{{p.created_at}}</td>
 <td>{{p.url}}</td>
 <td>{{p.http_status}}</td>
+<td>{{size}}</td>
 </tr></tbody>
 </table>
 {% if capture %}
 <div class="row">
-<div class="col-sm-3"></div>
-<div id="capture" class="col-sm-6" >
+<div class="col-md-3"></div>
+<div id="capture" class="col-md-6" >
 <a class="colorbox" href="/{{capture.path}}">
 <img src="data:image/png;base64,{{thumbnail}}" style="border:solid thin lightgrey;display: block;margin: 0 auto;">
 </a>
 <table class="table table-condensed">
+<thead>
+<th class="col-md-2"></th>
+<th></th>
+</thead>
+<tbody>
 <tr><th>Capture</th><td>{{capture.path}}</td></tr>
 <tr><th>Commit</th><td>{{capture.commit}}</td></tr>
+</tbody>
 </table>
 </div>
 </div>
-<div class="col-sm-3"></div>
+<div class="col-md-3"></div>
 </div>
 {% endif %}
 </div><!--.panel-body-->
@@ -58,7 +62,7 @@ Page
 
 </div><!--.page-->
 
-<div id="headers" class="col-sm-12">
+<div id="headers" class="col-md-12">
 
 <div class="panel panel-primary">
 <div class="panel-heading">
@@ -72,15 +76,44 @@ Header
 
 </div><!--.headers-->
 
-<div id="content" class="col-sm-12">
+{% if analysis %}
+<div id="analysis" class="col-md-12">
+
+<div class="panel panel-primary">
+<div class="panel-heading">
+Analysis
+</div>
+<div class="panel-body">
+<table class="table">
+<tr><th class="col-md-1">content_id</th><td>{{analysis.content.id}}</td></tr>
+<tr><th >rule</th><td>{{rule}}</td></tr>
+<tr><th>tag</th><td>{% for t in tags %}{{t}}
+{% endfor %}</td></tr>
+<tr><th>matched</th><td>{% for m in matched %}{{m}}
+{% endfor %}</td></tr>
+<tr><th>behavior</th><td><pre class="prettyprint linenums" style="white-space: pre-wrap;">{% for b in behavior %}{% for k,v in b.items %}{{k}}: {{v}}
+{% endfor %}{% endfor%}
+</pre></td></tr>
+</table>
+</div>
+</div><!--.panel-->
+
+</div><!--.analysis-->
+{% endif %}
+
+
+<div id="content" class="col-md-12">
 
 <div class="panel panel-primary">
 <div class="panel-heading">
 Content
 </div>
 <div class="panel-body">
+<form method="post" action="/page/{{p.id}}">{% csrf_token %}
+<input type="submit" value="analysis" name="analysis">
+</form>
 <table class="table">
-<tr><th>id</th><td>{{p.content.id}}</td></tr>
+<tr><th  class="col-md-1">id</th><td>{{p.content.id}}</td></tr>
 <tr><th>created_at</th><td>{{p.content.created_at}}</td></tr>
 <tr><th>path</th><td>{{p.content.path}}</td></tr>
 <tr><th>commit</th><td>{{p.content.commit}}</td></tr>
@@ -90,6 +123,7 @@ Content
 </div><!--.panel-->
 
 </div><!--.content-->
+
 
 </div><!--.row-->
 

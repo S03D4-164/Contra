@@ -18,6 +18,8 @@ $(document).ready(
                 $('#domain_table').DataTable({"order":[0, 'desc']});
                 $('#hostname_table').DataTable({"order":[0, 'desc']});
                 $('#ua_table').DataTable({"order":[0, 'desc']});
+                $('#jr_table').DataTable({"order":[0, 'desc']});
+                $('#analysis_table').DataTable({"order":[0, 'desc']});
         }
 );
 </script>
@@ -28,17 +30,19 @@ $(document).ready(
 
 <div class="row">
 
-<div id="list" class="col-sm-12">
+<div id="list" class="col-md-12">
 
 <ul class="nav nav-pills">
 <li class="active"><a data-toggle="pill" href="#query">Query({{query|length}})</a></li>
 {% if job %}<li><a data-toggle="pill" href="#job">Job({{job|length}})</a></li>{% endif %}
+{% if jr %}<li><a data-toggle="pill" href="#jr">Job_Resource({{jr|length}})</a></li>{% endif %}
 {% if page %}<li><a data-toggle="pill" href="#page">Page({{page|length}})</a></li>{% endif %}
 {% if resource %}<li><a data-toggle="pill" href="#resource">Resource({{resource|length}})</a></li>{% endif %}
 {% if capture %}<li><a data-toggle="pill" href="#capture">Capture({{capture|length}})</a></li>{% endif %}
 {% if url %}<li><a data-toggle="pill" href="#url">URL({{url|length}})</a></li>{% endif %}
 {% if domain %}<li><a data-toggle="pill" href="#domain">Domain({{domain|length}})</a></li>{% endif %}
 {% if hostname %}<li><a data-toggle="pill" href="#hostname">Hostname({{hostname|length}})</a></li>{% endif %}
+{% if analysis %}<li><a data-toggle="pill" href="#analysis">Analysis({{analysis|length}})</a></li>{% endif %}
 <li><a data-toggle="pill" href="#ua">User Agent({{ua|length}})</a></li>
 </ul>
 
@@ -49,8 +53,8 @@ $(document).ready(
 <div class="panel-body">
 <table id="query_table" class="table table-striped table-hover ">
 <thead><tr>
-<th>id</th>
-<th>created_at</th>
+<th class="col-md-1">id</th>
+<th class="col-md-3">created_at</th>
 <th>input</th>
 </tr></thead>
 <tbody>{% for q in query %}
@@ -69,11 +73,11 @@ $(document).ready(
 <div class="panel-body">
 <table id="job_table" class="table table-striped table-hover ">
 <thead><tr>
-<th>id</th>
-<th>created_at</th>
-<th>modified_at</th>
-<th>query</th>
-<th>status</th>
+<th class="col-md-1">id</th>
+<th class="col-md-2">created_at</th>
+<th class="col-md-2">modified_at</th>
+<th class="col-md-4">query</th>
+<th class="col-md-3">status</th>
 </tr></thead>
 <tbody>{% for j in job %}
 <tr>
@@ -91,13 +95,13 @@ $(document).ready(
 <div id="page" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>
 <div class="panel-body ">
-<table id="page_table" class="table table-striped table-hover " style="table-layout: fixed;">
+<table id="page_table" class="table table-striped table-hover " >
 <thead><tr >
-<th class="col-sm-1">id</th>
-<th class="col-sm-2">created_at</th>
-<th class="col-sm-1">http_status</th>
-<th class="col-sm-6">url</th>
-<th class="col-sm-2">capture</th>
+<th class="col-md-1">id</th>
+<th class="col-md-2">created_at</th>
+<th class="col-md-1">http_status</th>
+<th class="col-md-6">url</th>
+<th class="col-md-2">capture</th>
 </tr></thead>
 <tbody>{% for p in page %}
 <tr>
@@ -117,12 +121,12 @@ $(document).ready(
 <div id="resource" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>
 <div class="panel-body">
-<table id="resource_table" class="table table-striped table-hover " style="table-layout: fixed;">
+<table id="resource_table" class="table table-striped table-hover " >
 <thead><tr>
-<th class="col-sm-1">id</th>
-<th class="col-sm-2">created_at</th>
-<th class="col-sm-1">http_status</th>
-<th class="col-sm-8">url</th>
+<th class="col-md-1">id</th>
+<th class="col-md-2">created_at</th>
+<th class="col-md-1">http_status</th>
+<th class="col-md-8">url</th>
 </tr></thead>
 <tbody>{% for r in resource %}
 <tr>
@@ -164,9 +168,9 @@ $(document).ready(
 <div class="panel-body">
 <table id="url_table" class="table table-striped table-hover " style="table-layout: fixed;">
 <thead><tr>
-<th class="col-sm-1">id</th>
-<th class="col-sm-2">created_at</th>
-<th class="col-sm-9">url</th>
+<th class="col-md-1">id</th>
+<th class="col-md-2">created_at</th>
+<th class="col-md-9">url</th>
 </tr></thead>
 <tbody>{% for u in url %}
 <tr>
@@ -186,10 +190,10 @@ $(document).ready(
 <div class="panel-body">
 <table id="domain_table" class="table table-striped table-hover ">
 <thead><tr>
-<th>id</th>
-<th>created_at</th>
-<th>domain</th>
-<th>tld</th>
+<th class="col-md-1">id</th>
+<th class="col-md-2">created_at</th>
+<th class="col-md-8">domain</th>
+<th class="col-md-1">tld</th>
 </tr></thead>
 <tbody>{% for d in domain %}
 <tr>
@@ -210,11 +214,11 @@ $(document).ready(
 <div class="panel-body">
 <table id="hostname_table" class="table table-striped table-hover ">
 <thead><tr>
-<th>id</th>
-<th>created_at</th>
-<th>name</th>
-<th>domain</th>
-<th>subdomain</th>
+<th class="col-md-1">id</th>
+<th class="col-md-2">created_at</th>
+<th class="col-md-5">name</th>
+<th class="col-md-2">domain</th>
+<th class="col-md-2">subdomain</th>
 </tr></thead>
 <tbody>{% for h in hostname %}
 <tr>
@@ -238,13 +242,14 @@ $(document).ready(
 {{uaform}}
 <input type="submit" name="create_ua" value="Create">
 </form>
+<hr>
 </div>
 <table id="ua_table" class="table table-striped table-hover ">
 <thead><tr>
-<th>id</th>
-<th>created_at</th>
-<th>name</th>
-<th>strings</th>
+<th class="col-md-1">id</th>
+<th class="col-md-2">created_at</th>
+<th class="col-md-3">name</th>
+<th class="col-md-6">strings</th>
 </tr></thead>
 <tbody>{% for u in ua %}
 <tr>
@@ -258,6 +263,53 @@ $(document).ready(
 </div>
 </div><!--.panel-->
 
+{% if jr %}
+<div id="jr" class="panel panel-primary tab-pane">
+<div class="panel-heading"></div>
+<div class="panel-body">
+<table id="jr_table" class="table table-striped table-hover ">
+<thead><tr>
+<th class="col-md-1">id</th>
+<th class="col-md-2">created_at</th>
+<th class="col-md-2">seq</th>
+<th class="col-md-2">job</th>
+<th class="col-md-5">resource</th>
+</tr></thead>
+<tbody>{% for j in jr %}
+<tr>
+<td><a class="btn btn-primary" href="/job/{{j.job.id}}">{{j.id}}</td>
+<td>{{j.timestamp}}</td>
+<td>{{j.seq}}</td>
+<td>{{j.job.query.input}}</td>
+<td>{{j.resource.url}}</td>
+</tr>
+{% endfor %}</tbody>
+</table>
+</div>
+</div><!--.panel-->
+{% endif %}
+
+{% if analysis %}
+<div id="analysis" class="panel panel-primary tab-pane">
+<div class="panel-heading"></div>
+<div class="panel-body">
+<table id="analysis_table" class="table table-striped table-hover ">
+<thead><tr>
+<th class="col-md-1">id</th>
+<th class="col-md-2">created_at</th>
+<th class="col-md-4">content</th>
+</tr></thead>
+<tbody>{% for a in analysis %}
+<tr>
+<td><a class="btn btn-primary" href="/analysis/{{a.id}}">{{a.id}}</td>
+<td>{{a.created_at}}</td>
+<td>{{a.content.id}}</td>
+</tr>
+{% endfor %}</tbody>
+</table>
+</div>
+</div><!--.panel-->
+{% endif %}
 
 
 </div><!--.tab-content-->

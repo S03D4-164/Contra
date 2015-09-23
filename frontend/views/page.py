@@ -3,10 +3,16 @@ from django.template import RequestContext
 
 from ..forms import *
 from ..models import *
+from ..tasks.thug_task import content_analysis
 
-import ast, base64
+import ast, base64, json
 from StringIO import StringIO
 from PIL import Image, ImageOps
+from pprint import pprint
+
+import logging
+from ..logger import getlogger
+logger = getlogger()
 
 appdir = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..")
@@ -18,7 +24,7 @@ def create_b64thumb(image):
 	#s.write(image)
         #im = Image.open(s)
         im = Image.open(image)
-       	im.thumbnail((640,480))
+       	im.thumbnail((480,270))
 	tmp = StringIO()
         im.save(tmp, format="PNG")
 	thumb = base64.b64encode(tmp.getvalue())
@@ -26,13 +32,55 @@ def create_b64thumb(image):
 
 def view(request, id):
 	page= Resource.objects.get(pk=id)
-	#capture = base64.b64decode(page.capture.base64)
-	#thumbnail = create_b64thumb(capture)
-	thumbnail = create_b64thumb(appdir + "/" + page.capture.path)
+	jr = Job_Resource.objects.get(resource=page)
+	job = jr.job
+	analysis = None
+	try:
+		analysis = Analysis.objects.get(content=page.content)
+	except Exception as e:
+		logger.error(e)
+	if request.method == "POST":
+		logger.debug(request.POST)
+		if "analysis" in request.POST:
+			result = content_analysis(page.id)
+			if result:
+				analysis = Analysis.objects.filter(content=page.content)
+				for a in analysis:
+					a.delete()
+				analysis, created = Analysis.objects.get_or_create(
+					content = page.content,
+					result = result
+				)
+	thumbnail = None
+	if page.capture:
+		thumbnail = create_b64thumb(appdir + "/" + page.capture.path)
+
+	matched = []
+	tags = None
+	rule = None
+	behavior = None
+	if analysis:
+		results = json.loads(analysis.result)
+		behavior = results["behavior"]
+		for b in behavior:
+			desc = ast.literal_eval(b["description"])
+			strings = desc["strings"]
+			for s in strings:
+				if not s["data"] in matched:
+					matched.append(s["data"])
+			tags = desc["tags"]
+			rule = desc["rule"]
 
 	headers = ast.literal_eval(page.headers)
 	c = RequestContext(request, {
 		'p': page,
+		'size':os.path.getsize(appdir + "/" + page.content.path),
+		'job': job,
+		'analysis':analysis,
+		'behavior': behavior,
+		'rule':rule,
+		'tags':tags,
+		'matched':matched,
 		'capture': page.capture,
 		'thumbnail':thumbnail,
 		'headers': headers,

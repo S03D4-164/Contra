@@ -16,6 +16,7 @@ def main(url, output, defaults={}):
 	#defaults["display"] = True
 	#defaults["viewport_size"] = (640, 480)
 	ghost = Ghost(defaults=defaults)
+	dump = None
 	with ghost.start() as session:
 		page, resources = session.open(url)
 		result = {
@@ -30,6 +31,7 @@ def main(url, output, defaults={}):
 				"http_status":page.http_status,
 				"headers":page.headers,
 				"content":page.content,
+				"seq":0,
 			}
 			print page.url
 			capture = savedir + "/capture.png"
@@ -39,12 +41,15 @@ def main(url, output, defaults={}):
 					result["capture"] = c.read()
 					print capture
 		if resources:
+			seq = 0
 			for r in resources:
+				seq += 1
 				dict = {
 					"url":r.url,
 					"http_status":r.http_status,
 					"headers":r.headers,
 					"content":r.content,
+					"seq":seq,
 				}
 				result["resources"].append(dict)
 				print r.url
@@ -57,4 +62,5 @@ def main(url, output, defaults={}):
 		with gzip.open(dump, 'wb') as d:
 			pickle.dump(result, d)
 		"""
-		return dump
+	ghost.exit()
+	return dump

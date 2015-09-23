@@ -38,7 +38,7 @@ class Hostname(models.Model):
                 return self.name
 
 class URL(models.Model):
-	url = models.URLField(max_length=2000, unique=True)
+	url = models.URLField(max_length=20000, unique=True)
 	hostname = models.ForeignKey(Hostname, blank=True, null=True)
 	port = models.PositiveIntegerField(blank=True, null=True)
 	protocol = models.CharField(max_length=200, blank=True, null=True)
@@ -50,12 +50,14 @@ class URL(models.Model):
         def __unicode__(self):
                 return self.url
 
+
 class Content(models.Model):
 	content = models.TextField(blank=True, null=True)
 	md5 = models.CharField(max_length=200, blank=True, null=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	path = models.FilePathField(path=os.path.abspath(os.path.dirname(__file__)))
 	commit = models.CharField(max_length=200, blank=True, null=True)
+	#analysis = models.ForeignKey(Analysis, blank=True, null=True)
 
 class Capture(models.Model):
 	path = models.FilePathField(path=os.path.abspath(os.path.dirname(__file__)))
@@ -80,12 +82,18 @@ class Resource(models.Model):
 	is_page = models.BooleanField(default=False)
 	created_at = models.DateTimeField(auto_now_add=True)
 	#job = models.ForeignKey(Job, blank=True, null=True)
-	job = models.ManyToManyField(Job)
+	#job = models.ManyToManyField(Job)
 	capture = models.ForeignKey(Capture, blank=True, null=True)
 
+class Job_Resource(models.Model):
+	job = models.ForeignKey(Job)
+	resource = models.ForeignKey(Resource)
+	timestamp = models.DateTimeField(auto_now_add=True)
+	seq = models.PositiveIntegerField(blank=True, null=True)
+	
 class Analysis(models.Model):
 	object_id = models.CharField(max_length=200, blank=True, null=True)
-	url = models.ForeignKey(URL, blank=True, null=True)
+	#url = models.ForeignKey(URL, blank=True, null=True)
 	content = models.ForeignKey(Content, blank=True, null=True)
 	result = models.TextField(blank=True, null=True)
 	created_at = models.DateTimeField(auto_now_add=True)

@@ -9,6 +9,7 @@
 $(document).ready(
         function(){
                 $('#resource_table').DataTable({"order":[0, 'desc']});
+		$("a.colorbox").colorbox();
         }
 );
 </script>
@@ -28,15 +29,19 @@ Job
 <thead><tr>
 <th>id</th>
 <th>query</th>
+<th>input</th>
 <th>created_at</th>
 <th>status</th>
+<th>user_agent</th>
 </tr></thead>
 <tbody>
 <tr>
 <td><a class="btn btn-sm btn-primary" href="/job/{{j.id}}">{{j.id}}</td>
 <td><a class="btn btn-sm btn-primary" href="/query/{{j.query.id}}">{{j.query.id}}</td>
+<td>{{j.query.input}}</td>
 <td>{{j.created_at}}</td>
 <td>{{j.status}}</td>
+<td>{{j.user_agent}}</td>
 </tr>
 </tbody>
 </table>
@@ -86,18 +91,20 @@ Job
 <div class="panel-body">
 <table class="table table-condensed table-striped table-hover " style="table-layout: fixed;">
 <thead><tr>
+<th class="col-sm-1">seq</th>
 <th class="col-sm-1">id</th>
-<th class="col-sm-2">created_at</th>
+<th class="col-sm-2">timestamp</th>
 <th class="col-sm-1">http_status</th>
-<th class="col-sm-8">url</th>
+<th class="col-sm-7">url</th>
 </tr></thead>
 <tbody>
 {% for r in resource %}
 <tr>
-<td><a class="btn btn-sm btn-primary" href="/resource/{{r.id}}">{{r.id}}</td>
-<td>{{r.created_at}}</td>
-<td>{{r.http_status}}</td>
-<td>{{r.url}}</td>
+<td>{{r.seq}}</td>
+<td><a class="btn btn-sm btn-primary" href="/resource/{{r.resource.id}}">{{r.resource.id}}</td>
+<td>{{r.timestamp}}</td>
+<td>{{r.resource.http_status}}</td>
+<td>{{r.resource.url}}</td>
 </tr>
 {% endfor %}
 </tbody>

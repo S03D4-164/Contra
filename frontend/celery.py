@@ -8,7 +8,7 @@ from celery import Celery
 app = Celery('frontend',
              broker='redis://',
              backend='redis://',
-             include=['frontend.tasks.tasks'])
+             include=['frontend.tasks.ghost_task'])
 
 # Optional configuration, see the application user guide.
 app.conf.update(
