@@ -56,12 +56,16 @@ $(document).ready(
 <th class="col-md-1">id</th>
 <th class="col-md-3">created_at</th>
 <th>input</th>
+<th>interval</th>
+<th>counter</th>
 </tr></thead>
 <tbody>{% for q in query %}
 <tr>
 <td><a class="btn btn-primary" href="/query/{{q.id}}">{{q.id}}</td>
 <td>{{q.created_at}}</td>
 <td>{{q.input}}</td>
+<td>{{q.interval}}</td>
+<td>{{q.counter}}</td>
 </tr>
 {% endfor %}</tbody>
 </table>
@@ -75,17 +79,21 @@ $(document).ready(
 <thead><tr>
 <th class="col-md-1">id</th>
 <th class="col-md-2">created_at</th>
-<th class="col-md-2">modified_at</th>
 <th class="col-md-4">query</th>
-<th class="col-md-3">status</th>
+<th class="col-md-2">status</th>
+<th class="col-md-1">method</th>
+<th class="col-md-1">user_agent</th>
+<th class="col-md-1">referer</th>
 </tr></thead>
 <tbody>{% for j in job %}
 <tr>
 <td><a class="btn btn-primary" href="/job/{{j.id}}">{{j.id}}</td>
 <td>{{j.created_at}}</td>
-<td>{{j.modified_at}}</td>
 <td>{{j.query.input}}</td>
 <td>{{j.status}}</td>
+<td>{{j.method}}</td>
+<td>{{j.user_agent}}</td>
+<td>{{j.referer}}</td>
 </tr>
 {% endfor %}</tbody>
 </table>
@@ -100,7 +108,9 @@ $(document).ready(
 <th class="col-md-1">id</th>
 <th class="col-md-2">created_at</th>
 <th class="col-md-1">http_status</th>
-<th class="col-md-6">url</th>
+<th class="col-md-3">url</th>
+<th class="col-md-2">content_type</th>
+<th class="col-md-1">content_length</th>
 <th class="col-md-2">capture</th>
 </tr></thead>
 <tbody>{% for p in page %}
@@ -109,6 +119,8 @@ $(document).ready(
 <td>{{p.created_at}}</td>
 <td>{{p.http_status}}</td>
 <td>{{p.url}}</td>
+<td>{{p.content.type}}</td>
+<td>{{p.content.length}}</td>
 <td>
 <a class="colorbox" href="/{{p.capture.path}}" >
 <img src="data:image/png;base64,{{p.capture.b64thumb}}"></a></td>
@@ -126,7 +138,9 @@ $(document).ready(
 <th class="col-md-1">id</th>
 <th class="col-md-2">created_at</th>
 <th class="col-md-1">http_status</th>
-<th class="col-md-8">url</th>
+<th class="col-md-5">url</th>
+<th class="col-md-2">content_type</th>
+<th class="col-md-1">content_length</th>
 </tr></thead>
 <tbody>{% for r in resource %}
 <tr>
@@ -134,6 +148,8 @@ $(document).ready(
 <td>{{r.created_at}}</td>
 <td>{{r.http_status}}</td>
 <td>{{r.url}}</td>
+<td>{{r.content.type}}</td>
+<td>{{r.content.length}}</td>
 </tr>
 {% endfor %}</tbody>
 </table>
@@ -193,14 +209,14 @@ $(document).ready(
 <th class="col-md-1">id</th>
 <th class="col-md-2">created_at</th>
 <th class="col-md-8">domain</th>
-<th class="col-md-1">tld</th>
+<th class="col-md-1">suffix</th>
 </tr></thead>
 <tbody>{% for d in domain %}
 <tr>
 <td><a class="btn btn-primary" href="/domain/{{d.id}}">{{d.id}}</td>
 <td>{{d.created_at}}</td>
 <td>{{d.name}}</td>
-<td>{{d.tld}}</td>
+<td>{{d.suffix}}</td>
 </tr>
 {% endfor %}</tbody>
 </table>

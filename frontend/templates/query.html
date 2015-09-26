@@ -21,7 +21,6 @@ $(document).ready(
 <div class="row">
 
 <div id="query" class="col-md-12">
-
 <div class="panel panel-primary">
 <div class="panel-heading">Query</div>
 <div class="panel-body">
@@ -79,45 +78,50 @@ Are you sure?
 </div><!--.modal-body-->
 </div><!--.modal-content-->
 </div><!--.modal-dialog-->
-</div><!--#modal_delete-->
+</div><!--modal_delete-->
 
 
 </div><!--.query-->
 
+<div id="list" class="col-md-12">
 
-<div id="job" class="col-md-5">
-<div class="panel panel-primary">
-<div class="panel-heading">
-Job
-</div>
+<ul class="nav nav-pills">
+<li class="active"><a data-toggle="pill" href="#page">Page({{page|length}})</a></li>
+<li><a data-toggle="pill" href="#job">Job({{job|length}})</a></li>
+</ul>
+
+<div class="tab-content">
+
+<div id="job" class="panel panel-primary tab-pane ">
+<div class="panel-heading"></div>
 <div class="panel-body">
 <table id="job_table" class="table table-condensed table-striped table-hover">
 <thead><tr>
 <th class="col-md-1">id</th>
-<th>created_at</th>
-<th>status</th>
+<th class="col-md-2">created_at</th>
+<th class="col-md-5">status</th>
+<th>new</th>
+<th>out</th>
+<th>changed</th>
+<th>not_changed</th>
 </tr></thead>
 <tbody>{% for j in job %}
 <tr>
 <td><a class="btn btn-sm btn-primary" href="/job/{{j.id}}">{{j.id}}</td>
 <td>{{j.created_at}}</td>
 <td>{{j.status}}</td>
+<td>{{j.new|length}}</td>
+<td>{{j.out|length}}</td>
+<td>{{j.changed|length}}</td>
+<td>{{j.not_changed|length}}</td>
 </tr>
 {% endfor %}</tbody>
 </table>
-
 </div><!--.panel-body-->
+</div><!--job-->
 
-</div><!--panel-->
-
-</div><!--.query-->
-
-<div id="page" class="col-md-7">
-
-<div class="panel panel-primary">
-<div class="panel-heading">
-Page
-</div>
+<div id="page" class="panel panel-primary tab-pane in active">
+<div class="panel-heading"></div>
 <div class="panel-body">
 <table id="page_table" class="table table-condensed table-striped table-hover ">
 <thead>
@@ -126,6 +130,8 @@ Page
 <th>created_at</th>
 <th>url</th>
 <th class="col-md-1">status</th>
+<th class="col-md-2">type</th>
+<th class="col-md-1">length</th>
 <th>capture</th>
 </tr>
 </thead>
@@ -136,16 +142,19 @@ Page
 <td>{{p.created_at}}</td>
 <td>{{p.url}}</td>
 <td>{{p.http_status}}</td>
+<td>{{p.content.type}}</td>
+<td>{{p.content.length}}</td>
 <td><a class="colorbox" href="/{{p.capture.path}}"><img src="data:image/png;base64,{{p.capture.b64thumb}}"></a></td>
 </tr>
 {% endfor %}
 </tbody>
 </table>
 </div><!--.panel-body-->
+</div><!--page-->
 
-</div><!--.panel-->
+</div><!--.tab-content-->
 
-</div><!--.page-->
+</div><!--.list-->
 
 </div><!--.row-->
 

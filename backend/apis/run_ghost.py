@@ -1,26 +1,70 @@
 #!/usr/bin/env python
 
-import os, pickle, gzip
-from ghost import Ghost
+import os, pickle, gzip, json
+from .ghost import Ghost
+
+import logging
+from ..logger import getlogger
+logger = getlogger()
 
 appdir = os.path.abspath(
 	os.path.join(os.path.dirname(__file__), "..")
 )
 
-def main(url, output, defaults={}):
+def main(url, output, option):
 	#appdir = os.path.abspath(os.path.dirname(__file__))
 	savedir = appdir + "/static/artifacts/" +  output
 	if not os.path.exists(savedir):
 		os.makedirs(savedir)
-	#ghost = Ghost()
-	#defaults["display"] = True
-	#defaults["viewport_size"] = (640, 480)
-	ghost = Ghost(defaults=defaults)
+
+	defaults = {
+		"wait_timeout":60,
+		"display": False,
+		"viewport_size": (800, 600),
+		"plugins_enabled": True,
+		"java_enabled": True,
+	}
+	if option["user_agent"]:
+		defaults["user_agent"] = option["user_agent"]
+	if option["wait_timeout"]:
+		defaults["wait_timeout"] = option["wait_timeout"]
+	logger.info(defaults)
+	ghost = Ghost(
+		#log_level=logging.DEBUG,
+		log_level=logging.INFO,
+		defaults=defaults
+	)
+
 	dump = None
 	with ghost.start() as session:
-		page, resources = session.open(url)
+		try:
+			proxy_url = option["proxy"]
+			type = proxy_url.split(":")[0]
+			server = proxy_url.split("/")[2]
+			host = server.split(":")[0]
+			port = server.split(":")[1]
+			session.set_proxy(
+				proxy_type,
+				host=host,
+				port=port,
+			)
+		except Exception as e:
+			logger.error(e)
+
+		http_method = option["method"] 
+		h = option["headers"]
+		headers = {}
+		for header in h:
+			headers[str(header)] = str(h[header])
+		#body = option["body"]
+		page, resources = session.open(
+			url,
+			method = http_method,
+			headers = headers,
+			#body = body
+		)
 		result = {
-			"status":"Start",
+			#"status":"Start",
 			"page":{},
 			"resources":[],
 			"capture":None,
@@ -33,13 +77,12 @@ def main(url, output, defaults={}):
 				"content":page.content,
 				"seq":0,
 			}
-			print page.url
+			logger.debug(page.url)
 			capture = savedir + "/capture.png"
 			session.capture_to(capture)
 			if os.path.isfile(capture):
 				with open(capture, 'rb') as c:
 					result["capture"] = c.read()
-					print capture
 		if resources:
 			seq = 0
 			for r in resources:
@@ -52,15 +95,10 @@ def main(url, output, defaults={}):
 					"seq":seq,
 				}
 				result["resources"].append(dict)
-				print r.url
+				logger.debug(r.url)
 		dump = savedir +  "/ghost.pkl"
-		print dump
 		with open(dump, 'wb') as d:
 			pickle.dump(result, d)
-		"""
-		dump = savedir +  "/ghost.pkl.gz"
-		with gzip.open(dump, 'wb') as d:
-			pickle.dump(result, d)
-		"""
+			logger.debug(dump)
 	ghost.exit()
 	return dump

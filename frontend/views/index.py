@@ -4,7 +4,8 @@ from django.contrib import messages
 
 from ..forms import *
 from ..models import *
-from ..tasks.ghost_task import *
+from ..tasks.ghost_task import execute_job
+from ..tasks.parse_task import parse_url
 from progress import main as progress
 
 from ..logger import getlogger
@@ -14,11 +15,21 @@ logger = getlogger()
 def query_job(request, form, jobs):
 	input = form.cleaned_data["input"]
 	ua = form.cleaned_data["user_agent"]
+	referer = form.cleaned_data["referer"]
+	proxy = form.cleaned_data["proxy"]
+	if proxy:
+		proxy = parse_url(proxy)
+	additional_headers = form.cleaned_data["additional_headers"]
+	method = form.cleaned_data["method"]
+	post_data = form.cleaned_data["post_data"]
+	timeout = form.cleaned_data["timeout"]
+	
 	line = input.splitlines()
 	for i in line:
 		i.strip()
 		if re.match("^(ht|f)tps?://[^/]+", i):
-			try:
+			#try:
+			if True:
 				q, created = Query.objects.get_or_create(
 					input = i,
 				)
@@ -26,11 +37,20 @@ def query_job(request, form, jobs):
               	               		query = q,
                               		status = "Job Created",
 					user_agent = ua,
+					referer = referer,
+					#proxy = proxy,
+					additional_headers = additional_headers,
+					method = method,
+					post_data = post_data,
+					timeout = timeout,
               			)
+				if proxy:
+					job.proxy = proxy
+					job.save()
           			execute_job.delay(job.id)
 				jobs.append(job.id)
-			except Exception as e:
-				messages.error(request, 'Error: ' + str(e))
+			#except Exception as e:
+			#	messages.error(request, 'Error: ' + str(e))
 		else:
 			if i:
 				messages.error(request, 'Invalid Input: ' + str(i))
@@ -70,7 +90,7 @@ def view(request):
 		'resource': Resource.objects.filter(is_page=False),
 		'domain': Domain.objects.all(),
 		'hostname': Hostname.objects.all(),
-		'url': URL.objects.all(),
+		#'url': URL.objects.all(),
 		#'capture': Capture.objects.all(),
 		'ua': UserAgent.objects.all(),
 		'uaform': UserAgentForm(),

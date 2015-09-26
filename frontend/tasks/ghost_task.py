@@ -5,22 +5,47 @@ from ..models import *
 from .parse_task import parse_url
 from .repository import *
 
-import requests, pickle, gzip, hashlib, chardet, base64, re
+import requests, pickle, hashlib, chardet, base64, re, magic, json
+from PIL import Image
 
 try:
 	from cStringIO import StringIO
 except:
 	from StringIO import StringIO
 
-from PIL import Image
-
 import logging
 from ..logger import getlogger
 logger = getlogger(logging.DEBUG)
+	
+appdir = os.path.abspath(
+	os.path.join(os.path.dirname(__file__), "..")
+)
+
+
+def create_headers(jid):
+	job = Job.objects.get(pk=jid)
+	headers = {
+		"Accept-Language":"ja; q=1.0, en; q=0.5",
+		"Accept":"text/html; q=1.0, text/*; q=0.8, image/gif; q=0.6, image/jpeg; q=0.6, image/*; q=0.5, */*; q=0.1",
+	}
+	if job.referer:
+		headers['Referer'] = job.referer
+	if job.additional_headers:
+		lines = job.additional_headers.split("\n")
+		for line in lines:
+			l = line.split(":")
+			if len(l) > 2:
+				key = l[0]
+				value= l[1:]
+				headers[key] = value
+	return headers
 
 
 @app.task
 def execute_job(jid, retry=0):
+	api="http://localhost:8000/api/local/ghost/"
+	#api="http://localhost:8000/api/docker/ghost/"
+
 	job = Job.objects.get(pk=jid)
 
 	job.status = "Parsing Input"
@@ -28,20 +53,42 @@ def execute_job(jid, retry=0):
 	u = parse_url(job.query.input)
 	logger.debug(u)
 
-	#api="http://localhost:8000/api/local/ghost/"
-	api="http://localhost:8000/api/docker/ghost/"
+	headers = create_headers(jid)
+
+	user_agent = ""
+	if job.user_agent:
+		user_agent = job.user_agent.strings
+	proxy = ""
+	if job.proxy:
+		proxy = job.proxy.strings
 	payload = {
 		'url': u.url,
 		'query': job.query.id,
 		'job': job.id,
+		'user_agent':user_agent,
+		'timeout': job.timeout,
+		'proxy':proxy,
+		'headers':headers,
+		'method': job.method,
+		'post_data':job.post_data,
 	}
+	logger.debug(json.dumps(payload))
 	job.status = "Sending Request to API"
 	job.save()
-	r = requests.get(api, params=payload, stream=True)
 
-	logger.debug(r.status_code)
-	job.status = "Got Response from API: " + str(r.status_code)
-	job.save()
+	r = None
+	try:
+		#r = requests.get(api, params=payload, stream=True, timeout=30, verify=False)
+		h = {'content-type': 'application/json'}
+		r = requests.post(api, data=json.dumps(payload), headers=h, stream=True, timeout=job.timeout, verify=False)
+		logger.debug(r.status_code)
+		job.status = "Got Response from API: " + str(r.status_code)
+		job.save()
+	except Exception as e:
+		logger.error(e)
+		job.status = "Error: " + str(e)
+		job.save()
+		return
 
 	s = None
 	if r.status_code == 200:
@@ -56,11 +103,8 @@ def execute_job(jid, retry=0):
 			s.write(chunk)
 		s.seek(0)
 	if s:
-		#with open("tmp.pkl","wb") as t:
-		#	t.write(s.getvalue())
 		#try:
 		if True:
-			#pkl = gzip.GzipFile(mode='rb',fileobj=StringIO(r.content))
 			data = pickle.load(s)
 			job.status = "Parsing Response Content"
 			job.save()
@@ -81,12 +125,10 @@ def execute_job(jid, retry=0):
 			job.status = "Error: No Content in Response"
 			job.save()
 
+
 def get_savedir(uid):
 	u = URL.objects.get(pk=uid)
 	hostname = u.hostname.name.encode("utf-8")
-	appdir = os.path.abspath(
-		os.path.join(os.path.dirname(__file__), "..")
-	)
 	repodir = "static/repository"
 	repopath = appdir + "/" + repodir
 	repository = get_repo(repopath)
@@ -113,19 +155,23 @@ def get_savedir(uid):
 	}
 	return d
 
+
 def save_resource(data, jid, is_page=False, capture=None):
 	job = Job.objects.get(pk=jid)
+
 	u = parse_url(data["url"])
 	if not u:
 		return None
 	
 	d = get_savedir(u.id)
-	logger.debug(d)
+	#logger.debug(d)
 
-	c = None
 	s = StringIO()
 	s.write(data["content"])
 	content = s.getvalue()
+	type = magic.from_buffer(content, mime=True)
+	length = len(content)
+
 	cd = None
 	try:
 		cd = chardet.detect(content)
@@ -143,13 +189,14 @@ def save_resource(data, jid, is_page=False, capture=None):
 			md5 = str(hashlib.md5(decoded.encode("utf-8")).hexdigest())
 	logger.debug(md5)
 	s.close()
+
 	file = d["fullpath"] + "/" + str(u.md5)
 	with open(file , "wb") as f:
 		f.write(data["content"])
+	c = None
 	if os.path.isfile(file):
 		d["compath"] = d["comdir"] + "/" + str(u.md5)
 		commit = git_commit(d["compath"], d["repopath"])
-		c = None
 		d["contentpath"] = d["contentdir"] + "/" + str(u.md5)
 		path = d["contentpath"].decode("utf-8")
 		if commit:
@@ -158,6 +205,8 @@ def save_resource(data, jid, is_page=False, capture=None):
 				md5 = md5,
 				commit = commit,
 				path = path,
+				type = type,
+				length = length,
 			)
 			if c:
 				logger.info("content committed: " + path)
@@ -176,6 +225,8 @@ def save_resource(data, jid, is_page=False, capture=None):
 					content = decoded,
 					md5 = md5,
 					path = path,
+					type = type,
+					length = length,
 				)
 				if c:
 					logger.info("content not committed but created: " + path)
@@ -197,9 +248,6 @@ def save_resource(data, jid, is_page=False, capture=None):
 					resource = r,
 					seq = data["seq"]
 				)
-				#if not job in r.job.all():
-				#	r.job.add(job)
-				#	r.save()
 		except Exception as e:
 			logger.error(e)
 			r = Resource.objects.create(
@@ -209,9 +257,6 @@ def save_resource(data, jid, is_page=False, capture=None):
 				headers = data["headers"],
 				is_page = is_page,
 			)
-			#if not job in r.job.all():
-			#	r.job.add(job)
-			#	r.save()
 			jr = Job_Resource.objects.create(
 				job = job,
 				resource = r,
@@ -279,9 +324,9 @@ def save_capture(capture, d, rid):
 
 def parse_data(data, jid):
 	job = Job.objects.get(pk=jid)
+
 	job.status = "Creating Page"
 	job.save()
-
 	p = None
 	if data["page"]:
 		p = save_resource(data["page"], jid, is_page=True, capture=data["capture"])
@@ -307,3 +352,5 @@ def parse_data(data, jid):
 		job.status = "Completed"
 	job.save()
 
+def job_diff(jid):
+	pass

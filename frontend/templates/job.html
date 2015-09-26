@@ -27,27 +27,48 @@ Job
 <div class="panel-body">
 <table id="job_table" class="table table-condensed">
 <thead><tr>
-<th>id</th>
-<th>query</th>
+<th class="col-md-1">id</th>
+<th class="col-md-1">query</th>
 <th>input</th>
 <th>created_at</th>
 <th>status</th>
-<th>user_agent</th>
 </tr></thead>
-<tbody>
-<tr>
-<td><a class="btn btn-sm btn-primary" href="/job/{{j.id}}">{{j.id}}</td>
-<td><a class="btn btn-sm btn-primary" href="/query/{{j.query.id}}">{{j.query.id}}</td>
+<tbody><tr>
+<td><a class="btn btn-sm btn-primary" href="/job/{{j.id}}">{{j.id}}</a></td>
+<td><a class="btn btn-sm btn-primary" href="/query/{{j.query.id}}">{{j.query.id}}</a></td>
 <td>{{j.query.input}}</td>
 <td>{{j.created_at}}</td>
 <td>{{j.status}}</td>
+</tr></tbody>
+</table>
+</div><!--.panel-body-->
+</div><!--.panel-->
+
+<div class="panel panel-default">
+<div class="panel-heading">
+Request
+</div>
+<div class="panel-body">
+<table id="req_table" class="table table-condensed">
+<thead><tr>
+<th>user_agent</th>
+<th>referer</th>
+<th>proxy</th>
+<th>additional_headers</th>
+<th>method</th>
+<th>post_data</th>
+</tr></thead>
+<tbody><tr>
 <td>{{j.user_agent}}</td>
-</tr>
-</tbody>
+<td>{{j.referer}}</td>
+<td>{{j.proxy}}</td>
+<td>{{j.additional_headers}}</td>
+<td>{{j.method}}</td>
+<td>{{j.post_data}}</td>
+</tr></tbody>
 </table>
 
 </div><!--.panel-body-->
-
 </div><!--panel-->
 
 </div><!--.job-->
@@ -55,22 +76,26 @@ Job
 {% if p %}
 <div id="page" class="col-sm-12">
 
-<div class="panel panel-primary">
+<div class="panel panel-info">
 <div class="panel-heading">Page</div>
 <div class="panel-body">
 <table id="page_table" class="table table-condensed ">
 <thead><tr>
-<th>id</th>
+<th class="col-md-1">id</th>
 <th>created_at</th>
-<th>url</th>
 <th>http_status</th>
+<th>url</th>
+<th>content_type</th>
+<th>content_length</th>
 <th>capture</th>
 </tr></thead>
 <tbody><tr>
-<td><a class="btn btn-sm btn-primary" href="/page/{{p.id}}">{{p.id}}</td>
+<td><a class="btn btn-sm btn-primary" href="/page/{{p.id}}">{{p.id}}</a></td>
 <td>{{p.created_at}}</td>
-<td>{{p.url}}</td>
 <td>{{p.http_status}}</td>
+<td>{{p.url}}</td>
+<td>{{p.content.type}}</td>
+<td>{{p.content.length}}</td>
 <td>
 <a class="colorbox" href="/{{p.capture.path}}">
 <img src="data:image/png;base64,{{p.capture.b64thumb}}"></a></td>
@@ -86,8 +111,9 @@ Job
 {% if resource %}
 <div id="resource" class="col-sm-12">
 
-<div class="panel panel-primary">
-<div class="panel-heading">Resource</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+Resource</div>
 <div class="panel-body">
 <table class="table table-condensed table-striped table-hover " style="table-layout: fixed;">
 <thead><tr>
@@ -95,16 +121,28 @@ Job
 <th class="col-sm-1">id</th>
 <th class="col-sm-2">timestamp</th>
 <th class="col-sm-1">http_status</th>
-<th class="col-sm-7">url</th>
+<th class="col-sm-4">url</th>
+<th class="col-sm-2">type</th>
+<th class="col-sm-1">length</th>
 </tr></thead>
 <tbody>
 {% for r in resource %}
+{% if r.resource.url == p.url %}
+<tr class="success">
+{% elif r.resource.url.hostname == p.url.hostname %}
+<tr class="info">
+{% elif r.resource.url.hostname != p.url.hostname %}
+<tr class="warning">
+{% else %}
 <tr>
+{% endif %}
 <td>{{r.seq}}</td>
 <td><a class="btn btn-sm btn-primary" href="/resource/{{r.resource.id}}">{{r.resource.id}}</td>
 <td>{{r.timestamp}}</td>
 <td>{{r.resource.http_status}}</td>
 <td>{{r.resource.url}}</td>
+<td>{{r.resource.content.type}}</td>
+<td>{{r.resource.content.length}}</td>
 </tr>
 {% endfor %}
 </tbody>
