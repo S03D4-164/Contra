@@ -1,7 +1,21 @@
 {% extends "base.html" %}
 
 {% block title %}
-<title>Page</title>
+<title>
+{% if p.is_page %}Page{% else %}Resource{% endif %}
+</title>
+{% endblock %}
+
+{% block script %}
+<script>
+$(document).ready(
+        function(){
+                $('a.colorbox').colorbox({'photo':true});
+                $('#jr_table').DataTable({"order":[0, 'desc']});
+		prettyPrint();
+        }
+);
+</script>
 {% endblock %}
 
 {% block container %}
@@ -12,27 +26,23 @@
 
 <div class="panel panel-primary">
 <div class="panel-heading">
-Page
+{% if p.is_page %}Page{% else %}Resource{% endif %}
 </div>
 <div class="panel-body">
 <table class="table table-condensed ">
 <thead><tr>
-<th  class="col-md-1">Query</th>
-<th  class="col-md-1">Job</th>
-<th  class="col-md-1">Page</th>
+<th  class="col-md-1">
+{% if p.is_page %}Page{% else %}Resource{% endif %}
+</th>
 <th class="col-md-2">Created at</th>
 <th>URL</th>
 <th class="col-md-1">Status</th>
-<th class="col-md-1">size</th>
 </tr></thead>
 <tbody><tr>
-<td><a class="btn btn-primary" href="/query/{{job.query.id}}">{{job.query.id}}</a></td>
-<td><a class="btn btn-primary" href="/job/{{job.id}}">{{job.id}}</a></td>
 <td><a class="btn btn-primary" href="/page/{{p.id}}">{{p.id}}</a></td>
 <td>{{p.created_at}}</td>
 <td>{{p.url}}</td>
 <td>{{p.http_status}}</td>
-<td>{{size}}</td>
 </tr></tbody>
 </table>
 {% if capture %}
@@ -61,6 +71,39 @@ Page
 </div><!--.panel-->
 
 </div><!--.page-->
+
+<div id="Job" class="col-md-12">
+
+<div class="panel panel-primary">
+<div class="panel-heading">
+Job
+</div>
+<div class="panel-body">
+<table id="jr_table" class="table">
+<thead>
+<tr>
+<th>Job/Query</th>
+<th>timestamp</th>
+<th>status</th>
+</tr>
+</thead>
+<tbody>
+{% for j in job %}
+<tr>
+<td>
+<a class="btn btn-default" href="/job/{{j.job.id}}">{{j.job.id}}</a>
+<a class="btn btn-default" href="/query/{{j.job.query.id}}">{{j.job.query.id}}</a>
+</td>
+<td>{{j.timestamp}}</td>
+<td>{{j.job.status}}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div><!--.panel-->
+
+
 
 <div id="headers" class="col-md-12">
 
@@ -115,6 +158,8 @@ Content
 <table class="table">
 <tr><th  class="col-md-1">id</th><td>{{p.content.id}}</td></tr>
 <tr><th>created_at</th><td>{{p.content.created_at}}</td></tr>
+<tr><th>type</th><td>{{p.content.type}}</td></tr>
+<tr><th>lengtht</th><td>{{p.content.length}}</td></tr>
 <tr><th>path</th><td>{{p.content.path}}</td></tr>
 <tr><th>commit</th><td>{{p.content.commit}}</td></tr>
 </table>

@@ -80,13 +80,13 @@ def parse_standard(p):
 		p["port"] = p["server"].split(':')[1]
         no_fetch_extract = tldextract.TLDExtract(suffix_list_url=False)
         ext = no_fetch_extract(hostname.encode("utf-8"))
-	tld = ext.suffix
-        domain = ext.domain + '.'+ tld
+	suffix = ext.suffix
+        domain = ext.domain + '.'+ suffix
 	subdomain = ext.subdomain
 	if domain:
 		d, created = Domain.objects.get_or_create(
 			name = domain,
-			tld = tld
+			suffix = suffix
 		)
 		h, created = Hostname.objects.get_or_create(
 			name = hostname,

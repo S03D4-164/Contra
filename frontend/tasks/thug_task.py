@@ -7,11 +7,6 @@ from .repository import *
 
 import requests, pickle, gzip, hashlib, chardet, base64, re
 
-try:
-        from cStringIO import StringIO
-except:
-        from StringIO import StringIO
-
 import logging
 from ..logger import getlogger
 logger = getlogger(logging.DEBUG)
@@ -19,7 +14,8 @@ logger = getlogger(logging.DEBUG)
 def content_analysis(rid):
         r = Resource.objects.get(pk=rid)
         c = r.content
-        api="http://localhost:8000/api/docker/thug/"
+        #api="http://localhost:8000/api/docker/thug/"
+        api="http://localhost:8000/api/local/thug/"
 
         payload = {
                 'content': c.content.encode('utf-8'),

@@ -25,9 +25,9 @@ def main(url, output, option):
 		"java_enabled": True,
 	}
 	if option["user_agent"]:
-		defaults["user_agent"] = option["user_agent"]
+		defaults["user_agent"] = str(option["user_agent"])
 	if option["wait_timeout"]:
-		defaults["wait_timeout"] = option["wait_timeout"]
+		defaults["wait_timeout"] = int(option["wait_timeout"])
 	logger.info(defaults)
 	ghost = Ghost(
 		#log_level=logging.DEBUG,
@@ -44,9 +44,9 @@ def main(url, output, option):
 			host = server.split(":")[0]
 			port = server.split(":")[1]
 			session.set_proxy(
-				proxy_type,
-				host=host,
-				port=port,
+				str(type),
+				host=str(host),
+				port=int(port),
 			)
 		except Exception as e:
 			logger.error(e)
@@ -56,12 +56,14 @@ def main(url, output, option):
 		headers = {}
 		for header in h:
 			headers[str(header)] = str(h[header])
-		#body = option["body"]
+		body = None
+		if option["body"]:
+			body = str(option["body"])
 		page, resources = session.open(
 			url,
 			method = http_method,
 			headers = headers,
-			#body = body
+			body = body
 		)
 		result = {
 			#"status":"Start",

@@ -4,15 +4,26 @@ import os
 os.environ['DJANGO_SETTINGS_MODULE'] = 'myproject2.settings'
 
 from celery import Celery
+from datetime import timedelta
 
-app = Celery('frontend',
-             broker='redis://',
-             backend='redis://',
-             include=['frontend.tasks.ghost_task'])
+app = Celery(
+	'frontend',
+	broker='redis://',
+        backend='redis://',
+        include=[
+		'frontend.tasks.ghost_task',
+		'frontend.tasks.crawl_task',
+	])
 
-# Optional configuration, see the application user guide.
 app.conf.update(
-    CELERY_TASK_RESULT_EXPIRES=3600,
+	CELERY_MAX_CACHED_RESULTS = 0,
+	CELERYBEAT_SCHEDULE = {
+		'1h': {
+			'task': 'frontend.tasks.crawl_task.crawl',
+			'schedule': timedelta(seconds=3600),
+			'args': [3600]
+		},
+	},
 )
 
 if __name__ == '__main__':

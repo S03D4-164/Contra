@@ -54,16 +54,18 @@ $(document).ready(
 <table id="query_table" class="table table-striped table-hover ">
 <thead><tr>
 <th class="col-md-1">id</th>
-<th class="col-md-3">created_at</th>
 <th>input</th>
-<th>interval</th>
-<th>counter</th>
+<th class="col-md-2">created_at</th>
+<th class="col-md-2">updated_at</th>
+<th class="col-md-1">interval</th>
+<th class="col-md-1">counter</th>
 </tr></thead>
 <tbody>{% for q in query %}
 <tr>
 <td><a class="btn btn-primary" href="/query/{{q.id}}">{{q.id}}</td>
-<td>{{q.created_at}}</td>
 <td>{{q.input}}</td>
+<td>{{q.created_at}}</td>
+<td>{{q.updated_at}}</td>
 <td>{{q.interval}}</td>
 <td>{{q.counter}}</td>
 </tr>
@@ -123,7 +125,7 @@ $(document).ready(
 <td>{{p.content.length}}</td>
 <td>
 <a class="colorbox" href="/{{p.capture.path}}" >
-<img src="data:image/png;base64,{{p.capture.b64thumb}}"></a></td>
+<img src="data:image/png;base64,{{p.capture.b64thumb}}" ></a></td>
 </tr>
 {% endfor %}</tbody>
 </table>

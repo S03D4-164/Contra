@@ -60,7 +60,7 @@ def execute_job(jid, retry=0):
 		user_agent = job.user_agent.strings
 	proxy = ""
 	if job.proxy:
-		proxy = job.proxy.strings
+		proxy = job.proxy.url
 	payload = {
 		'url': u.url,
 		'query': job.query.id,
@@ -78,7 +78,6 @@ def execute_job(jid, retry=0):
 
 	r = None
 	try:
-		#r = requests.get(api, params=payload, stream=True, timeout=30, verify=False)
 		h = {'content-type': 'application/json'}
 		r = requests.post(api, data=json.dumps(payload), headers=h, stream=True, timeout=job.timeout, verify=False)
 		logger.debug(r.status_code)
@@ -220,7 +219,6 @@ def save_resource(data, jid, is_page=False, capture=None):
 				if c:
 					logger.info("content already exists: " + path)
 			except Exception as e:
-				#print e
 				c = Content.objects.create(
 					content = decoded,
 					md5 = md5,
@@ -270,6 +268,7 @@ def save_resource(data, jid, is_page=False, capture=None):
 				r.capture = c
 				r.save()
 	return rid
+
 
 def save_capture(capture, d, rid):
 	capdir = d["fullpath"] + "/capture"
@@ -322,6 +321,7 @@ def save_capture(capture, d, rid):
 			cid = c.id
 	return cid
 
+
 def parse_data(data, jid):
 	job = Job.objects.get(pk=jid)
 
@@ -351,6 +351,7 @@ def parse_data(data, jid):
 	else:
 		job.status = "Completed"
 	job.save()
+
 
 def job_diff(jid):
 	pass

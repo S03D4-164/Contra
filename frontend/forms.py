@@ -24,6 +24,15 @@ class QueryForm(forms.Form):
 	post_data = forms.CharField(widget=forms.Textarea(attrs={'rows':3}), required=False)
 	timeout = forms.ChoiceField(choices=TIMEOUT_CHOICES)
 
+class QueryRunForm(forms.Form):
+	user_agent = forms.ModelChoiceField(queryset=UserAgent.objects.all().order_by("name"), required=False)
+	referer = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
+	proxy = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
+	additional_headers = forms.CharField(widget=forms.Textarea(attrs={'rows':3}), required=False)
+	method = forms.ChoiceField(choices=METHOD_CHOICES)
+	post_data = forms.CharField(widget=forms.Textarea(attrs={'rows':3}), required=False)
+	timeout = forms.ChoiceField(choices=TIMEOUT_CHOICES)
+
 class UserAgentForm(forms.ModelForm):
 	class Meta:
         	model = UserAgent
@@ -33,3 +42,15 @@ class UserAgentForm(forms.ModelForm):
 	        self.fields['name'].widget.attrs['style'] = 'width:30%;'
 	        self.fields['strings'].widget.attrs['style'] = 'width:30%;'
 
+INTERVAL_CHOICES = (
+    (0, 'disable'),
+    (3600, '1h'),
+)
+
+class CrawlForm(forms.ModelForm):
+	class Meta:
+        	model = Query
+        	fields = ['interval', 'counter']
+	def __init__(self, *args, **kwargs):
+        	super(CrawlForm, self).__init__(*args, **kwargs)
+	        self.fields['interval'].widget = forms.Select(choices=INTERVAL_CHOICES)

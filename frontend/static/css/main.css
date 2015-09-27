@@ -5,3 +5,9 @@ table{
 td {
 	word-wrap:break-word;
 }
+
+a.colorbox img{
+	border:solid thin lightgrey;
+	display: block;
+	margin: 0 auto;
+}

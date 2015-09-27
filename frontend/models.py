@@ -82,13 +82,6 @@ class URL(models.Model):
         def __unicode__(self):
                 return self.url
 
-class Analysis(models.Model):
-	#object_id = models.CharField(max_length=200, blank=True, null=True)
-	#url = models.ForeignKey(URL, blank=True, null=True)
-	#content = models.ForeignKey(Content, blank=True, null=True)
-	result = models.TextField(blank=True, null=True)
-	created_at = models.DateTimeField(auto_now_add=True)
-
 class Content(models.Model):
 	content = models.TextField(blank=True, null=True)
 	md5 = models.CharField(max_length=200, blank=True, null=True)
@@ -97,7 +90,12 @@ class Content(models.Model):
 	commit = models.CharField(max_length=200, blank=True, null=True)
 	type = models.CharField(max_length=200, blank=True, null=True)
 	length = models.PositiveIntegerField(blank=True, null=True)
-	analysis = models.ForeignKey(Analysis, blank=True, null=True)
+	#analysis = models.ForeignKey(Analysis, blank=True, null=True)
+
+class Analysis(models.Model):
+	content = models.ForeignKey(Content, blank=True, null=True)
+	result = models.TextField(blank=True, null=True)
+	created_at = models.DateTimeField(auto_now_add=True)
 
 class Capture(models.Model):
 	path = models.FilePathField(path=os.path.abspath(os.path.dirname(__file__)))
@@ -112,21 +110,16 @@ class Capture(models.Model):
 #	created_at = models.DateTimeField(auto_now_add=True)
 
 class Resource(models.Model):
-	#url = models.URLField(max_length=20000)
 	url = models.ForeignKey(URL, blank=True, null=True)
-	#http_status = models.PositiveSmallIntegerField(blank=True, null=True)
 	http_status = models.CharField(max_length=200, blank=True, null=True)
 	headers = models.TextField(blank=True, null=True)
 	#headers = models.ManyToManyField(Headers)
-	#content = models.TextField(blank=True, null=True)
 	content = models.ForeignKey(Content, blank=True, null=True)
 	is_page = models.BooleanField(default=False)
 	created_at = models.DateTimeField(auto_now_add=True)
-	#job = models.ForeignKey(Job, blank=True, null=True)
-	#job = models.ManyToManyField(Job)
 	capture = models.ForeignKey(Capture, blank=True, null=True)
 	#wappalyzer = models.ManyToManyField(Wappalyzer)
-
+	analysis = models.ForeignKey(Analysis, blank=True, null=True)
 
 class Query(models.Model):
 	input = models.URLField(max_length=20000)
@@ -162,7 +155,6 @@ class Job(models.Model):
 	referer = models.CharField(max_length=2000, blank=True, null=True)
 	proxy = models.ForeignKey(URL, blank=True, null=True)
 	additional_headers = models.TextField(blank=True, null=True)
-	#http_method = models.CharField(max_length=10, choices=METHOD_CHOICES, default='GET')
 	method = models.CharField(max_length=10, default='GET')
 	post_data = models.TextField(blank=True, null=True)
 	timeout = models.PositiveSmallIntegerField(choices=TIMEOUT_CHOICES, default=60)
