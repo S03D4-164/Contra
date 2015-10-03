@@ -20,9 +20,6 @@ appdir = os.path.abspath(
 
 def create_b64thumb(image):
 	thumb = None
-	#s = StringIO()
-	#s.write(image)
-        #im = Image.open(s)
         im = Image.open(image)
        	im.thumbnail((480,270))
 	tmp = StringIO()
@@ -32,8 +29,7 @@ def create_b64thumb(image):
 
 def view(request, id):
 	page= Resource.objects.get(pk=id)
-	jr = Job_Resource.objects.get(resource=page)
-	job = jr.job
+	jr = Job_Resource.objects.filter(resource=page)
 	analysis = None
 	try:
 		analysis = Analysis.objects.get(content=page.content)
@@ -51,6 +47,8 @@ def view(request, id):
 					content = page.content,
 					result = result
 				)
+				if analysis:
+					page.analysis = analysis
 	thumbnail = None
 	if page.capture:
 		thumbnail = create_b64thumb(appdir + "/" + page.capture.path)
@@ -60,22 +58,27 @@ def view(request, id):
 	rule = None
 	behavior = None
 	if analysis:
-		results = json.loads(analysis.result)
-		behavior = results["behavior"]
-		for b in behavior:
-			desc = ast.literal_eval(b["description"])
-			strings = desc["strings"]
-			for s in strings:
-				if not s["data"] in matched:
-					matched.append(s["data"])
-			tags = desc["tags"]
-			rule = desc["rule"]
+		results = None
+		try:
+			results = json.loads(analysis.result)
+		except Exception as e:
+			logger.error(e)
+		if results:
+			behavior = results["behavior"]
+			for b in behavior:
+				desc = ast.literal_eval(b["description"])
+				strings = desc["strings"]
+				for s in strings:
+					if not s["data"] in matched:
+						matched.append(s["data"])
+				tags = desc["tags"]
+				rule = desc["rule"]
 
 	headers = ast.literal_eval(page.headers)
 	c = RequestContext(request, {
 		'p': page,
 		'size':os.path.getsize(appdir + "/" + page.content.path),
-		'job': job,
+		'job': jr,
 		'analysis':analysis,
 		'behavior': behavior,
 		'rule':rule,

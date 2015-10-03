@@ -12,7 +12,7 @@ from ..logger import getlogger
 import re, logging
 logger = getlogger()
 
-def query_job(request, form, jobs):
+def _query_job(request, form, jobs):
 	input = form.cleaned_data["input"]
 	ua = form.cleaned_data["user_agent"]
 	referer = form.cleaned_data["referer"]
@@ -64,7 +64,7 @@ def view(request):
 			form = QueryForm(request.POST)
 			jobs = []
 			if form.is_valid():
-				request, jobs = query_job(request, form, jobs)
+				request, jobs = _query_job(request, form, jobs)
 			rc = progress(request, jobs)
 			return render_to_response("progress.html", rc) 
 		elif "create_ua" in request.POST:
@@ -95,7 +95,7 @@ def view(request):
 		'ua': UserAgent.objects.all(),
 		'uaform': UserAgentForm(),
 		#'jr': Job_Resource.objects.all(),
-		#'analysis': Analysis.objects.all(),
+		'analysis': Analysis.objects.all(),
 	})
 	return render_to_response("index.html", rc) 
 
