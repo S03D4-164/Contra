@@ -45,6 +45,7 @@ def ghost_api(request):
 def _ghost_api(url, output, option):
 	logger.debug(option)
 	p = Process(target=run_ghost, args=(url, output, option))
+	logger.debug(p)
 	p.start()
 	p.join(300)
 	#appdir = os.path.abspath(os.path.dirname(__file__))

@@ -54,8 +54,10 @@ def main(url, output, option):
 		http_method = option["method"] 
 		h = option["headers"]
 		headers = {}
+		logger.debug(h)
 		for header in h:
 			headers[str(header)] = str(h[header])
+		logger.debug(headers)
 		body = None
 		if option["body"]:
 			body = str(option["body"])
@@ -66,7 +68,7 @@ def main(url, output, option):
 			body = body
 		)
 		result = {
-			#"status":"Start",
+			"status":None,
 			"page":{},
 			"resources":[],
 			"capture":None,
@@ -76,10 +78,9 @@ def main(url, output, option):
 				"url":page.url,
 				"http_status":page.http_status,
 				"headers":page.headers,
-				"content":page.content,
+				"content":session.content.encode("utf-8"),
 				"seq":0,
 			}
-			logger.debug(page.url)
 			capture = savedir + "/capture.png"
 			session.capture_to(capture)
 			if os.path.isfile(capture):
