@@ -54,8 +54,8 @@ def view(request, id):
 		thumbnail = create_b64thumb(appdir + "/" + page.capture.path)
 
 	matched = []
-	tags = None
-	rule = None
+	tags = []
+	rule = []
 	behavior = None
 	if analysis:
 		results = None
@@ -66,13 +66,20 @@ def view(request, id):
 		if results:
 			behavior = results["behavior"]
 			for b in behavior:
-				desc = ast.literal_eval(b["description"])
-				strings = desc["strings"]
-				for s in strings:
-					if not s["data"] in matched:
-						matched.append(s["data"])
-				tags = desc["tags"]
-				rule = desc["rule"]
+				desc = None
+				try:
+					desc = ast.literal_eval(b["description"])
+				except:
+					pass
+				if desc:
+					strings = desc["strings"]
+					for s in strings:
+						if not s["data"] in matched:
+							matched.append(s["data"])
+					if not desc["tags"][0] in tags:
+						tags.append(desc["tags"][0])
+					if not desc["rule"] in rule:
+						rule.append(desc["rule"])
 
 	headers = ast.literal_eval(page.headers)
 	c = RequestContext(request, {

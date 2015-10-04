@@ -16,13 +16,13 @@ def view(request, id):
 	try:
 		#page = Resource.objects.get(job=job, is_page=True)
 		p = jr.get(resource__is_page=True)
-		page = p.resource
+		#page = p.resource
 	except:
 		pass
-	resource = []
-	for r in jr.filter(resource__is_page=False).order_by("seq"):
-		resource.append(r)
-	#resource = Resource.objects.filter(job=job, is_page=False)
+	#resource = []
+	#for r in jr.filter(resource__is_page=False).order_by("seq"):
+	#	resource.append(r)
+	resource = jr.filter(resource__is_page=False).order_by("seq")
 	if request.method == "POST":
 		if "run" in request.POST:
 			j = Job.objects.create(
@@ -35,7 +35,7 @@ def view(request, id):
 		'form': QueryForm(),
 		'q': job.query,
 		'j': job,
-		'p': page,
+		'p': p,
 		'resource': resource,
 	})
 	return render_to_response("job.html", c) 

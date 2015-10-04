@@ -105,7 +105,7 @@ Are you sure?
 <thead><tr>
 <th class="col-md-1">id</th>
 <th class="col-md-2">created_at</th>
-<th class="col-md-5">status</th>
+<th class="col-md-2">status</th>
 <th>new</th>
 <th>out</th>
 <th>changed</th>
@@ -134,7 +134,8 @@ Are you sure?
 <tr>
 <th class="col-md-1">id</th>
 <th class="col-md-2">created_at</th>
-<th>url</th>
+<th class="col-md-2">url</th>
+<th class="col-md-2">ip</th>
 <th class="col-md-1">status</th>
 <th class="col-md-1">type</th>
 <th class="col-md-1">length</th>
@@ -143,18 +144,23 @@ Are you sure?
 </thead>
 <tbody>
 {% for p in page %}
-{% if p.http_status == "404" or p.http_status == "403" %}
+{% if p.resource.http_status == "404" or p.resource.http_status == "403" %}
 <tr style="background-color:grey">
 {% else %}
 <tr>
 {% endif %}
-<td><a class="btn btn-md btn-primary" href="/page/{{p.id}}">{{p.id}}</td>
-<td>{{p.created_at}}</td>
-<td>{{p.url}}</td>
-<td>{{p.http_status}}</td>
-<td>{{p.content.type}}</td>
-<td>{{p.content.length}}</td>
-<td><a class="colorbox" href="/{{p.capture.path}}"><img src="data:image/png;base64,{{p.capture.b64thumb}}"></a></td>
+<td><a class="btn btn-md btn-primary" href="/page/{{p.resource.id}}">{{p.resource.id}}</td>
+<td>{{p.resource.created_at}}</td>
+<td>{{p.resource.url}}</td>
+<td>
+{% for i in p.ip_whois.all %}
+<img src="/static/images/flags/{{i.whois.country|lower}}.png">{{i.ip}}<br>
+{% endfor %}
+</td>
+<td>{{p.resource.http_status}}</td>
+<td>{{p.resource.content.type}}</td>
+<td>{{p.resource.content.length}}</td>
+<td><a class="colorbox" href="/{{p.resource.capture.path}}"><img src="data:image/png;base64,{{p.resource.capture.b64thumb}}"></a></td>
 </tr>
 {% endfor %}
 </tbody>

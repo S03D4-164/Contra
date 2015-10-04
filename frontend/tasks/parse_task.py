@@ -1,6 +1,8 @@
 from ..models import *
+from .domain import *
+from .hostname import *
 
-import re, hashlib, tldextract
+import re, hashlib, tldextract, datetime
 
 import logging
 from ..logger import getlogger
@@ -93,6 +95,7 @@ def parse_standard(p):
 			domain = d,
 			subdomain = subdomain,
 		)
+
 		url, created = URL.objects.get_or_create(
 			url = p["url"],
 			hostname = h,

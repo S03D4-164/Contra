@@ -38,12 +38,14 @@ def _query_job(query, form):
 def view(request, id):
 	query = Query.objects.get(pk=id)
 	job = Job.objects.filter(query=query)
-	jr = Job_Resource.objects.filter(job__in=job, resource__is_page=True).distinct()
+	page = Job_Resource.objects.filter(job__in=job, resource__is_page=True).distinct()
+	"""
 	page = []
 	for j in jr.all():
 		if not j.resource in page:
 			page.append(j.resource)
 	#page = Resource.objects.filter(id__in=jr.resource.all())
+	"""
 	cform = CrawlForm(instance=query)
 	if request.method == "POST":
 		if "run" in request.POST:

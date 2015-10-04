@@ -4,6 +4,10 @@ from ..models import *
 
 from .parse_task import parse_url
 from .repository import *
+from .hostname import iplookup
+from .domain import whois_domain
+from .ipaddress import whois_ip
+from .hostname import iplookup
 
 import requests, pickle, hashlib, chardet, base64, re, magic, json
 from PIL import Image
@@ -34,10 +38,10 @@ def create_headers(jid):
 		lines = job.additional_headers.split("\n")
 		for line in lines:
 			l = line.split(":")
-			if len(l) > 2:
+			if len(l) >= 2:
 				key = l[0]
-				value= l[1:]
-				headers[key] = value
+				value= ":".join(l[1:])
+				headers[str(key)] = str(value)
 	return headers
 
 
@@ -154,6 +158,58 @@ def get_savedir(uid):
 	}
 	return d
 
+@app.task
+def set_whois(jrid):
+	jr = Job_Resource.objects.get(pk=jrid)
+	job = jr.job
+	jrs = Job_Resource.objects.filter(job=job).order_by("-timestamp")
+
+	hostname = jr.resource.url.hostname
+	domain = hostname.domain
+	domain_whois = None
+	if jrs:
+		j = jrs.filter(domain_whois__domain=domain)
+		if j:
+			domain_whois = j[0].domain_whois
+		else:
+			domain_whois = whois_domain(domain.id)
+	else:
+		domain_whois = whois_domain(domain.id)
+	if domain_whois:
+		jr.domain_whois = domain_whois
+		jr.save()
+
+	host_ip = None
+	if jrs:
+		j = jrs.filter(host_ip__hostname=hostname)
+		if j:
+			host_ip = j[0].host_ip
+		else:
+			host_ip = iplookup(hostname.id)
+	else:
+		#host_ips = Host_IP.object.filter(hostname=hostname).order_by("-last_seen")
+		host_ip = iplookup(hostname.id)
+	if host_ip:
+		jr.host_ip = host_ip
+		jr.save()
+	else:
+		return
+
+	ip_whois = None
+	ips = host_ip.ip.all()
+	for i in ips:
+		if jrs:
+			j = jrs.filter(ip_whois__ip=i).order_by("-timestamp")
+			if j:
+				iws = j[0].ip_whois.all()
+				ip_whois = iws.get(ip=i)
+			else:
+				ip_whois = whois_ip(i.id)
+		else:
+			ip_whois = whois_ip(i.id)
+		if ip_whois:
+			jr.ip_whois.add(ip_whois)
+			jr.save()
 
 def save_resource(data, jid, is_page=False, capture=None):
 	job = Job.objects.get(pk=jid)
@@ -161,7 +217,7 @@ def save_resource(data, jid, is_page=False, capture=None):
 	u = parse_url(data["url"])
 	if not u:
 		return None
-	
+
 	d = get_savedir(u.id)
 	#logger.debug(d)
 
@@ -175,7 +231,7 @@ def save_resource(data, jid, is_page=False, capture=None):
 	try:
 		cd = chardet.detect(content)
 	except ValueError:
-		cd = chardet.detect(content.encode("utf-8"))
+		cd = chardet.detect(content)
 	logger.debug(cd)
 	decoded = content
 	md5 = None
@@ -229,6 +285,7 @@ def save_resource(data, jid, is_page=False, capture=None):
 				if c:
 					logger.info("content not committed but created: " + path)
 	rid = None
+	jr = None
 	if u and c:
 		r = None
 		try:
@@ -244,10 +301,12 @@ def save_resource(data, jid, is_page=False, capture=None):
 				jr = Job_Resource.objects.create(
 					job = job,
 					resource = r,
-					seq = data["seq"]
+					seq = data["seq"],
+					#host_ip = host_ip,
 				)
+				#set_whois.delay(jr.id)
 		except Exception as e:
-			logger.error(e)
+			logger.error("get resource failed: " + str(e))
 			r = Resource.objects.create(
 				url = u,
 				http_status = data["http_status"],
@@ -258,8 +317,10 @@ def save_resource(data, jid, is_page=False, capture=None):
 			jr = Job_Resource.objects.create(
 				job = job,
 				resource = r,
-				seq = data["seq"]
+				seq = data["seq"],
+				#host_ip = host_ip,
 			)
+			#set_whois.delay(jr.id)
 		if r:
 			rid = r.id
 			if is_page and capture and not r.capture:
@@ -267,6 +328,7 @@ def save_resource(data, jid, is_page=False, capture=None):
 				c = Capture.objects.get(pk=cid)
 				r.capture = c
 				r.save()
+	set_whois(jr.id)
 	return rid
 
 

@@ -13,6 +13,9 @@ app = Celery(
         include=[
 		'frontend.tasks.ghost_task',
 		'frontend.tasks.crawl_task',
+		'frontend.tasks.domain',
+		'frontend.tasks.hostname',
+		'frontend.tasks.ipaddress',
 	])
 
 app.conf.update(

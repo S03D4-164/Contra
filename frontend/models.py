@@ -2,37 +2,29 @@ from django.db import models
 
 import os
 
-class Email(models.Model):
-	address = models.EmailField(unique=True)
-	user = models.CharField(max_length=2000, blank=True, null=True)
-	type = models.TextField(max_length=200, blank=True, null=True)
-	created_at = models.DateTimeField(auto_now_add=True)
-        def __unicode__(self):
-                return self.user
-
-class Whois(models.Model):
-	query = models.TextField(max_length=200)
-	result = models.TextField(blank=True, null=True)
-	md5 = models.CharField(max_length=200, blank=True, null=True)
-	organization = models.TextField(max_length=2000, blank=True, null=True)
-	country = models.TextField(max_length=20, blank=True, null=True)
-	created_at = models.DateTimeField(auto_now_add=True)
-	email = models.ManyToManyField(Email)
-
-class Dig(models.Model):
-	query = models.TextField(max_length=200)
-	result = models.TextField(blank=True, null=True)
-	created_at = models.DateTimeField(auto_now_add=True)
-
 class IPAddress(models.Model):
 	ip = models.GenericIPAddressField(unique=True)
         def __unicode__(self):
                 return self.ip
 
-class IP_Whois(models.Model):
-	timestamp = models.DateTimeField(auto_now_add=True)
+class Whois_IP(models.Model):
 	ip = models.ForeignKey(IPAddress)
-	whois = models.ForeignKey(Whois)
+	#query = models.TextField(max_length=200)
+	result = models.TextField(blank=True, null=True)
+	md5 = models.CharField(max_length=200, blank=True, null=True)
+	country = models.TextField(max_length=20, blank=True, null=True)
+	description = models.TextField(max_length=2000, blank=True, null=True)
+	creation_date = models.DateTimeField(blank=True, null=True)
+	updated_date = models.DateTimeField(blank=True, null=True)
+
+
+class IP_Whois_History(models.Model):
+	first_seen = models.DateTimeField(auto_now_add=True)
+	last_seen = models.DateTimeField(auto_now=True)
+	ip = models.ForeignKey(IPAddress)
+	reverse = models.CharField(max_length=2000, blank=True, null=True)
+	whois = models.ForeignKey(Whois_IP)
+
 
 class Domain(models.Model):
 	name = models.CharField(max_length=2000, unique=True)
@@ -41,15 +33,41 @@ class Domain(models.Model):
         def __unicode__(self):
                 return self.name
 
+class Contact(models.Model):
+	email = models.EmailField()
+	name = models.CharField(max_length=2000, blank=True, null=True)
+	organization = models.CharField(max_length=2000, blank=True, null=True)
+	type = models.TextField(max_length=200, blank=True, null=True)
+	country = models.TextField(max_length=20, blank=True, null=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+
+class Whois_Domain(models.Model):
+	domain = models.ForeignKey(Domain)
+	#query = models.TextField(max_length=200)
+	result = models.TextField(blank=True, null=True)
+	md5 = models.CharField(max_length=200, blank=True, null=True)
+	creation_date = models.DateTimeField(blank=True, null=True)
+	updated_date = models.DateTimeField(blank=True, null=True)
+	contact = models.ManyToManyField(Contact)
+
+class Domain_Whois_History(models.Model):
+	first_seen = models.DateTimeField(auto_now_add=True)
+	last_seen = models.DateTimeField(auto_now=True)
+	domain = models.ForeignKey(Domain)
+	whois = models.ForeignKey(Whois_Domain)
+
+class Dig(models.Model):
+	query = models.TextField(max_length=200)
+	result = models.TextField(blank=True, null=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+
 class Domain_Dig(models.Model):
-	timestamp = models.DateTimeField(auto_now_add=True)
+	first_seen = models.DateTimeField(auto_now_add=True)
+	last_seen = models.DateTimeField(auto_now=True)
+	#timestamp = models.DateTimeField(auto_now_add=True)
 	domain = models.ForeignKey(Domain)
 	dig = models.ForeignKey(Dig)
 
-class Domain_Whois(models.Model):
-	timestamp = models.DateTimeField(auto_now_add=True)
-	domain = models.ForeignKey(Domain)
-	whois = models.ForeignKey(Whois)
 
 class Hostname(models.Model):
 	name = models.CharField(max_length=20000, unique=True)
@@ -60,12 +78,18 @@ class Hostname(models.Model):
                 return self.name
 
 class Host_IP(models.Model):
-	timestamp = models.DateTimeField(auto_now_add=True)
+	first_seen = models.DateTimeField(auto_now_add=True)
+	last_seen = models.DateTimeField(auto_now=True)
 	hostname = models.ForeignKey(Hostname)
-	ip = models.ForeignKey(IPAddress)
+	ip = models.ManyToManyField(IPAddress)
+	ip_new = models.ManyToManyField(IPAddress, related_name="ip_new")
+	ip_out = models.ManyToManyField(IPAddress, related_name="ip_out")
+
 
 class Host_Dig(models.Model):
-	timestamp = models.DateTimeField(auto_now_add=True)
+	first_seen = models.DateTimeField(auto_now_add=True)
+	last_seen = models.DateTimeField(auto_now=True)
+	#timestamp = models.DateTimeField(auto_now_add=True)
 	hostname = models.ForeignKey(Hostname)
 	dig = models.ForeignKey(Dig)
 
@@ -86,7 +110,7 @@ class Content(models.Model):
 	content = models.TextField(blank=True, null=True)
 	md5 = models.CharField(max_length=200, blank=True, null=True)
 	created_at = models.DateTimeField(auto_now_add=True)
-	path = models.FilePathField(path=os.path.abspath(os.path.dirname(__file__)))
+	path = models.FilePathField(path=os.path.abspath(os.path.dirname(__file__)), max_length=2000)
 	commit = models.CharField(max_length=200, blank=True, null=True)
 	type = models.CharField(max_length=200, blank=True, null=True)
 	length = models.PositiveIntegerField(blank=True, null=True)
@@ -95,10 +119,12 @@ class Content(models.Model):
 class Analysis(models.Model):
 	content = models.ForeignKey(Content, blank=True, null=True)
 	result = models.TextField(blank=True, null=True)
+	rule = models.CharField(max_length=200, blank=True, null=True)
+	tag = models.CharField(max_length=200, blank=True, null=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 class Capture(models.Model):
-	path = models.FilePathField(path=os.path.abspath(os.path.dirname(__file__)))
+	path = models.FilePathField(path=os.path.abspath(os.path.dirname(__file__)), max_length=2000)
 	commit = models.CharField(max_length=200, blank=True, null=True)
 	#md5 = models.CharField(max_length=200, blank=True, null=True)
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -170,6 +196,9 @@ class Job(models.Model):
 class Job_Resource(models.Model):
 	job = models.ForeignKey(Job)
 	resource = models.ForeignKey(Resource)
+	host_ip = models.ForeignKey(Host_IP, blank=True, null=True)
+	ip_whois = models.ManyToManyField(IP_Whois_History)
+	domain_whois = models.ForeignKey(Domain_Whois_History, blank=True, null=True)
 	timestamp = models.DateTimeField(auto_now_add=True)
 	seq = models.PositiveIntegerField(blank=True, null=True)
 	

@@ -82,20 +82,24 @@ def view(request):
 				elif ua and not created:
 					messages.success(request, 'UA already exists: ' + str(ua.name))
 
+
 	rc = RequestContext(request, {
 		'form': form,
 		'query': Query.objects.all(),
 		'job': Job.objects.all(),
-		'page': Resource.objects.filter(is_page=True),
-		'resource': Resource.objects.filter(is_page=False),
+		'page': Job_Resource.objects.filter(resource__is_page=True),
+		'resource': Job_Resource.objects.filter(resource__is_page=False).order_by("-pk")[0:300],
 		'domain': Domain.objects.all(),
+		'domain_whois': Whois_Domain.objects.all(),
 		'hostname': Hostname.objects.all(),
+		#'hostip': Host_IP.objects.all(),
+		#'ip_whois': IP_Whois_History.objects.all(),
 		#'url': URL.objects.all(),
 		#'capture': Capture.objects.all(),
 		'ua': UserAgent.objects.all(),
 		'uaform': UserAgentForm(),
 		#'jr': Job_Resource.objects.all(),
-		'analysis': Analysis.objects.all(),
+		#'analysis': Analysis.objects.all(),
 	})
 	return render_to_response("index.html", rc) 
 
