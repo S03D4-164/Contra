@@ -29,14 +29,14 @@ $(document).ready(
 <table class="table ">
 <tr><th class="col-md-3">id</th><td><a class="btn btn-md btn-primary" href="/query/{{q.id}}">{{q.id}}</a></td></tr>
 <tr><th>input</th><td>{{q.input}}</td></tr>
-<tr><th >created_at</th><td>{{q.created_at}}</td></tr>
-<tr><th >updated_at</th><td>{{q.updated_at}}</td></tr>
+<tr><th>registered_by</th><td>{{q.registered_by}}</td></tr>
+<tr><th >created_at</th><td>{{q.created_at|date:"c"}}</td></tr>
+<tr><th >updated_at</th><td>{{q.updated_at|date:"c"}}</td></tr>
 </table>
 </div><!--table-->
 <div class="col-md-6">
 <form method="post" >{% csrf_token %}
 <table class="table">
-<tr><th>Crawl Setting</th></tr>
 {{cform.as_table}}
 </table>
 <button type="submit" class="btn btn-md btn-info" value="update" name="update">Update</button>
@@ -79,7 +79,7 @@ $(document).ready(
 <div class="modal-body">
 Are you sure?
 <form method="post" action="/query/{{q.id}}" >{% csrf_token %}
-<input type="submit" class="btn" name="delete" value="delete">
+<input type="submit" class="btn" name="delete" value="Delete">
 </form>
 </div><!--.modal-body-->
 </div><!--.modal-content-->
@@ -114,7 +114,7 @@ Are you sure?
 <tbody>{% for j in job %}
 <tr>
 <td><a class="btn btn-md btn-primary" href="/job/{{j.id}}">{{j.id}}</td>
-<td>{{j.created_at}}</td>
+<td>{{j.created_at|date:"c"}}</td>
 <td>{{j.status}}</td>
 <td>{{j.new|length}}</td>
 <td>{{j.out|length}}</td>
@@ -150,7 +150,7 @@ Are you sure?
 <tr>
 {% endif %}
 <td><a class="btn btn-md btn-primary" href="/page/{{p.resource.id}}">{{p.resource.id}}</td>
-<td>{{p.resource.created_at}}</td>
+<td>{{p.resource.created_at|date:"c"}}</td>
 <td>{{p.resource.url}}</td>
 <td>
 {% for i in p.ip_whois.all %}

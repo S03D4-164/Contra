@@ -47,10 +47,17 @@ INTERVAL_CHOICES = (
     (3600, '1h'),
 )
 
-class CrawlForm(forms.ModelForm):
+RESTRICTION_CHOICES = (
+    (0, 'login_user'),
+    (1, 'group_only'),
+    (2, 'all_user'),
+)
+
+class QueryConfigForm(forms.ModelForm):
 	class Meta:
         	model = Query
-        	fields = ['interval', 'counter']
+        	fields = ['restriction', 'interval', 'counter']
 	def __init__(self, *args, **kwargs):
-        	super(CrawlForm, self).__init__(*args, **kwargs)
+        	super(QueryConfigForm, self).__init__(*args, **kwargs)
 	        self.fields['interval'].widget = forms.Select(choices=INTERVAL_CHOICES)
+	        self.fields['restriction'].widget = forms.Select(choices=RESTRICTION_CHOICES)

@@ -1,9 +1,11 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 import os
 
 class IPAddress(models.Model):
 	ip = models.GenericIPAddressField(unique=True)
+	created_at = models.DateTimeField(auto_now_add=True)
         def __unicode__(self):
                 return self.ip
 
@@ -33,12 +35,16 @@ class Domain(models.Model):
         def __unicode__(self):
                 return self.name
 
-class Contact(models.Model):
+class Person(models.Model):
 	email = models.EmailField()
 	name = models.CharField(max_length=2000, blank=True, null=True)
 	organization = models.CharField(max_length=2000, blank=True, null=True)
-	type = models.TextField(max_length=200, blank=True, null=True)
 	country = models.TextField(max_length=20, blank=True, null=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+
+class Contact(models.Model):
+	type = models.TextField(max_length=200, blank=True, null=True)
+	person = models.ForeignKey(Person)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 class Whois_Domain(models.Model):
@@ -147,8 +153,16 @@ class Resource(models.Model):
 	#wappalyzer = models.ManyToManyField(Wappalyzer)
 	analysis = models.ForeignKey(Analysis, blank=True, null=True)
 
+RESTRICTION_CHOICES = (
+    (0, 'login_user'),
+    (1, 'group_only'),
+    (2, 'all_user'),
+)
+
 class Query(models.Model):
 	input = models.URLField(max_length=20000)
+	registered_by = models.ForeignKey(User)
+	restriction = models.PositiveSmallIntegerField(choices=RESTRICTION_CHOICES, default=0)
 	interval = models.PositiveSmallIntegerField(default=0)
 	counter = models.PositiveSmallIntegerField(default=0)
 	created_at = models.DateTimeField(auto_now_add=True)
@@ -200,5 +214,8 @@ class Job_Resource(models.Model):
 	ip_whois = models.ManyToManyField(IP_Whois_History)
 	domain_whois = models.ForeignKey(Domain_Whois_History, blank=True, null=True)
 	timestamp = models.DateTimeField(auto_now_add=True)
-	seq = models.PositiveIntegerField(blank=True, null=True)
+
+class Job_Resource_Seq(models.Model):
+	seq = models.PositiveIntegerField()
+	job_resource = models.ForeignKey(Job_Resource)
 	

@@ -19,23 +19,23 @@ $(document).ready(
 
 <div class="row">
 
+<div id="job" class="col-md-12">
 <div class="panel panel-primary">
-<div class="panel-heading">
-Job
-</div>
+<div class="panel-heading">Job</div>
 <div class="panel-body">
-<div id="job" class="col-md-6">
+
+<div class="col-md-6">
 <table id="job_table" class="table table-condensed">
 <tr><th class="col-md-3">Job/Query</th><td><a class="btn btn-md btn-primary" href="/job/{{j.id}}">{{j.id}}</a>
 <a class="btn btn-md btn-default" href="/query/{{j.query.id}}">{{j.query.id}}</a></td></tr>
 <tr><th>input</th><td>{{j.query.input}}</td></tr>
 <tr><th>status</th><td>{{j.status}}</td></tr>
-<tr><th>created_at</th><td>{{j.created_at}}</td></tr>
-<tr><th>updated_at</th><td>{{j.updated_at}}</td></tr>
+<tr><th>created_at</th><td>{{j.created_at|date:"c"}}</td></tr>
+<tr><th>updated_at</th><td>{{j.updated_at|date:"c"}}</td></tr>
 </table>
 </div>
 
-<div id="job" class="col-md-6">
+<div class="col-md-6">
 <table id="req_table" class="table table-condensed">
 <tr><th>Request</th></tr>
 <tr><th>user_agent</th><td>{{j.user_agent}}</td></tr>
@@ -45,11 +45,11 @@ Job
 <tr><th>method</th><td>{{j.method}}</td></tr>
 <tr><th>post_data</th><td>{{j.post_data}}</td></tr>
 </table>
-</div><!--.job-->
+</div>
 
 </div><!--.panel-body-->
 </div><!--panel-->
-
+</div>
 
 {% if p %}
 <div id="page" class="col-md-12">
@@ -70,11 +70,11 @@ Job
 </tr></thead>
 <tbody><tr>
 <td><a class="btn btn-md btn-primary" href="/page/{{p.resource.id}}">{{p.resource.id}}</a></td>
-<td>{{p.resource.created_at}}</td>
+<td>{{p.resource.created_at|date:"c"}}</td>
 <td>{{p.resource.url}}</td>
 <td>
 {% for i in p.ip_whois.all %}
-<img src="/static/images/flags/{{i.whois.country|lower}}.png">{{i.ip}}<br>
+<img src="/static/images/flags/{{i.whois.country|lower}}.png" title="{{i.whois.country}}">{{i.ip}}<br>
 {% endfor %}
 </td>
 <td>{{p.resource.http_status}}</td>
@@ -112,25 +112,25 @@ Resource</div>
 </tr></thead>
 <tbody>
 {% for r in resource %}
-{% if r.resource.url == p.resource.url %}
+{% if r.job_resource.resource.url == p.resource.url %}
 <tr class="info">
-{% elif r.resource.url.hostname == p.resource.url.hostname %}
+{% elif r.job_resource.resource.url.hostname == p.resource.url.hostname %}
 <tr class="warning">
-{% elif r.resource.url.hostname != p.resource.url.hostname %}
+{% elif r.job_resource.resource.url.hostname != p.resource.url.hostname %}
 <tr>
 {% endif %}
 <td><a class="btn btn-md btn-default">{{r.seq}}</a></td>
-<td><a class="btn btn-md btn-primary" href="/resource/{{r.resource.id}}">{{r.resource.id}}</a></td>
-<td>{{r.timestamp}}</td>
-<td>{{r.resource.url}}</td>
+<td><a class="btn btn-md btn-primary" href="/resource/{{r.job_resource.resource.id}}">{{r.job_resource.resource.id}}</a></td>
+<td>{{r.job_resource.timestamp|date:"c"}}</td>
+<td>{{r.job_resource.resource.url}}</td>
 <td>
-{% for i in r.ip_whois.all %}
-<img src="/static/images/flags/{{i.whois.country|lower}}.png">{{i.ip}}<br>
+{% for i in r.job_resource.ip_whois.all %}
+<img src="/static/images/flags/{{i.whois.country|lower}}.png" title="{{i.whois.country}}">{{i.ip}}<br>
 {% endfor %}
 </td>
-<td>{{r.resource.http_status}}</td>
-<td>{{r.resource.content.type}}</td>
-<td>{{r.resource.content.length}}</td>
+<td>{{r.job_resource.resource.http_status}}</td>
+<td>{{r.job_resource.resource.content.type}}</td>
+<td>{{r.job_resource.resource.content.length}}</td>
 </tr>
 {% endfor %}
 </tbody>

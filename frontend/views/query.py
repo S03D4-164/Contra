@@ -1,10 +1,13 @@
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib import messages
 
 from ..forms import *
 from ..models import *
 from ..tasks.ghost_task import *
-from progress import main as progress
+from .progress import main as progress
+from .auth import check_permission
 
 import requests, pickle, gzip, hashlib, chardet, base64
 from sh import git
@@ -37,16 +40,14 @@ def _query_job(query, form):
 
 def view(request, id):
 	query = Query.objects.get(pk=id)
+
+	if not check_permission(request, query.id):
+		messages.error(request, "Cannot access Query " + str(query.id))
+		return redirect("/")
+
 	job = Job.objects.filter(query=query)
 	page = Job_Resource.objects.filter(job__in=job, resource__is_page=True).distinct()
-	"""
-	page = []
-	for j in jr.all():
-		if not j.resource in page:
-			page.append(j.resource)
-	#page = Resource.objects.filter(id__in=jr.resource.all())
-	"""
-	cform = CrawlForm(instance=query)
+	cform = QueryConfigForm(instance=query)
 	if request.method == "POST":
 		if "run" in request.POST:
 			form = QueryRunForm(request.POST)
@@ -59,16 +60,19 @@ def view(request, id):
 			query.delete()
 			return redirect("/")
 		elif "update" in request.POST:
-			cform = CrawlForm(request.POST)
+			cform = QueryConfigForm(request.POST)
 			if cform.is_valid():
 				interval = cform.cleaned_data["interval"]
 				counter = cform.cleaned_data["counter"]
+				restriction = cform.cleaned_data["restriction"]
 				query.interval = interval
 				query.counter = counter
+				query.restriction = restriction
 				query.save()
-				
 	c = RequestContext(request, {
 		'form': QueryForm(),
+		'authform': AuthenticationForm(),
+		'redirect': request.path,
 		'qrform': QueryRunForm(),
 		'q': query,
 		'job': job,

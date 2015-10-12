@@ -1,9 +1,12 @@
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib import messages
 
 from ..forms import *
 from ..models import *
 from ..tasks.thug_task import content_analysis
+from .auth import check_permission
 
 import ast, base64, json
 from StringIO import StringIO
@@ -29,7 +32,14 @@ def create_b64thumb(image):
 
 def view(request, id):
 	page= Resource.objects.get(pk=id)
+
+	jp = Job_Resource.objects.get(resource=page)
+        if not check_permission(request, jp.job.query.id):
+                messages.error(request, "Cannot access Page " + str(page.id))
+                return redirect("/")
+
 	jr = Job_Resource.objects.filter(resource=page)
+
 	analysis = None
 	try:
 		analysis = Analysis.objects.get(content=page.content)
@@ -95,6 +105,8 @@ def view(request, id):
 		'thumbnail':thumbnail,
 		'headers': headers,
 		'form':QueryForm(),
+                'authform': AuthenticationForm(),
+                'redirect': request.path,
 	})
 	return render_to_response("page.html", c) 
 

@@ -1,10 +1,8 @@
 from ..celery import app
 
-import tldextract, socket, datetime
+import socket
 
 from ..models import *
-#from .domain import whois_domain
-from .ipaddress import whois_ip
 
 from ..logger import getlogger
 import logging
@@ -16,9 +14,9 @@ def iplookup(hid):
 	hostname = Hostname.objects.get(pk=hid)
 	hostips = Host_IP.objects.filter(hostname=hostname).order_by("-last_seen")
 	last = None
-	ips = []
 	if hostips:
 		last = hostips[0]
+	ips = []
 	try:
 		addr = socket.getaddrinfo(hostname.name, None)
 		for a in addr:

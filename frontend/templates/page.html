@@ -40,7 +40,7 @@ $(document).ready(
 </tr></thead>
 <tbody><tr>
 <td><a class="btn btn-primary" href="/page/{{p.id}}">{{p.id}}</a></td>
-<td>{{p.created_at}}</td>
+<td>{{p.created_at|date:"c"}}</td>
 <td>{{p.url}}</td>
 <td>{{p.http_status}}</td>
 </tr></tbody>
@@ -95,7 +95,7 @@ Job
 <a class="btn btn-default" href="/job/{{j.job.id}}">{{j.job.id}}</a>
 <a class="btn btn-default" href="/query/{{j.job.query.id}}">{{j.job.query.id}}</a>
 </td>
-<td>{{j.timestamp}}</td>
+<td>{{j.timestamp|date:"c"}}</td>
 <td>{{j.job.status}}</td>
 <td>
 <table>
@@ -168,7 +168,7 @@ Content
 </form>
 <table class="table">
 <tr><th  class="col-md-1">id</th><td>{{p.content.id}}</td></tr>
-<tr><th>created_at</th><td>{{p.content.created_at}}</td></tr>
+<tr><th>created_at</th><td>{{p.content.created_at|date:"c"}}</td></tr>
 <tr><th>type</th><td>{{p.content.type}}</td></tr>
 <tr><th>lengtht</th><td>{{p.content.length}}</td></tr>
 <tr><th>md5</th><td>{{p.content.md5}}</td></tr>

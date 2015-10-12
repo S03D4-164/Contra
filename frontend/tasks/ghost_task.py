@@ -1,4 +1,7 @@
 from ..celery import app
+
+from django.utils import timezone
+
 from ..forms import *
 from ..models import *
 
@@ -9,7 +12,7 @@ from .domain import whois_domain
 from .ipaddress import whois_ip
 from .hostname import iplookup
 
-import requests, pickle, hashlib, chardet, base64, re, magic, json
+import requests, pickle, hashlib, chardet, base64, re, magic, json, datetime
 from PIL import Image
 
 try:
@@ -158,58 +161,93 @@ def get_savedir(uid):
 	}
 	return d
 
-@app.task
-def set_whois(jrid):
+@app.task(rate_limit="5/m")
+def _set_domain_whois(jrid):
 	jr = Job_Resource.objects.get(pk=jrid)
-	job = jr.job
-	jrs = Job_Resource.objects.filter(job=job).order_by("-timestamp")
+	domain = jr.resource.url.hostname.domain
+	domain_whois = whois_domain(domain.id)
+	jr.domain_whois = domain_whois
+	jr.save()
 
-	hostname = jr.resource.url.hostname
-	domain = hostname.domain
-	domain_whois = None
+def set_domain_whois(jrid):
+	jr = Job_Resource.objects.get(pk=jrid)
+	domain = jr.resource.url.hostname.domain
+	jrs = Job_Resource.objects.filter(job=jr.job).order_by("-timestamp")
+
 	if jrs:
 		j = jrs.filter(domain_whois__domain=domain)
 		if j:
 			domain_whois = j[0].domain_whois
-		else:
-			domain_whois = whois_domain(domain.id)
-	else:
-		domain_whois = whois_domain(domain.id)
-	if domain_whois:
-		jr.domain_whois = domain_whois
-		jr.save()
+			jr.domain_whois = domain_whois
+			jr.save()
+			return
+
+        last = None
+        dws = Domain_Whois_History.objects.filter(domain=domain).order_by("-last_seen")
+        if dws:
+                last = dws[0]
+                if timezone.now() < (last.last_seen + datetime.timedelta(minutes=10)):
+                        logger.debug("domain whois skipped: " + domain.name)
+			jr.domain_whois = last
+			jr.save()
+                        return
+
+	_set_domain_whois.delay(jr.id)
+
+
+@app.task(rate_limit="5/m")
+def _set_ip_whois(jrid, ipid):
+	jr = Job_Resource.objects.get(pk=jrid)
+	ip_whois = whois_ip(ipid)
+	jr.ip_whois.add(ip_whois)
+	jr.save()
+
+def set_ip_whois(jrid):
+	jr = Job_Resource.objects.get(pk=jrid)
+	hostname = jr.resource.url.hostname
+	jrs = Job_Resource.objects.filter(job=jr.job).order_by("-timestamp")
 
 	host_ip = None
 	if jrs:
 		j = jrs.filter(host_ip__hostname=hostname)
 		if j:
 			host_ip = j[0].host_ip
+
 		else:
 			host_ip = iplookup(hostname.id)
 	else:
-		#host_ips = Host_IP.object.filter(hostname=hostname).order_by("-last_seen")
 		host_ip = iplookup(hostname.id)
+
 	if host_ip:
 		jr.host_ip = host_ip
 		jr.save()
 	else:
 		return
 
-	ip_whois = None
 	ips = host_ip.ip.all()
 	for i in ips:
+		ip_whois = None
 		if jrs:
 			j = jrs.filter(ip_whois__ip=i).order_by("-timestamp")
 			if j:
 				iws = j[0].ip_whois.all()
 				ip_whois = iws.get(ip=i)
+				jr.ip_whois.add(ip_whois)
+				jr.save()
+		if not ip_whois:
+	        	iws = IP_Whois_History.objects.filter(ip=i).order_by("-last_seen")
+        		if iws:
+                		last = iws[0]
+                		if timezone.now() < (last.last_seen + datetime.timedelta(minutes=10)):
+                       			logger.debug("ip whois skipped: " + i.ip)
+                       			ip_whois = last
+					jr.ip_whois.add(ip_whois)
+					jr.save()
+				else:
+					_set_ip_whois(jr.id, i.id)
 			else:
-				ip_whois = whois_ip(i.id)
-		else:
-			ip_whois = whois_ip(i.id)
-		if ip_whois:
-			jr.ip_whois.add(ip_whois)
-			jr.save()
+				_set_ip_whois(jr.id, i.id)
+
 
 def save_resource(data, jid, is_page=False, capture=None):
 	job = Job.objects.get(pk=jid)
@@ -283,7 +321,7 @@ def save_resource(data, jid, is_page=False, capture=None):
 					length = length,
 				)
 				if c:
-					logger.info("content not committed but created: " + path)
+					logger.error("content not committed but created: " + path)
 	rid = None
 	jr = None
 	if u and c:
@@ -298,13 +336,14 @@ def save_resource(data, jid, is_page=False, capture=None):
 			)
 			if r:
 				logger.info("resource already exists")
-				jr = Job_Resource.objects.create(
+				jr, created = Job_Resource.objects.get_or_create(
 					job = job,
 					resource = r,
-					seq = data["seq"],
-					#host_ip = host_ip,
 				)
-				#set_whois.delay(jr.id)
+				jrs = Job_Resource_Seq.objects.create(
+					job_resource = jr,
+					seq = data["seq"],
+				)
 		except Exception as e:
 			logger.error("get resource failed: " + str(e))
 			r = Resource.objects.create(
@@ -314,13 +353,14 @@ def save_resource(data, jid, is_page=False, capture=None):
 				headers = data["headers"],
 				is_page = is_page,
 			)
-			jr = Job_Resource.objects.create(
+			jr, created = Job_Resource.objects.get_or_create(
 				job = job,
 				resource = r,
-				seq = data["seq"],
-				#host_ip = host_ip,
 			)
-			#set_whois.delay(jr.id)
+			jrs = Job_Resource_Seq.objects.create(
+				job_resource = jr,
+				seq = data["seq"],
+			)
 		if r:
 			rid = r.id
 			if is_page and capture and not r.capture:
@@ -328,7 +368,10 @@ def save_resource(data, jid, is_page=False, capture=None):
 				c = Capture.objects.get(pk=cid)
 				r.capture = c
 				r.save()
-	set_whois(jr.id)
+
+	set_domain_whois(jr.id)
+	set_ip_whois(jr.id)
+
 	return rid
 
 

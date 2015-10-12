@@ -1,11 +1,11 @@
 from ..celery import app
 
+from django.utils import timezone
+
 from ipwhois import IPWhois
-import hashlib
-import datetime
+import hashlib, datetime
 
 from ..models import *
-#from ..views.db import get_node_on_db
 
 from ..logger import getlogger
 import logging
@@ -20,7 +20,7 @@ def whois_ip(ipid):
 	last = None
         if iws:
 	        last = iws[0]
-                if datetime.datetime.now() < (last.last_seen + datetime.timedelta(minutes=30)):
+                if timezone.now() < (last.last_seen + datetime.timedelta(minutes=10)):
                 	logger.debug("ip whois skipped: " + ip.ip)
 			return last
 
@@ -40,12 +40,16 @@ def whois_ip(ipid):
 	if results:
 		nets = sorted(results["nets"], key=lambda n:n["cidr"], reverse=True)[0]
 		if last:
+			#logger.debug(last.whois.updated_date)
+			#logger.debug(nets["updated"])
 			if last.whois.updated_date == nets["updated"]:
 				logger.debug("ip whois not changed: " + ip.ip)
 				last.save()
 				return last
-		else:
-			logger.debug("ip whois changed: " + ip.ip)
+			#else:
+			#	logger.debug("ip whois changed: " + ip.ip)
+
+		logger.debug("creating ip whois: " + ip.ip)
 
 		wi, created = Whois_IP.objects.get_or_create(
 			ip = ip,
@@ -56,11 +60,13 @@ def whois_ip(ipid):
 			creation_date = nets["created"],
 			updated_date = nets["updated"],
 		)
-		iwh = IP_Whois_History.objects.create(
+		#iwh = IP_Whois_History.objects.create(
+		iwh, created = IP_Whois_History.objects.get_or_create(
 			ip = ip,
 			whois = wi,
 			reverse = reverse,
 		)
+		iwh.save()
 		return iwh
 	else:
 		return None
