@@ -24,49 +24,44 @@ $(document).ready(
 
 <div id="page" class="col-md-12">
 
-<div class="panel panel-primary">
+<div class="panel panel-primary ">
 <div class="panel-heading">
 {% if p.is_page %}Page{% else %}Resource{% endif %}
 </div>
 <div class="panel-body">
+
+<div class="col-md-6">
 <table class="table table-condensed ">
-<thead><tr>
-<th  class="col-md-1">
+<tr><th class="col-md-3">
 {% if p.is_page %}Page{% else %}Resource{% endif %}
 </th>
-<th class="col-md-2">Created at</th>
-<th>URL</th>
-<th class="col-md-1">Status</th>
-</tr></thead>
-<tbody><tr>
-<td><a class="btn btn-primary" href="/page/{{p.id}}">{{p.id}}</a></td>
-<td>{{p.created_at|date:"c"}}</td>
-<td>{{p.url}}</td>
-<td>{{p.http_status}}</td>
-</tr></tbody>
+<td><a class="btn btn-primary" href="/page/{{p.id}}">{{p.id}}</a></td></tr>
+<tr><th>Created at</th><td>{{p.created_at|date:"c"}}</td></tr>
+<tr><th>URL</th><td>{{p.url}}</td></tr>
+<tr><th >Status</th><td>{{p.http_status}}</td></tr>
+<tr><th >Webapp</th>
+<td>
+{% for w in p.webapp.all %}
+{{w}}<br>
+{% endfor %}
+</td></tr>
 </table>
+</div>
+
+<div class="col-md-6">
 {% if capture %}
-<div class="row">
-<div class="col-md-3"></div>
-<div id="capture" class="col-md-6" >
-<a class="colorbox" href="/{{capture.path}}">
-<img src="data:image/png;base64,{{thumbnail}}" style="border:solid thin lightgrey;display: block;margin: 0 auto;">
-</a>
 <table class="table table-condensed">
-<thead>
-<th class="col-md-2"></th>
-<th></th>
-</thead>
 <tbody>
-<tr><th>Capture</th><td>{{capture.path}}</td></tr>
+<tr><th class="col-md-3">Capture</th><td>{{capture.path}}</td></tr>
 <tr><th>Commit</th><td>{{capture.commit}}</td></tr>
 </tbody>
 </table>
-</div>
-</div>
-<div class="col-md-3"></div>
-</div>
+<a class="colorbox" href="/{{capture.path}}">
+<img src="data:image/png;base64,{{thumbnail}}" style="border:solid thin lightgrey;display: block;margin: 0 auto;">
+</a>
 {% endif %}
+</div>
+
 </div><!--.panel-body-->
 </div><!--.panel-->
 
@@ -79,7 +74,7 @@ $(document).ready(
 Job
 </div>
 <div class="panel-body">
-<table id="jr_table" class="table">
+<table id="jr_table" class="table table-condensed">
 <thead>
 <tr>
 <th class="col-md-1">Job/Query</th>
@@ -99,7 +94,7 @@ Job
 <td>{{j.job.status}}</td>
 <td>
 <table>
-{% for i in j.ip_whois.all %}<tr>
+{% for i in j.host_info.ip_whois.all %}<tr>
 <td><img src="/static/images/flags/{{i.whois.country|lower}}.png">
 <td>{{i.ip}}</td>
 <td>{{i.whois.description}}</td>
@@ -165,6 +160,7 @@ Content
 <div class="panel-body">
 <form method="post" action="/page/{{p.id}}">{% csrf_token %}
 <input type="submit" value="analysis" name="analysis">
+<input type="submit" value="wappalyze" name="wappalyze">
 </form>
 <table class="table">
 <tr><th  class="col-md-1">id</th><td>{{p.content.id}}</td></tr>

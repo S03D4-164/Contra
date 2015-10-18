@@ -7,10 +7,11 @@ from ..models import *
 
 from .parse_task import parse_url
 from .repository import *
-from .hostname import iplookup
-from .domain import whois_domain
-from .ipaddress import whois_ip
-from .hostname import iplookup
+from .whois_domain import whois_domain
+from .whois_ip import whois_ip
+from .iplookup import iplookup
+from .dns_resolve import dns_resolve
+from .wappalyze import wappalyze
 
 import requests, pickle, hashlib, chardet, base64, re, magic, json, datetime
 from PIL import Image
@@ -132,10 +133,15 @@ def execute_job(jid, retry=0):
 			job.save()
 
 
-def get_savedir(uid):
+def get_savedir(uid, is_page=False):
 	u = URL.objects.get(pk=uid)
 	hostname = u.hostname.name.encode("utf-8")
-	repodir = "static/repository"
+	#repodir = "static/repository"
+	repodir = None
+	if is_page:
+		repodir = "static/repository/page"
+	else:
+		repodir = "static/repository/resource"
 	repopath = appdir + "/" + repodir
 	repository = get_repo(repopath)
 	comdir = None
@@ -161,93 +167,57 @@ def get_savedir(uid):
 	}
 	return d
 
-@app.task(rate_limit="5/m")
-def _set_domain_whois(jrid):
-	jr = Job_Resource.objects.get(pk=jrid)
-	domain = jr.resource.url.hostname.domain
-	domain_whois = whois_domain(domain.id)
-	jr.domain_whois = domain_whois
-	jr.save()
 
-def set_domain_whois(jrid):
-	jr = Job_Resource.objects.get(pk=jrid)
-	domain = jr.resource.url.hostname.domain
-	jrs = Job_Resource.objects.filter(job=jr.job).order_by("-timestamp")
-
-	if jrs:
-		j = jrs.filter(domain_whois__domain=domain)
-		if j:
-			domain_whois = j[0].domain_whois
-			jr.domain_whois = domain_whois
-			jr.save()
-			return
-
-        last = None
-        dws = Domain_Whois_History.objects.filter(domain=domain).order_by("-last_seen")
-        if dws:
-                last = dws[0]
-                if timezone.now() < (last.last_seen + datetime.timedelta(minutes=10)):
-                        logger.debug("domain whois skipped: " + domain.name)
-			jr.domain_whois = last
-			jr.save()
-                        return
-
-	_set_domain_whois.delay(jr.id)
-
-
-@app.task(rate_limit="5/m")
-def _set_ip_whois(jrid, ipid):
-	jr = Job_Resource.objects.get(pk=jrid)
-	ip_whois = whois_ip(ipid)
-	jr.ip_whois.add(ip_whois)
-	jr.save()
-
-def set_ip_whois(jrid):
+def set_host_info(jrid):
 	jr = Job_Resource.objects.get(pk=jrid)
 	hostname = jr.resource.url.hostname
-	jrs = Job_Resource.objects.filter(job=jr.job).order_by("-timestamp")
+	domain = hostname.domain
 
-	host_ip = None
-	if jrs:
-		j = jrs.filter(host_ip__hostname=hostname)
-		if j:
-			host_ip = j[0].host_ip
-
-		else:
-			host_ip = iplookup(hostname.id)
-	else:
-		host_ip = iplookup(hostname.id)
-
-	if host_ip:
-		jr.host_ip = host_ip
+	samehosts = Job_Resource.objects.filter(job__id=jr.job.id,host_info__hostname=hostname).order_by("-id")
+	if samehosts:
+		logger.debug("host info already created in same job.: " + str(hostname))
+		jr.host_info = samehosts[0].host_info
 		jr.save()
-	else:
 		return
 
-	ips = host_ip.ip.all()
-	for i in ips:
-		ip_whois = None
-		if jrs:
-			j = jrs.filter(ip_whois__ip=i).order_by("-timestamp")
-			if j:
-				iws = j[0].ip_whois.all()
-				ip_whois = iws.get(ip=i)
-				jr.ip_whois.add(ip_whois)
-				jr.save()
-		if not ip_whois:
-	        	iws = IP_Whois_History.objects.filter(ip=i).order_by("-last_seen")
-        		if iws:
-                		last = iws[0]
-                		if timezone.now() < (last.last_seen + datetime.timedelta(minutes=10)):
-                       			logger.debug("ip whois skipped: " + i.ip)
-                       			ip_whois = last
-					jr.ip_whois.add(ip_whois)
-					jr.save()
-				else:
-					_set_ip_whois(jr.id, i.id)
-			else:
-				_set_ip_whois(jr.id, i.id)
+	host_ip = iplookup(hostname.id)
 
+	host_dns = None
+	hdns = dns_resolve(str(hostname.name))
+	if hdns:
+		host_dns, created = Host_DNS.objects.get_or_create(
+			hostname = hostname,
+			dns = hdns,
+		)
+		if not created:
+			host_dns.save()
+
+	domain_dns = None
+	ddns = dns_resolve(str(domain.name))
+	if ddns:
+		domain_dns, created = Domain_DNS.objects.get_or_create(
+			domain = domain,
+			dns = ddns,
+		)
+		if not created:
+			domain_dns.save()
+
+	domain_whois = whois_domain(domain.id)
+	host_info, created = Host_Info.objects.get_or_create(
+		hostname = hostname,
+		host_ip = host_ip,
+		host_dns = host_dns,
+		domain_dns = domain_dns,
+		domain_whois = domain_whois,
+	)
+	jr.host_info = host_info
+	jr.save()
+	for i in host_ip.ip.all():
+		ip_whois = whois_ip(i.id)
+		if ip_whois:
+			host_info.ip_whois.add(ip_whois)	
+	host_info.save()
+	
 
 def save_resource(data, jid, is_page=False, capture=None):
 	job = Job.objects.get(pk=jid)
@@ -256,7 +226,7 @@ def save_resource(data, jid, is_page=False, capture=None):
 	if not u:
 		return None
 
-	d = get_savedir(u.id)
+	d = get_savedir(u.id, is_page=is_page)
 	#logger.debug(d)
 
 	s = StringIO()
@@ -280,7 +250,7 @@ def save_resource(data, jid, is_page=False, capture=None):
 		else:
 		        decoded = content.decode("utf-8", errors="ignore")
 			md5 = str(hashlib.md5(decoded.encode("utf-8")).hexdigest())
-	logger.debug(md5)
+	#logger.debug(md5)
 	s.close()
 
 	file = d["fullpath"] + "/" + str(u.md5)
@@ -293,35 +263,27 @@ def save_resource(data, jid, is_page=False, capture=None):
 		d["contentpath"] = d["contentdir"] + "/" + str(u.md5)
 		path = d["contentpath"].decode("utf-8")
 		if commit:
-			c = Content.objects.create(
-				content = decoded,
-				md5 = md5,
-				commit = commit,
-				path = path,
-				type = type,
-				length = length,
-			)
-			if c:
-				logger.info("content committed: " + path)
-		else:
 			try:
 				c = Content.objects.get(
 					content = decoded,
 					md5 = md5,
-					#path = d["contentpath"],
-				)
-				if c:
-					logger.info("content already exists: " + path)
-			except Exception as e:
-				c = Content.objects.create(
-					content = decoded,
-					md5 = md5,
+					commit = commit,
 					path = path,
 					type = type,
 					length = length,
 				)
-				if c:
-					logger.error("content not committed but created: " + path)
+				logger.debug("content already exists: " + path)
+			except Exception as e:
+				logger.error(str(e))
+				c = Content.objects.create(
+					content = decoded,
+					md5 = md5,
+					commit = commit,
+					path = path,
+					type = type,
+					length = length,
+				)
+				logger.info("content created: " + path)
 	rid = None
 	jr = None
 	if u and c:
@@ -368,9 +330,15 @@ def save_resource(data, jid, is_page=False, capture=None):
 				c = Capture.objects.get(pk=cid)
 				r.capture = c
 				r.save()
+			wappalyze(rid)
 
-	set_domain_whois(jr.id)
-	set_ip_whois(jr.id)
+	if not jr.host_info:
+		if jr.resource.url.hostname.domain.whitelisted:
+			logger.info("whitelisted domain: " + str(jr.resource.query.hostname.domain.name))
+		else:
+			set_host_info(jr.id)
+		#set_domain_whois(jr.id)
+		#set_ip_whois(jr.id)
 
 	return rid
 
@@ -455,8 +423,38 @@ def parse_data(data, jid):
 		job.status = "Completed: No resources"
 	else:
 		job.status = "Completed"
+		job_diff(job.id)
 	job.save()
 
-
+@app.task
 def job_diff(jid):
-	pass
+	job = Job.objects.get(pk=jid)
+	jrs = Job_Resource.objects.filter(job=job)
+
+	old_jobs = Job.objects.filter(query=job.query, pk__lt=jid, status="Completed").order_by("-id")
+	old_jrs = None
+	if old_jobs:
+		old_job = old_jobs[0]
+		old_jrs = Job_Resource.objects.filter(job=old_job)
+
+	for jr in jrs:
+		r = jr.resource
+		if old_jrs:
+			same_urls = old_jrs.filter(resource__url=r.url).order_by("-id")
+			if same_urls:
+				same_url = same_urls[0]
+				if r.content == same_url.resource.content:
+					job.not_changed.add(r)
+				else:
+					job.changed.add(r)
+			else:
+				job.new.add(r)
+
+		else:
+			job.new.add(r)
+	if old_jrs:
+		for jr in old_jrs:
+			r = jr.resource
+			if not jrs.filter(resource__url=r.url):
+				job.out.add(r)
+	job.save()

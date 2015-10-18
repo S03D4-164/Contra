@@ -16,8 +16,8 @@ def check_permission(request, qid):
         owner = query.registered_by
         user = request.user
         if query.restriction == 0:
-                if not user.is_authenticated:
-                        messages.error(request, "Authentication required.")
+                if not user.is_authenticated():
+                        #messages.error(request, "Authentication required.")
                         #return redirect("/")
 			return False
 		else:
@@ -29,7 +29,7 @@ def check_permission(request, qid):
                                 permitted = True
 				return True
                 if not permitted:
-                        messages.error(request, "You don't have permission.")
+                        #messages.error(request, "You don't have permission.")
                         #return redirect("/")
                         return False
 	elif query.restriction == 2:
@@ -40,6 +40,17 @@ def check_permission(request, qid):
 	return False
 
 def user(request):
+	if not request.user.is_authenticated():
+                        messages.error(request, "Authentication required to access account information.")
+                        return redirect("/")
+
+	if request.method == "POST":
+		pform = SetPasswordForm(user=request.user, data=request.POST)
+		if pform.is_valid():
+			pform.save()
+                        messages.success(request, "Updated.")
+		else:
+                	messages.warning(request, "Invalid Input.")
         rc = RequestContext(request, {
                 'form': QueryForm(),
                 'authform': AuthenticationForm(),

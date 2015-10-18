@@ -19,7 +19,6 @@ class Whois_IP(models.Model):
 	creation_date = models.DateTimeField(blank=True, null=True)
 	updated_date = models.DateTimeField(blank=True, null=True)
 
-
 class IP_Whois_History(models.Model):
 	first_seen = models.DateTimeField(auto_now_add=True)
 	last_seen = models.DateTimeField(auto_now=True)
@@ -27,11 +26,11 @@ class IP_Whois_History(models.Model):
 	reverse = models.CharField(max_length=2000, blank=True, null=True)
 	whois = models.ForeignKey(Whois_IP)
 
-
 class Domain(models.Model):
 	name = models.CharField(max_length=2000, unique=True)
 	suffix = models.CharField(max_length=200, blank=True, null=True)
 	created_at = models.DateTimeField(auto_now_add=True)
+	whitelisted = models.BooleanField(default=False)
         def __unicode__(self):
                 return self.name
 
@@ -62,19 +61,6 @@ class Domain_Whois_History(models.Model):
 	domain = models.ForeignKey(Domain)
 	whois = models.ForeignKey(Whois_Domain)
 
-class Dig(models.Model):
-	query = models.TextField(max_length=200)
-	result = models.TextField(blank=True, null=True)
-	created_at = models.DateTimeField(auto_now_add=True)
-
-class Domain_Dig(models.Model):
-	first_seen = models.DateTimeField(auto_now_add=True)
-	last_seen = models.DateTimeField(auto_now=True)
-	#timestamp = models.DateTimeField(auto_now_add=True)
-	domain = models.ForeignKey(Domain)
-	dig = models.ForeignKey(Dig)
-
-
 class Hostname(models.Model):
 	name = models.CharField(max_length=20000, unique=True)
 	domain = models.ForeignKey(Domain, blank=True, null=True)
@@ -83,21 +69,42 @@ class Hostname(models.Model):
         def __unicode__(self):
                 return self.name
 
+class DNSRecord(models.Model):
+	query = models.CharField(max_length=20000)
+	md5 = models.CharField(max_length=200, blank=True, null=True)
+	a = models.ManyToManyField(IPAddress, related_name="A")
+	aaaa = models.ManyToManyField(IPAddress, related_name="AAAA")
+	cname = models.ManyToManyField(Hostname, related_name="CNAME")
+	ns = models.ManyToManyField(Hostname, related_name="NS")
+	mx = models.TextField()
+	soa = models.TextField()
+	txt = models.TextField()
+	timestamp = models.DateTimeField(auto_now_add=True)
+
+class Domain_DNS(models.Model):
+	first_seen = models.DateTimeField(auto_now_add=True)
+	last_seen = models.DateTimeField(auto_now=True)
+	#timestamp = models.DateTimeField(auto_now_add=True)
+	domain = models.ForeignKey(Domain)
+	dns = models.ForeignKey(DNSRecord)
+
 class Host_IP(models.Model):
 	first_seen = models.DateTimeField(auto_now_add=True)
 	last_seen = models.DateTimeField(auto_now=True)
 	hostname = models.ForeignKey(Hostname)
 	ip = models.ManyToManyField(IPAddress)
+	#ip_whois = models.ManyToManyField(Whois_IP)
+	#dns = models.ForeignKey(DNSRecord)
 	ip_new = models.ManyToManyField(IPAddress, related_name="ip_new")
 	ip_out = models.ManyToManyField(IPAddress, related_name="ip_out")
 
 
-class Host_Dig(models.Model):
+class Host_DNS(models.Model):
 	first_seen = models.DateTimeField(auto_now_add=True)
 	last_seen = models.DateTimeField(auto_now=True)
 	#timestamp = models.DateTimeField(auto_now_add=True)
 	hostname = models.ForeignKey(Hostname)
-	dig = models.ForeignKey(Dig)
+	dns = models.ForeignKey(DNSRecord)
 
 class URL(models.Model):
 	url = models.URLField(max_length=20000, unique=True)
@@ -114,7 +121,11 @@ class URL(models.Model):
 
 class Content(models.Model):
 	content = models.TextField(blank=True, null=True)
-	md5 = models.CharField(max_length=200, blank=True, null=True)
+	md5 = models.CharField(max_length=32, blank=True, null=True)
+	sha1 = models.CharField(max_length=40, blank=True, null=True)
+	sha256 = models.CharField(max_length=64, blank=True, null=True)
+	sha512 = models.CharField(max_length=128, blank=True, null=True)
+	ssdeep = models.CharField(max_length=200, blank=True, null=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	path = models.FilePathField(path=os.path.abspath(os.path.dirname(__file__)), max_length=2000)
 	commit = models.CharField(max_length=200, blank=True, null=True)
@@ -141,6 +152,11 @@ class Capture(models.Model):
 #	serialized = models.TextField(blank=True, null=True)
 #	created_at = models.DateTimeField(auto_now_add=True)
 
+class Webapp(models.Model):
+ 	name = models.CharField(max_length=2000)
+        def __unicode__(self):
+                return self.name
+
 class Resource(models.Model):
 	url = models.ForeignKey(URL, blank=True, null=True)
 	http_status = models.CharField(max_length=200, blank=True, null=True)
@@ -150,7 +166,7 @@ class Resource(models.Model):
 	is_page = models.BooleanField(default=False)
 	created_at = models.DateTimeField(auto_now_add=True)
 	capture = models.ForeignKey(Capture, blank=True, null=True)
-	#wappalyzer = models.ManyToManyField(Wappalyzer)
+	webapp = models.ManyToManyField(Webapp)
 	analysis = models.ForeignKey(Analysis, blank=True, null=True)
 
 RESTRICTION_CHOICES = (
@@ -207,12 +223,19 @@ class Job(models.Model):
 	changed = models.ManyToManyField(Resource, related_name="changed")
 	not_changed = models.ManyToManyField(Resource, related_name="not_changed")
 
-class Job_Resource(models.Model):
-	job = models.ForeignKey(Job)
-	resource = models.ForeignKey(Resource)
+class Host_Info(models.Model):
+	hostname = models.ForeignKey(Hostname)
+	host_dns = models.ForeignKey(Host_DNS, blank=True, null=True)
 	host_ip = models.ForeignKey(Host_IP, blank=True, null=True)
 	ip_whois = models.ManyToManyField(IP_Whois_History)
 	domain_whois = models.ForeignKey(Domain_Whois_History, blank=True, null=True)
+	domain_dns = models.ForeignKey(Domain_DNS, blank=True, null=True)
+	timestamp = models.DateTimeField(auto_now_add=True)
+
+class Job_Resource(models.Model):
+	job = models.ForeignKey(Job)
+	resource = models.ForeignKey(Resource)
+	host_info = models.ForeignKey(Host_Info, blank=True, null=True)
 	timestamp = models.DateTimeField(auto_now_add=True)
 
 class Job_Resource_Seq(models.Model):

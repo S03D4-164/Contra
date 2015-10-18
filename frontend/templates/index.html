@@ -16,10 +16,11 @@ $(document).ready(
                 $('#url_table').DataTable({"order":[0, 'desc']});
                 $('#capture_table').DataTable({"order":[0, 'desc']});
                 $('#domain_table').DataTable({"order":[0, 'desc']});
-                $('#dom_who_table').DataTable({"order":[0, 'desc']});
+                $('#whois_domain_table').DataTable({"order":[0, 'desc']});
                 $('#hostname_table').DataTable({"order":[0, 'desc']});
-                $('#hostip_table').DataTable({"order":[0, 'desc']});
-                $('#ip_who_table').DataTable({"order":[0, 'desc']});
+                $('#host_ip_table').DataTable({"order":[0, 'desc']});
+                $('#whois_ip_table').DataTable({"order":[0, 'desc']});
+                $('#dns_table').DataTable({"order":[0, 'desc']});
                 $('#ua_table').DataTable({"order":[0, 'desc']});
                 $('#jr_table').DataTable({"order":[0, 'desc']});
                 $('#analysis_table').DataTable({"order":[0, 'desc']});
@@ -44,10 +45,11 @@ $(document).ready(
 {% if capture %}<li><a data-toggle="pill" href="#capture">Capture({{capture|length}})</a></li>{% endif %}
 {% if url %}<li><a data-toggle="pill" href="#url">URL({{url|length}})</a></li>{% endif %}
 {% if domain %}<li><a data-toggle="pill" href="#domain">Domain({{domain|length}})</a></li>{% endif %}
-{% if domain_whois %}<li><a data-toggle="pill" href="#dom_who">WHois(Domain)({{domain_whois|length}})</a></li>{% endif %}
+{% if dns %}<li><a data-toggle="pill" href="#dns">DNS({{dns|length}})</a></li>{% endif %}
+{% if whois_domain %}<li><a data-toggle="pill" href="#whois_domain">Whois(Domain)({{whois_domain|length}})</a></li>{% endif %}
 {% if hostname %}<li><a data-toggle="pill" href="#hostname">Hostname({{hostname|length}})</a></li>{% endif %}
-{% if hostip %}<li><a data-toggle="pill" href="#hostip">Host_IP({{hostip|length}})</a></li>{% endif %}
-{% if ip_whois %}<li><a data-toggle="pill" href="#ip_who">Whois(IP)({{ip_whois|length}})</a></li>{% endif %}
+{% if host_ip %}<li><a data-toggle="pill" href="#host_ip">Host_IP({{host_ip|length}})</a></li>{% endif %}
+{% if whois_ip %}<li><a data-toggle="pill" href="#whois_ip">Whois(IP)({{whois_ip|length}})</a></li>{% endif %}
 {% if analysis %}<li><a data-toggle="pill" href="#analysis">Analysis({{analysis|length}})</a></li>{% endif %}
 <li><a data-toggle="pill" href="#ua">User Agent({{ua|length}})</a></li>
 </ul>
@@ -132,7 +134,7 @@ $(document).ready(
 <td>{{p.resource.http_status}}</td>
 <td>{{p.resource.url}}</td>
 <td>
-{% for i in p.ip_whois.all %}
+{% for i in p.host_info.ip_whois.all %}
 <img src="/static/images/flags/{{i.whois.country|lower}}.png" title="{{i.whois.country}}">{{i.ip}}<br>
 {% endfor %}
 </td>
@@ -166,7 +168,7 @@ $(document).ready(
 <td>{{r.resource.http_status}}</td>
 <td>{{r.resource.url}}</td>
 <td>
-{% for i in r.ip_whois.all %}
+{% for i in r.host_info.ip_whois.all %}
 <img src="/static/images/flags/{{i.whois.country|lower}}.png" title="{{i.whois.country}}">{{i.ip}}<br>
 {% endfor %}
 </td>
@@ -246,27 +248,27 @@ $(document).ready(
 </div><!--.panel-->
 {% endif %}
 
-{% if domain_whois %}
-<div id="dom_who" class="panel panel-primary tab-pane">
+{% if whois_domain %}
+<div id="whois_domain" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>
 <div class="panel-body">
-<table id="dom_who_table" class="table table-striped table-hover ">
+<table id="whois_domain_table" class="table table-striped table-hover ">
 <thead><tr>
 <th class="col-md-1">id</th>
-<th class="col-md-2">first_seen</th>
-<th class="col-md-2">last_seen</th>
+<th class="col-md-2">creation_date</th>
+<th class="col-md-2">updated_date</th>
 <th class="col-md-1">domain</th>
 <th class="col-md-6">contact</th>
 </tr></thead>
-<tbody>{% for d in domain_whois %}
+<tbody>{% for d in whois_domain %}
 <tr>
-<td><a class="btn btn-primary" href="/domain/{{d.id}}">{{d.id}}</td>
-<td>{{d.first_seen|date:"c"}}</td>
-<td>{{d.last_seen|date:"c"}}</td>
-<td>{{d.domain}}</td>
+<td><a class="btn btn-primary" href="/whois_domain/{{d.id}}">{{d.id}}</td>
+<td>{{d.creation_date|date:"c"}}</td>
+<td>{{d.updated_date|date:"c"}}</td>
+<td><a href="/domain/{{d.domain.id}}">{{d.domain}}</a></td>
 <td>
 <table>
-{% for c in d.whois.contact.all %}
+{% for c in d.contact.all %}
 <tr>
 <td>{{c.type}}</td>
 <td>{{c.person.organization}}</td>
@@ -309,11 +311,43 @@ $(document).ready(
 </div><!--.panel-->
 {% endif %}
 
-{% if hostip %}
-<div id="hostip" class="panel panel-primary tab-pane">
+{% if dns %}
+<div id="dns" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>
 <div class="panel-body">
-<table id="hostip_table" class="table table-striped table-hover ">
+<table id="dns_table" class="table table-striped table-hover ">
+<thead><tr>
+<th class="col-md-1">id</th>
+<th class="col-md-2">timestamp</th>
+<th class="col-md-2">query</th>
+<th class="col-md-2">A</th>
+<th class="col-md-7">TXT</th>
+</tr></thead>
+<tbody>{% for d in dns %}
+<tr>
+<td><a class="btn btn-primary" href="/dns/{{d.id}}">{{d.id}}</a></td>
+<td>{{d.timestamp|date:"c"}}</td>
+<td>{{d.query}}</td>
+<td>
+{% for a in d.a.all %}
+{{a.ip}}<br>
+{% endfor %}
+</td>
+<td>{{d.txt}}</td>
+</tr>
+{% endfor %}</tbody>
+</table>
+</div>
+</div><!--.panel-->
+{% endif %}
+
+
+
+{% if host_ip %}
+<div id="host_ip" class="panel panel-primary tab-pane">
+<div class="panel-heading"></div>
+<div class="panel-body">
+<table id="host_ip_table" class="table table-striped table-hover ">
 <thead><tr>
 <th class="col-md-1">id</th>
 <th class="col-md-2">first_seen</th>
@@ -323,7 +357,7 @@ $(document).ready(
 <th class="col-md-2">ip_new</th>
 <th class="col-md-2">ip_out</th>
 </tr></thead>
-<tbody>{% for h in hostip %}
+<tbody>{% for h in host_ip %}
 <tr>
 <td><a class="btn btn-primary" href="/hostname/{{h.id}}">{{h.id}}</td>
 <td>{{h.first_seen|date:"c"}}</td>
@@ -339,27 +373,27 @@ $(document).ready(
 </div><!--.panel-->
 {% endif %}
 
-{% if ip_whois %}
-<div id="ip_who" class="panel panel-primary tab-pane">
+{% if whois_ip %}
+<div id="whois_ip" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>
 <div class="panel-body">
-<table id="ip_who_table" class="table table-striped table-hover ">
+<table id="whois_ip_table" class="table table-striped table-hover ">
 <thead><tr>
 <th class="col-md-1">id</th>
-<th class="col-md-2">first_seen</th>
+<th class="col-md-2">creation_date</th>
+<th class="col-md-2">updated_date</th>
 <th class="col-md-2">ip</th>
-<th class="col-md-2">reverse</th>
-<th class="col-md-2">md5</th>
-<th class="col-md-3">description</th>
+<th class="col-md-1">country</th>
+<th class="col-md-4">description</th>
 </tr></thead>
-<tbody>{% for i in ip_whois %}
+<tbody>{% for i in whois_ip %}
 <tr>
-<td><a class="btn btn-primary" href="/hostname/{{i.id}}">{{i.id}}</td>
-<td>{{i.first_seen|date:"c"}}</td>
+<td><a class="btn btn-primary" href="/whois_ip/{{i.id}}">{{i.id}}</td>
+<td>{{i.creation_date|date:"c"}}</td>
+<td>{{i.updated_date|date:"c"}}</td>
 <td>{{i.ip}}</td>
-<td>{{i.reverse}}</td>
-<td>{{i.whois.md5}}</td>
-<td>{{i.whois.description}}</td>
+<td>{{i.country}}<img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}"></td>
+<td>{{i.description}}</td>
 </tr>
 {% endfor %}</tbody>
 </table>

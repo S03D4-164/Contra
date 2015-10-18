@@ -42,6 +42,11 @@ class UserAgentForm(forms.ModelForm):
 	        self.fields['name'].widget.attrs['style'] = 'width:30%;'
 	        self.fields['strings'].widget.attrs['style'] = 'width:30%;'
 
+class DomainConfigForm(forms.ModelForm):
+	class Meta:
+        	model = Domain
+        	fields = ['whitelisted']
+
 INTERVAL_CHOICES = (
     (0, 'disable'),
     (3600, '1h'),

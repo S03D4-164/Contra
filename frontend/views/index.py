@@ -106,21 +106,6 @@ def view(request):
 			pass
 
 	jr = Job_Resource.objects.filter(job__query__in=query)
-	resource = []
-	host_ip = []
-	ip_whois = []
-	domain_whois = []
-	for r in jr:
-		if r.resource and not r.resource in resource:
-			resource.append(r.resource)
-		if r.host_ip and not r.host_ip in host_ip:
-			host_ip.append(r.host_ip)
-		for i in r.ip_whois.all():
-			if not i in ip_whois:
-				ip_whois.append(i)
-		if r.domain_whois and not r.domain_whois in domain_whois:
-			domain_whois.append(r.domain_whois)
-
 	rc = RequestContext(request, {
 		'form': form,
 		'authform': AuthenticationForm(),
@@ -128,14 +113,15 @@ def view(request):
 		'query': query,
 		'job': Job.objects.filter(query=query),
 		'page': Job_Resource.objects.filter(resource__is_page=True, job__query=query).distinct(),
-		'resource': Job_Resource.objects.filter(resource__is_page=False, job__query=query).order_by("-pk").distinct()[0:100],
-		'hostip':host_ip,
-		'ip_whois':ip_whois,
-		'domain_whois':domain_whois,
+		'resource': Job_Resource.objects.filter(resource__is_page=False, job__query=query).order_by("-pk").distinct(),
 		#'domain': Domain.objects.all(),
 		#'hostname': Hostname.objects.all(),
 		'ua': UserAgent.objects.all(),
 		'uaform': UserAgentForm(),
+		'dns':DNSRecord.objects.all(),
+		'whois_domain':Whois_Domain.objects.all(),
+		'whois_ip':Whois_IP.objects.all(),
+		'host_ip':Host_IP.objects.all(),
 		#'jr': Job_Resource.objects.all(),
 		#'analysis': Analysis.objects.all(),
 		#'url': URL.objects.all(),

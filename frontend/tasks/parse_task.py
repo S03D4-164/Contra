@@ -1,6 +1,6 @@
 from ..models import *
-from .domain import *
-from .hostname import *
+#from .domain_whois import *
+#from .iplookup import *
 
 import re, hashlib, tldextract, datetime
 
@@ -74,12 +74,7 @@ def parse_ipv4(p):
 		logger.error(e)
 	return None
 
-def parse_standard(p):
-	hostname = p["server"]
-	s = p["server"].split(':')
-	if len(s) == 2:
-		hostname = p["server"].split(':')[0]		
-		p["port"] = p["server"].split(':')[1]
+def parse_hostname(hostname):
         no_fetch_extract = tldextract.TLDExtract(suffix_list_url=False)
         ext = no_fetch_extract(hostname.encode("utf-8"))
 	suffix = ext.suffix
@@ -95,7 +90,18 @@ def parse_standard(p):
 			domain = d,
 			subdomain = subdomain,
 		)
+		return h
+	return None
 
+def parse_standard(p):
+	hostname = p["server"]
+	s = p["server"].split(':')
+	if len(s) == 2:
+		hostname = p["server"].split(':')[0]		
+		p["port"] = p["server"].split(':')[1]
+
+	h = parse_hostname(hostname)
+	if h:
 		url, created = URL.objects.get_or_create(
 			url = p["url"],
 			hostname = h,

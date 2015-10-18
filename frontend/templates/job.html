@@ -73,7 +73,7 @@ $(document).ready(
 <td>{{p.resource.created_at|date:"c"}}</td>
 <td>{{p.resource.url}}</td>
 <td>
-{% for i in p.ip_whois.all %}
+{% for i in p.host_info.ip_whois.all %}
 <img src="/static/images/flags/{{i.whois.country|lower}}.png" title="{{i.whois.country}}">{{i.ip}}<br>
 {% endfor %}
 </td>
@@ -97,18 +97,19 @@ $(document).ready(
 
 <div class="panel panel-default">
 <div class="panel-heading">
-Resource</div>
+Resource(total:{{resource|length}})</div>
 <div class="panel-body">
 <table class="table table-condensed table-striped table-hover " style="table-layout: fixed;">
 <thead><tr>
 <th class="col-md-1">seq</th>
 <th class="col-md-1">id</th>
 <th class="col-md-2">timestamp</th>
-<th class="col-md-3">url</th>
+<th class="col-md-2">url</th>
 <th class="col-md-2">ip</th>
-<th class="col-md-1">http_status</th>
+<th class="col-md-1">status</th>
 <th class="col-md-1">type</th>
 <th class="col-md-1">length</th>
+<th class="col-md-1">content</th>
 </tr></thead>
 <tbody>
 {% for r in resource %}
@@ -124,13 +125,20 @@ Resource</div>
 <td>{{r.job_resource.timestamp|date:"c"}}</td>
 <td>{{r.job_resource.resource.url}}</td>
 <td>
-{% for i in r.job_resource.ip_whois.all %}
+{% for i in r.job_resource.host_info.ip_whois.all %}
 <img src="/static/images/flags/{{i.whois.country|lower}}.png" title="{{i.whois.country}}">{{i.ip}}<br>
 {% endfor %}
 </td>
 <td>{{r.job_resource.resource.http_status}}</td>
 <td>{{r.job_resource.resource.content.type}}</td>
 <td>{{r.job_resource.resource.content.length}}</td>
+<td>
+{% if r.job_resource.resource in j.new.all %}new
+{% elif r.job_resource.resource in j.changed.all %}changed
+{% elif r.job_resource.resource in j.not_changed.all %}not changed
+
+{% endif %}
+</td>
 </tr>
 {% endfor %}
 </tbody>

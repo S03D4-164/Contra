@@ -91,7 +91,7 @@ Page
 <tr><th>url</th><td>{{p.resource.url}}</td></tr>
 <tr><th >status</th><td>{{p.resource.http_status}}</td></tr>
 <tr><th>ip</th><td>
-{% for i in p.ip_whois.all %}
+{% for i in p.host_info.ip_whois.all %}
 {{i.ip}}<img src="/static/images/flags/{{i.whois.country|lower}}.png"><br>
 {% endfor %}
 </td></tr>

@@ -13,7 +13,7 @@ appdir = os.path.abspath(
 
 def main(url, output, option):
 	#appdir = os.path.abspath(os.path.dirname(__file__))
-	savedir = appdir + "/static/artifacts/" +  output
+	savedir = appdir + "/static/artifacts/ghost/" +  output
 	if not os.path.exists(savedir):
 		os.makedirs(savedir)
 
@@ -34,6 +34,9 @@ def main(url, output, option):
 		log_level=logging.INFO,
 		defaults=defaults
 	)
+	logger.info(dir(ghost))
+	if hasattr(ghost, "xvfb"):
+		logger.info(ghost.xvfb)
 
 	dump = None
 	with ghost.start() as session:
@@ -61,18 +64,27 @@ def main(url, output, option):
 		body = None
 		if option["body"]:
 			body = str(option["body"])
-		page, resources = session.open(
-			url,
-			method = http_method,
-			headers = headers,
-			body = body
-		)
+
+		page = None
+		resources = None
+		error = None
+		try:
+			page, resources = session.open(
+				url,
+				method = http_method,
+				headers = headers,
+				body = body
+			)
+		except Exception as e:
+			error = str(e)
 		result = {
-			"status":None,
+			"error":None,
 			"page":{},
 			"resources":[],
 			"capture":None,
 		}
+		if error:
+			result["error"] = error
 		if page:
 			result["page"] = {
 				"url":page.url,

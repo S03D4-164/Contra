@@ -49,7 +49,7 @@ def _ghost_api(url, output, option):
 	p.start()
 	p.join(300)
 	#appdir = os.path.abspath(os.path.dirname(__file__))
-	pkl = appdir + "/static/artifacts/" + output + "/ghost.pkl"
+	pkl = appdir + "/static/artifacts/ghost/" + output + "/ghost.pkl"
 	if  os.path.isfile(pkl):
 		return pkl
 	return None

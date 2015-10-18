@@ -42,6 +42,7 @@ def view(request, id):
 		'j': job,
 		'p': page,
 		'resource': resource,
+		'redirect': request.path,
 	})
 	return render_to_response("job.html", c) 
 

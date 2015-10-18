@@ -6,6 +6,7 @@ from django.contrib import messages
 from ..forms import *
 from ..models import *
 from ..tasks.thug_task import content_analysis
+from ..tasks.wappalyze import wappalyze
 from .auth import check_permission
 
 import ast, base64, json
@@ -25,6 +26,7 @@ def create_b64thumb(image):
 	thumb = None
         im = Image.open(image)
        	im.thumbnail((480,270))
+       	#im = ImageOps.fit(im, (480,270), centering=(0.0, 0.0))
 	tmp = StringIO()
         im.save(tmp, format="PNG")
 	thumb = base64.b64encode(tmp.getvalue())
@@ -33,12 +35,17 @@ def create_b64thumb(image):
 def view(request, id):
 	page= Resource.objects.get(pk=id)
 
+	"""
 	jp = Job_Resource.objects.get(resource=page)
         if not check_permission(request, jp.job.query.id):
                 messages.error(request, "Cannot access Page " + str(page.id))
                 return redirect("/")
-
+	"""
+	user = request.user
 	jr = Job_Resource.objects.filter(resource=page)
+	if not jr.filter(job__query__registered_by=user):
+                messages.error(request, "Cannot access Page " + str(page.id))
+                return redirect("/")
 
 	analysis = None
 	try:
@@ -59,6 +66,9 @@ def view(request, id):
 				)
 				if analysis:
 					page.analysis = analysis
+		elif "wappalyze" in request.POST:
+			result = wappalyze(page.id)
+			print result
 	thumbnail = None
 	if page.capture:
 		thumbnail = create_b64thumb(appdir + "/" + page.capture.path)
