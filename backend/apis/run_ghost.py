@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from ..celery import app
+
 import os, pickle, gzip, json
 from .ghost import Ghost
 
@@ -11,6 +13,7 @@ appdir = os.path.abspath(
 	os.path.join(os.path.dirname(__file__), "..")
 )
 
+@app.task
 def main(url, output, option):
 	#appdir = os.path.abspath(os.path.dirname(__file__))
 	savedir = appdir + "/static/artifacts/ghost/" +  output

@@ -8,4 +8,7 @@ urlpatterns = [
     url(r'local/thug/$', local_thug.thug_api),
     url(r'docker/ghost/$', docker_ghost.ghost_api),
     url(r'docker/thug/$', docker_thug.thug_api),
+    url(r'dns_resolve/$', dns_resolve.dns_resolve),
+    url(r'whois_domain/$', whois_domain.whois_domain),
+    url(r'whois_ip/$', whois_ip.whois_ip),
 ]

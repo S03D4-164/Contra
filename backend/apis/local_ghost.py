@@ -44,11 +44,8 @@ def ghost_api(request):
 
 def _ghost_api(url, output, option):
 	logger.debug(option)
-	p = Process(target=run_ghost, args=(url, output, option))
-	logger.debug(p)
-	p.start()
-	p.join(300)
-	#appdir = os.path.abspath(os.path.dirname(__file__))
+	result = run_ghost.delay(url, output, option)
+	result.get()
 	pkl = appdir + "/static/artifacts/ghost/" + output + "/ghost.pkl"
 	if  os.path.isfile(pkl):
 		return pkl
