@@ -81,7 +81,9 @@ Job
 <th class="col-md-1">Query</th>
 <th class="col-md-2">timestamp</th>
 <th class="col-md-2">status</th>
-<th>ip</th>
+<th>DNS</th>
+<th>whois(domain)</th>
+<th>whois(ip)</th>
 </tr>
 </thead>
 <tbody>
@@ -92,13 +94,15 @@ Job
 <td>{{j.timestamp|date:"c"}}</td>
 <td>{{j.job.status}}</td>
 <td>
-<table class="table table-condensed">
-{% for i in j.host_info.ip_whois.all %}<tr>
-<td>{{i.ip}}</td>
-<td><img src="/static/images/flags/{{i.whois.country|lower}}.png">
-<td>{{i.whois.description}}</td>
-</tr>{% endfor %}
-</table>
+<a href="/dns/{{j.host_info.host_dns.dns.id}}">{{j.host_info.hostname}}</a><br>
+<a href="/dns/{{j.host_info.domain_dns.dns.id}}">{{j.host_info.hostname.domain}}</a><br>
+</td>
+<td>
+<a href="/whois_domain/{{j.host_info.domain_whois.whois.id}}">{{j.host_info.domain_whois.domain}}</a></td>
+<td>
+{% for i in j.host_info.ip_whois.all %}
+<a href="/whois_ip/{{i.whois.id}}">{{i.ip}}</a><br>
+{% endfor %}
 </td>
 </tr>
 {% endfor %}
