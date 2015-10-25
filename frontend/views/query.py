@@ -9,9 +9,6 @@ from ..tasks.ghost_task import *
 from .progress import main as progress
 from .auth import check_permission
 
-import requests, pickle, gzip, hashlib, chardet, base64
-from sh import git
-from StringIO import StringIO
 
 def _query_job(query, form):
         ua = form.cleaned_data["user_agent"]
@@ -78,8 +75,6 @@ def view(request, id):
 		'job': job,
 		'page': page,
 		'cform': cform,
-		#'job': Job.objects.filter(query=query),
-		#'page': Resource.objects.filter(job__query=query, is_page=True),
 	})
 	return render_to_response("query.html", c) 
 

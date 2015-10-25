@@ -3,7 +3,6 @@ from django.template import RequestContext
 
 from ..forms import *
 from ..models import *
-#from ..tasks.tasks import *
 import re, logging
 
 def view(request):

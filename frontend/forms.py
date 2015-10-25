@@ -14,6 +14,9 @@ METHOD_CHOICES = (
     ('HEAD', 'HEAD'),
 )
 
+class InputForm(forms.Form):
+	input = forms.CharField()
+
 class QueryForm(forms.Form):
 	input = forms.CharField(widget=forms.Textarea(attrs={'rows':3}))
 	user_agent = forms.ModelChoiceField(queryset=UserAgent.objects.all().order_by("name"), required=False)

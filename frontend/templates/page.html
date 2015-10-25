@@ -77,7 +77,8 @@ Job
 <table id="jr_table" class="table table-condensed">
 <thead>
 <tr>
-<th class="col-md-1">Job/Query</th>
+<th class="col-md-1">Job</th>
+<th class="col-md-1">Query</th>
 <th class="col-md-2">timestamp</th>
 <th class="col-md-2">status</th>
 <th>ip</th>
@@ -86,17 +87,15 @@ Job
 <tbody>
 {% for j in job %}
 <tr>
-<td>
-<a class="btn btn-default" href="/job/{{j.job.id}}">{{j.job.id}}</a>
-<a class="btn btn-default" href="/query/{{j.job.query.id}}">{{j.job.query.id}}</a>
-</td>
+<td><a class="btn btn-primary" href="/job/{{j.job.id}}">{{j.job.id}}</a></td>
+<td><a class="btn btn-default" href="/query/{{j.job.query.id}}">{{j.job.query.id}}</a></td>
 <td>{{j.timestamp|date:"c"}}</td>
 <td>{{j.job.status}}</td>
 <td>
-<table>
+<table class="table table-condensed">
 {% for i in j.host_info.ip_whois.all %}<tr>
-<td><img src="/static/images/flags/{{i.whois.country|lower}}.png">
 <td>{{i.ip}}</td>
+<td><img src="/static/images/flags/{{i.whois.country|lower}}.png">
 <td>{{i.whois.description}}</td>
 </tr>{% endfor %}
 </table>
@@ -160,7 +159,7 @@ Content
 <div class="panel-body">
 <form method="post" action="/page/{{p.id}}">{% csrf_token %}
 <input type="submit" value="analysis" name="analysis">
-<input type="submit" value="wappalyze" name="wappalyze">
+<!--<input type="submit" value="wappalyze" name="wappalyze">-->
 </form>
 <table class="table">
 <tr><th  class="col-md-1">id</th><td>{{p.content.id}}</td></tr>

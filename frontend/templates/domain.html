@@ -1,9 +1,19 @@
 {% extends "base.html" %}
 
-
 {% block title %}
 <title>Domain</title>
 {% endblock %}
+
+{% block script %}
+<script>
+$(document).ready(
+        function(){
+                $('#history_table').DataTable({"order":[0, 'desc']});
+        }
+);
+</script>
+{% endblock %}
+
 
 {% block container %}
 
@@ -15,7 +25,7 @@
 <div class="panel-body">
 <div class="row">
 <div class="col-md-6">
-<table class="table">
+<table class="table table-condensed">
 <tr><th>id</th><td><a class="btn btn-md btn-primary" href="/domain/{{domain.id}}">{{domain.id}}</a></td></tr>
 <tr><th>created_at</th><td>{{domain.created_at|date:"c"}}</td></tr>
 <tr><th>domain</th><td>{{domain.name}}</td></tr>
@@ -24,11 +34,44 @@
 </div>
 <div class="col-md-6">
 <form method="post" >{% csrf_token %}
-<table class="table">
+<table class="table table-condensed">
 {{dform.as_table}}
 </table>
 <button type="submit" class="btn btn-md btn-info" value="update" name="update">Update</button>
 </form>
+</div>
+</div><!--.panel-body-->
+</div><!--.panel-->
+
+</div><!--query-->
+
+<div class="panel panel-primary">
+<div class="panel-heading">Whois History</div>
+<div class="panel-body">
+<div class="col-md-12">
+<table id="history_table" class="table table-condensed table-stripe table-hover">
+<thead><tr>
+<th class="col-md-1">id</th>
+<th class="col-md-3">first_seen</th>
+<th class="col-md-3">last_seen</th>
+<th>contact</th>
+</tr></thead>
+<tbody>
+{% for d in dwh %}
+<tr>
+<td><a class="btn btn-md btn-primary" href="/whois_domain/{{d.whois.id}}">{{d.whois.id}}</a></td>
+<td>{{d.first_seen|date:"c"}}</td>
+<td>{{d.last_seen|date:"c"}}</td>
+<td><table class="table table-condensed">
+{% for c in d.whois.contact.all %}
+<tr><th>{{c.type}}</th><td>{{c.person.email}}</td></tr>
+{% endfor %}
+</table>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
 </div>
 </div><!--.panel-body-->
 </div><!--.panel-->

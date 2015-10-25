@@ -45,11 +45,11 @@ $(document).ready(
 {% if capture %}<li><a data-toggle="pill" href="#capture">Capture({{capture|length}})</a></li>{% endif %}
 {% if url %}<li><a data-toggle="pill" href="#url">URL({{url|length}})</a></li>{% endif %}
 {% if domain %}<li><a data-toggle="pill" href="#domain">Domain({{domain|length}})</a></li>{% endif %}
-{% if dns %}<li><a data-toggle="pill" href="#dns">DNS({{dns|length}})</a></li>{% endif %}
-{% if whois_domain %}<li><a data-toggle="pill" href="#whois_domain">Whois(Domain)({{whois_domain|length}})</a></li>{% endif %}
+<li><a data-toggle="pill" href="#dns">DNS({{dns|length}})</a></li>
+<li><a data-toggle="pill" href="#whois_domain">Whois(Domain)({{whois_domain|length}})</a></li>
+<li><a data-toggle="pill" href="#whois_ip">Whois(IP)({{whois_ip|length}})</a></li>
 {% if hostname %}<li><a data-toggle="pill" href="#hostname">Hostname({{hostname|length}})</a></li>{% endif %}
-{% if host_ip %}<li><a data-toggle="pill" href="#host_ip">Host_IP({{host_ip|length}})</a></li>{% endif %}
-{% if whois_ip %}<li><a data-toggle="pill" href="#whois_ip">Whois(IP)({{whois_ip|length}})</a></li>{% endif %}
+<li><a data-toggle="pill" href="#host_ip">Host_IP({{host_ip|length}})</a></li>
 {% if analysis %}<li><a data-toggle="pill" href="#analysis">Analysis({{analysis|length}})</a></li>{% endif %}
 <li><a data-toggle="pill" href="#ua">User Agent({{ua|length}})</a></li>
 </ul>
@@ -248,10 +248,16 @@ $(document).ready(
 </div><!--.panel-->
 {% endif %}
 
-{% if whois_domain %}
 <div id="whois_domain" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>
 <div class="panel-body">
+<div>
+<form method="post">{% csrf_token %}
+{{iform}}
+<input type="submit" name="whois_domain" value="whois">
+</form>
+<hr>
+</div>
 <table id="whois_domain_table" class="table table-striped table-hover ">
 <thead><tr>
 <th class="col-md-1">id</th>
@@ -283,7 +289,6 @@ $(document).ready(
 </table>
 </div>
 </div><!--.panel-->
-{% endif %}
 
 {% if hostname %}
 <div id="hostname" class="panel panel-primary tab-pane">
@@ -311,17 +316,23 @@ $(document).ready(
 </div><!--.panel-->
 {% endif %}
 
-{% if dns %}
 <div id="dns" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>
 <div class="panel-body">
+<div>
+<form method="post">{% csrf_token %}
+{{iform}}
+<input type="submit" name="dns_resolve" value="resolve">
+</form>
+<hr>
+</div>
 <table id="dns_table" class="table table-striped table-hover ">
 <thead><tr>
 <th class="col-md-1">id</th>
 <th class="col-md-2">timestamp</th>
 <th class="col-md-2">query</th>
 <th class="col-md-2">A</th>
-<th class="col-md-7">TXT</th>
+<th class="col-md-7">SOA</th>
 </tr></thead>
 <tbody>{% for d in dns %}
 <tr>
@@ -333,20 +344,24 @@ $(document).ready(
 {{a.ip}}<br>
 {% endfor %}
 </td>
-<td>{{d.txt}}</td>
+<td>{{d.soa}}</td>
 </tr>
 {% endfor %}</tbody>
 </table>
 </div>
 </div><!--.panel-->
-{% endif %}
 
 
-
-{% if host_ip %}
 <div id="host_ip" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>
 <div class="panel-body">
+<div>
+<form method="post">{% csrf_token %}
+{{iform}}
+<input type="submit" name="host_inspect" value="inspect">
+</form>
+<hr>
+</div>
 <table id="host_ip_table" class="table table-striped table-hover ">
 <thead><tr>
 <th class="col-md-1">id</th>
@@ -371,12 +386,17 @@ $(document).ready(
 </table>
 </div>
 </div><!--.panel-->
-{% endif %}
 
-{% if whois_ip %}
 <div id="whois_ip" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>
 <div class="panel-body">
+<div>
+<form method="post">{% csrf_token %}
+{{iform}}
+<input type="submit" name="whois_ip" value="whois">
+</form>
+<hr>
+</div>
 <table id="whois_ip_table" class="table table-striped table-hover ">
 <thead><tr>
 <th class="col-md-1">id</th>
@@ -392,14 +412,16 @@ $(document).ready(
 <td>{{i.creation_date|date:"c"}}</td>
 <td>{{i.updated_date|date:"c"}}</td>
 <td>{{i.ip}}</td>
-<td>{{i.country}}<img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}"></td>
+<td>
+<img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}">
+{{i.country}}
+</td>
 <td>{{i.description}}</td>
 </tr>
 {% endfor %}</tbody>
 </table>
 </div>
 </div><!--.panel-->
-{% endif %}
 
 <div id="ua" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>

@@ -29,6 +29,6 @@ def crawl(interval):
 		q.counter -= 1
 		if q.counter <= 0:
 			q.interval = 0
-			q.save()
+		q.save()
 
 	

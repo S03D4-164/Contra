@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+<title>Whois(IP)</title>
+{% endblock %}
+
+{% block container %}
+
+<div class="row">
+
+<div id="query" class="col-md-12">
+<div class="panel panel-primary">
+<div class="panel-heading">Whois(IP)</div>
+<div class="panel-body">
+<div class="row">
+<div class="col-md-6">
+<table class="table">
+<tr><th class="col-md-3">id</th><td><a class="btn btn-md btn-primary" href="/whois_ip/{{wi.id}}">{{wi.id}}</a></td></tr>
+<tr><th>creation_date</th><td>{{wi.creation_date|date:"c"}}</td></tr>
+<tr><th>updated_date</th><td>{{wi.updated_date|date:"c"}}</td></tr>
+</table>
+</div>
+<div class="col-md-6">
+<table class="table table-condensed">
+<tr><th class="col-md-3">ip</th><td>{{wi.ip}}</td></tr>
+<tr><th>description</th><td>{{wi.description}}</td></tr>
+<tr><th>country</th><td>{{wi.country}}</td></tr>
+<tr><th>md5</th><td>{{wi.md5}}</td></tr>
+</table>
+</div>
+<div class="col-md-12">
+<table class="table">
+<tr><th class="col-md-1">result</th><td><pre class="prettyprint linenums">{{wi.result}}</pre></td></tr>
+</table>
+</div>
+</div><!--.panel-body-->
+</div><!--.panel-->
+
+</div><!--query-->
+
+</div><!--.row-->
+
+{% endblock %}

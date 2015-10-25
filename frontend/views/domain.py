@@ -5,12 +5,13 @@ from django.contrib import messages
 
 from ..forms import *
 from ..models import *
-from .auth import check_permission
+#from .auth import check_permission
 
 import requests, pickle, gzip, hashlib, chardet, base64
 
 def view(request, id):
 	domain = Domain.objects.get(pk=id)
+	dwh = Domain_Whois_History.objects.filter(domain=domain)
 
 	dform = DomainConfigForm(instance=domain)
 	if request.method == "POST":
@@ -20,11 +21,13 @@ def view(request, id):
 				w = dform.cleaned_data["whitelisted"]
 				domain.whitelisted = w
 				domain.save()
+				messages.success(request, "Updated.")
 	c = RequestContext(request, {
 		'form': QueryForm(),
 		'authform': AuthenticationForm(),
 		'redirect': request.path,
 		'domain': domain,
+		'dwh': dwh,
 		'dform': dform,
 	})
 	return render_to_response("domain.html", c) 

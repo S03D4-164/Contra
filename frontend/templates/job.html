@@ -56,7 +56,11 @@ $(document).ready(
 
 <div class="panel panel-info">
 <div class="panel-heading">Page</div>
+{% if p.resource.http_status in "403 404" %}
+<div class="panel-body" style="background-color:lightgrey;">
+{% else %}
 <div class="panel-body">
+{% endif %}
 <table id="page_table" class="table table-condensed ">
 <thead><tr>
 <th class="col-md-1">id</th>
@@ -69,7 +73,7 @@ $(document).ready(
 <th>capture</th>
 </tr></thead>
 <tbody><tr>
-<td><a class="btn btn-md btn-primary" href="/page/{{p.resource.id}}">{{p.resource.id}}</a></td>
+<td><a class="btn btn-md btn-info" href="/page/{{p.resource.id}}">{{p.resource.id}}</a></td>
 <td>{{p.resource.created_at|date:"c"}}</td>
 <td>{{p.resource.url}}</td>
 <td>
@@ -99,7 +103,7 @@ $(document).ready(
 <div class="panel-heading">
 Resource(total:{{resource|length}})</div>
 <div class="panel-body">
-<table class="table table-condensed table-striped table-hover " style="table-layout: fixed;">
+<table class="table table-condensed table-hover " style="table-layout: fixed;">
 <thead><tr>
 <th class="col-md-1">seq</th>
 <th class="col-md-1">id</th>
@@ -113,11 +117,13 @@ Resource(total:{{resource|length}})</div>
 </tr></thead>
 <tbody>
 {% for r in resource %}
-{% if r.job_resource.resource.url == p.resource.url %}
+{% if r.job_resource.resource.http_status in "403 404"%}
+<tr style="background-color:lightgrey;">
+{% elif r.job_resource.resource.url == p.resource.url %}
 <tr class="info">
 {% elif r.job_resource.resource.url.hostname == p.resource.url.hostname %}
 <tr class="warning">
-{% elif r.job_resource.resource.url.hostname != p.resource.url.hostname %}
+{% else %}
 <tr>
 {% endif %}
 <td><a class="btn btn-md btn-default">{{r.seq}}</a></td>

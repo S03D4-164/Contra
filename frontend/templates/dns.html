@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+<title>DNS</title>
+{% endblock %}
+
+{% block container %}
+
+<div class="row">
+
+<div id="query" class="col-md-12">
+<div class="panel panel-primary">
+<div class="panel-heading">DNS</div>
+<div class="panel-body">
+<div class="row">
+<div class="col-md-6">
+<table class="table">
+<tr><th class="col-md-3">id</th><td><a class="btn btn-md btn-primary" href="/dns/{{dns.id}}">{{dns.id}}</a></td></tr>
+<tr><th>timestamp</th><td>{{dns.timestamp|date:"c"}}</td></tr>
+<tr><th>query</th><td>{{dns.query}}</td></tr>
+<tr><th>md5</th><td>{{dns.md5}}</td></tr>
+<tr><th>A</th><td>{% for a in dns.a.all %}{{a}}<br>{% endfor%}</td></tr>
+<tr><th>AAAA</th><td>{% for aaaa in dns.aaaa.all %}{{aaaa}}<br>{% endfor%}</td></tr>
+</table>
+</div>
+<div class="col-md-6">
+<table class="table">
+<tr><th class="col-md-3">CNAME</th><td>{% for c in dns.cname.all %}{{c}}<br>{% endfor%}</td></tr>
+<tr><th>NS</th><td>{% for n in dns.ns.all %}{{n}}<br>{% endfor%}</td></tr>
+</table>
+</div>
+<div class="col-md-12">
+<table class="table">
+<tr><th class="col-md-1">MX</th><td><pre class="prettyprint linenums">{{dns.mx}}</pre></td></tr>
+<tr><th>SOA</th><td><pre class="prettyprint linenums">{{dns.soa}}</pre></td></tr>
+<tr><th>TXT</th><td><pre class="prettyprint linenums">{{dns.txt}}</pre></td></tr>
+</table>
+</div>
+</div><!--.panel-body-->
+</div><!--.panel-->
+
+</div><!--query-->
+
+</div><!--.row-->
+
+{% endblock %}

@@ -7,24 +7,19 @@ from ..models import *
 from ..tasks.ghost_task import *
 from .auth import check_permission 
 
-import requests, pickle, gzip, hashlib, chardet, base64
-from sh import git
-from StringIO import StringIO
 
 def view(request, id):
 	job = Job.objects.get(pk=id)
 
 	if not check_permission(request, job.query.id):
-                messages.error(request, "Cannot access Job " + str(job.id))
+                messages.warning(request, "Cannot access Job " + str(job.id))
                 return redirect("/")
 
 	jrs = Job_Resource_Seq.objects.filter(job_resource__job=job)
 	page = None
 	try:
-		#page = Resource.objects.get(job=job, is_page=True)
 		p = jrs.get(job_resource__resource__is_page=True)
 		page = p.job_resource
-		#page = p.resource
 	except:
 		pass
 	resource = jrs.filter(job_resource__resource__is_page=False).order_by("seq")
@@ -32,9 +27,18 @@ def view(request, id):
 		if "run" in request.POST:
 			j = Job.objects.create(
 				query = job.query,
-				status = "Created",
+				status = "Job Created",
+				user_agent = job.ua,
+				referer = job.referer,
+				additional_headers = job.additional_headers,
+				method = job.method,
+				post_data = job.post_data,
+				timeout = job.timeout,
+				proxy = job.proxy
 			)
-			execute_job(j.id)
+			execute_job.delay(j.id)
+			rc = progress(request, [j.id])
+			return render_to_response("progress.html", rc)
 
 	c = RequestContext(request, {
 		'form': QueryForm(),

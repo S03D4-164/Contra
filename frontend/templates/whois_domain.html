@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+<title>Whois(Domain)</title>
+{% endblock %}
+
+{% block container %}
+
+<div class="row">
+
+<div id="query" class="col-md-12">
+<div class="panel panel-primary">
+<div class="panel-heading">Whois(Domain)</div>
+<div class="panel-body">
+<div class="row">
+<div class="col-md-5">
+<table class="table">
+<tr><th class="col-md-3">id</th><td><a class="btn btn-md btn-primary" href="/whois_domain/{{wd.id}}">{{wd.id}}</a></td></tr>
+<tr><th>creation_date</th><td>{{wd.creation_date|date:"c"}}</td></tr>
+<tr><th>updated_date</th><td>{{wd.updated_date|date:"c"}}</td></tr>
+<tr><th>domain</th><td><a href="/domain/{{wd.domain.id}}">{{wd.domain}}</a></td></tr>
+</table>
+</div>
+<div class="col-md-7">
+{% for c in wd.contact.all %}
+<table class="table table-condensed">
+<tr><th>{{c.type}}</td></th>
+<tr><th>email</th><td>{{c.person.email}}</td></tr>
+<tr><th>name</th><td>{{c.person.name}}</td></tr>
+<tr><th>organization</th><td>{{c.person.organization}}</td></tr>
+<tr><th>country</th><td>{{c.person.country}}</td></tr>
+</table>
+{% endfor%}
+</div>
+<div class="col-md-12">
+<table class="table">
+<tr><th class="col-md-1">result</th><td><pre class="prettyprint linenums">{{wd.result}}</pre></td></tr>
+</table>
+</div>
+</div><!--.panel-body-->
+</div><!--.panel-->
+
+</div><!--query-->
+
+</div><!--.row-->
+
+{% endblock %}

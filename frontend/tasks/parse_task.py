@@ -1,6 +1,4 @@
 from ..models import *
-#from .domain_whois import *
-#from .iplookup import *
 
 import re, hashlib, tldextract, datetime
 

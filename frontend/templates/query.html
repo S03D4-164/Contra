@@ -144,8 +144,8 @@ Are you sure?
 </thead>
 <tbody>
 {% for p in page %}
-{% if p.resource.http_status == "404" or p.resource.http_status == "403" %}
-<tr style="background-color:grey">
+{% if p.resource.http_status in "403 404" %}
+<tr style="background-color:lightgrey">
 {% else %}
 <tr>
 {% endif %}

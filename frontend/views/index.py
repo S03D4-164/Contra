@@ -3,12 +3,16 @@ from django.template import RequestContext
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
+from django.shortcuts import redirect
 
 from .auth import log_in
 from ..forms import *
 from ..models import *
 from ..tasks.ghost_task import execute_job
-from ..tasks.parse_task import parse_url
+from ..tasks.whois_domain import whois_domain
+from ..tasks.whois_ip import whois_ip
+from ..tasks.dns_resolve import dns_resolve
+from ..tasks.host_inspect import host_inspect
 from progress import main as progress
 
 import re, logging
@@ -86,14 +90,40 @@ def view(request):
 					name = uaform.cleaned_data["name"]
 					strings = uaform.cleaned_data["strings"]
 					ua, created = UserAgent.objects.get_or_create(
-						name = name,
+						name = name.strip(),
 					)
 					if ua and created:
-						ua.strings = strings
+						ua.strings = strings.strip()
 						ua.save()
 						messages.success(request, 'User Agent Created: ' + str(ua.name))
 					elif ua and not created:
 						messages.success(request, 'User Agent Already Exists: ' + str(ua.name))
+		elif "dns_resolve" in request.POST:
+			iform = InputForm(request.POST)
+			if iform.is_valid():
+				input = iform.cleaned_data["input"]
+				d = dns_resolve(input.strip())
+				if d:
+					return redirect("/dns/" + str(d.id))
+		elif "whois_domain" in request.POST:
+			iform = InputForm(request.POST)
+			if iform.is_valid():
+				input = iform.cleaned_data["input"]
+				dwh = whois_domain(input.strip())
+				if dwh:
+					return redirect("/whois_domain/" + str(dwh.whois.id))
+		elif "whois_ip" in request.POST:
+			iform = InputForm(request.POST)
+			if iform.is_valid():
+				input = iform.cleaned_data["input"]
+				iwh = whois_ip(input.strip())
+				if iwh:
+					return redirect("/whois_ip/" + str(iwh.whois.id))
+		elif "host_inspect" in request.POST:
+			iform = InputForm(request.POST)
+			if iform.is_valid():
+				input = iform.cleaned_data["input"]
+				hi = host_inspect(input.strip())
 
 	query = Query.objects.filter(restriction=2)
 	if user.is_authenticated():
@@ -118,6 +148,7 @@ def view(request):
 		#'hostname': Hostname.objects.all(),
 		'ua': UserAgent.objects.all(),
 		'uaform': UserAgentForm(),
+		'iform': InputForm(),
 		'dns':DNSRecord.objects.all(),
 		'whois_domain':Whois_Domain.objects.all(),
 		'whois_ip':Whois_IP.objects.all(),

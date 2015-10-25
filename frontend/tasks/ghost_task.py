@@ -9,9 +9,9 @@ from .parse_task import parse_url
 from .repository import *
 from .whois_domain import whois_domain
 from .whois_ip import whois_ip
-from .iplookup import iplookup
 from .dns_resolve import dns_resolve
 from .wappalyze import wappalyze
+from .host_inspect import host_inspect
 
 import requests, pickle, hashlib, chardet, base64, re, magic, json, datetime
 from PIL import Image
@@ -59,7 +59,7 @@ def execute_job(jid, retry=0):
 	job.status = "Parsing Input"
 	job.save()
 	u = parse_url(job.query.input)
-	logger.debug(u)
+	#logger.debug(u)
 
 	headers = create_headers(jid)
 
@@ -168,57 +168,7 @@ def get_savedir(uid, is_page=False):
 	return d
 
 
-def set_host_info(jrid):
-	jr = Job_Resource.objects.get(pk=jrid)
-	hostname = jr.resource.url.hostname
-	domain = hostname.domain
-
-	samehosts = Job_Resource.objects.filter(job__id=jr.job.id,host_info__hostname=hostname).order_by("-id")
-	if samehosts:
-		logger.debug("host info already created in same job.: " + str(hostname))
-		jr.host_info = samehosts[0].host_info
-		jr.save()
-		return
-
-	host_ip = iplookup(hostname.id)
-
-	host_dns = None
-	hdns = dns_resolve(str(hostname.name))
-	if hdns:
-		host_dns, created = Host_DNS.objects.get_or_create(
-			hostname = hostname,
-			dns = hdns,
-		)
-		if not created:
-			host_dns.save()
-
-	domain_dns = None
-	ddns = dns_resolve(str(domain.name))
-	if ddns:
-		domain_dns, created = Domain_DNS.objects.get_or_create(
-			domain = domain,
-			dns = ddns,
-		)
-		if not created:
-			domain_dns.save()
-
-	domain_whois = whois_domain(domain.id)
-	host_info, created = Host_Info.objects.get_or_create(
-		hostname = hostname,
-		host_ip = host_ip,
-		host_dns = host_dns,
-		domain_dns = domain_dns,
-		domain_whois = domain_whois,
-	)
-	jr.host_info = host_info
-	jr.save()
-	for i in host_ip.ip.all():
-		ip_whois = whois_ip(i.id)
-		if ip_whois:
-			host_info.ip_whois.add(ip_whois)	
-	host_info.save()
-	
-
+@app.task
 def save_resource(data, jid, is_page=False, capture=None):
 	job = Job.objects.get(pk=jid)
 
@@ -332,13 +282,22 @@ def save_resource(data, jid, is_page=False, capture=None):
 				r.save()
 			wappalyze(rid)
 
-	if not jr.host_info:
-		if jr.resource.url.hostname.domain.whitelisted:
-			logger.info("whitelisted domain: " + str(jr.resource.query.hostname.domain.name))
-		else:
-			set_host_info(jr.id)
-		#set_domain_whois(jr.id)
-		#set_ip_whois(jr.id)
+	if jr:
+		if not jr.host_info:
+			if jr.resource.url.hostname.domain.whitelisted:
+				logger.info("whitelisted domain: " + str(jr.resource.url.hostname.domain.name))
+			else:
+				jrs = Job_Resource.objects.filter(host_info__hostname=jr.resource.url.hostname).order_by("-pk")
+				host_info = None
+				if jrs:
+					logger.info("host info already created in same job: " + str(jr.resource.url.hostname.name))
+					host_info = jrs[0].host_info
+				else:
+				#set_host_info(jr.id)
+					host_info = host_inspect(jr.resource.url.hostname.name)
+				if host_info:
+					jr.host_info = host_info
+					jr.save()
 
 	return rid
 
@@ -418,7 +377,9 @@ def parse_data(data, jid):
 		count = count + 1
 		job.status = "Creating Resources: " + str(count) + "/" + str(len(resources))
 		job.save()
+		u = parse_url(resource["url"])
 		r = save_resource(resource, jid, is_page=False)
+
 	if count == 0:
 		job.status = "Completed: No resources"
 	else:

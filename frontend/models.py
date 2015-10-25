@@ -11,7 +11,6 @@ class IPAddress(models.Model):
 
 class Whois_IP(models.Model):
 	ip = models.ForeignKey(IPAddress)
-	#query = models.TextField(max_length=200)
 	result = models.TextField(blank=True, null=True)
 	md5 = models.CharField(max_length=200, blank=True, null=True)
 	country = models.TextField(max_length=20, blank=True, null=True)
@@ -48,7 +47,6 @@ class Contact(models.Model):
 
 class Whois_Domain(models.Model):
 	domain = models.ForeignKey(Domain)
-	#query = models.TextField(max_length=200)
 	result = models.TextField(blank=True, null=True)
 	md5 = models.CharField(max_length=200, blank=True, null=True)
 	creation_date = models.DateTimeField(blank=True, null=True)
@@ -72,19 +70,19 @@ class Hostname(models.Model):
 class DNSRecord(models.Model):
 	query = models.CharField(max_length=20000)
 	md5 = models.CharField(max_length=200, blank=True, null=True)
+	serialized = models.TextField(blank=True, null=True)
 	a = models.ManyToManyField(IPAddress, related_name="A")
 	aaaa = models.ManyToManyField(IPAddress, related_name="AAAA")
 	cname = models.ManyToManyField(Hostname, related_name="CNAME")
 	ns = models.ManyToManyField(Hostname, related_name="NS")
-	mx = models.TextField()
-	soa = models.TextField()
-	txt = models.TextField()
+	mx = models.TextField(blank=True, null=True)
+	soa = models.TextField(blank=True, null=True)
+	txt = models.TextField(blank=True, null=True)
 	timestamp = models.DateTimeField(auto_now_add=True)
 
 class Domain_DNS(models.Model):
 	first_seen = models.DateTimeField(auto_now_add=True)
 	last_seen = models.DateTimeField(auto_now=True)
-	#timestamp = models.DateTimeField(auto_now_add=True)
 	domain = models.ForeignKey(Domain)
 	dns = models.ForeignKey(DNSRecord)
 
@@ -93,8 +91,6 @@ class Host_IP(models.Model):
 	last_seen = models.DateTimeField(auto_now=True)
 	hostname = models.ForeignKey(Hostname)
 	ip = models.ManyToManyField(IPAddress)
-	#ip_whois = models.ManyToManyField(Whois_IP)
-	#dns = models.ForeignKey(DNSRecord)
 	ip_new = models.ManyToManyField(IPAddress, related_name="ip_new")
 	ip_out = models.ManyToManyField(IPAddress, related_name="ip_out")
 
@@ -102,7 +98,6 @@ class Host_IP(models.Model):
 class Host_DNS(models.Model):
 	first_seen = models.DateTimeField(auto_now_add=True)
 	last_seen = models.DateTimeField(auto_now=True)
-	#timestamp = models.DateTimeField(auto_now_add=True)
 	hostname = models.ForeignKey(Hostname)
 	dns = models.ForeignKey(DNSRecord)
 
