@@ -43,7 +43,6 @@ def view(request, id):
 		return redirect("/")
 
 	job = Job.objects.filter(query=query)
-	page = Job_Resource.objects.filter(job__in=job, resource__is_page=True).distinct()
 	cform = QueryConfigForm(instance=query)
 	if request.method == "POST":
 		if "run" in request.POST:
@@ -73,7 +72,6 @@ def view(request, id):
 		'qrform': QueryRunForm(),
 		'q': query,
 		'job': job,
-		'page': page,
 		'cform': cform,
 	})
 	return render_to_response("query.html", c) 

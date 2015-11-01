@@ -78,15 +78,15 @@ $(document).ready(
 <td>{{p.resource.url}}</td>
 <td>
 {% for i in p.host_info.ip_whois.all %}
-<img src="/static/images/flags/{{i.whois.country|lower}}.png" title="{{i.whois.country}}">{{i.ip}}<br>
+<img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}">{{i.ip}}<br>
 {% endfor %}
 </td>
 <td>{{p.resource.http_status}}</td>
 <td>{{p.resource.content.type}}</td>
 <td>{{p.resource.content.length}}</td>
 <td>
-<a class="colorbox" href="/{{p.resource.capture.path}}">
-<img src="data:image/png;base64,{{p.resource.capture.b64thumb}}"></a></td>
+<a class="colorbox" href="/{{j.capture.path}}">
+<img src="data:image/png;base64,{{j.capture.b64thumb}}"></a></td>
 </tr></tbody>
 </table>
 </div><!--.panel-body-->
@@ -113,38 +113,30 @@ Resource(total:{{resource|length}})</div>
 <th class="col-md-1">status</th>
 <th class="col-md-1">type</th>
 <th class="col-md-1">length</th>
-<th class="col-md-1">content</th>
 </tr></thead>
 <tbody>
 {% for r in resource %}
-{% if r.job_resource.resource.http_status in "403 404"%}
+{% if r.resource.http_status in "403 404"%}
 <tr style="background-color:lightgrey;">
-{% elif r.job_resource.resource.url == p.resource.url %}
+{% elif r.resourceurl == p.resource.url %}
 <tr class="info">
-{% elif r.job_resource.resource.url.hostname == p.resource.url.hostname %}
+{% elif r.resource.url.hostname == p.resource.url.hostname %}
 <tr class="warning">
 {% else %}
 <tr>
 {% endif %}
 <td><a class="btn btn-md btn-default">{{r.seq}}</a></td>
-<td><a class="btn btn-md btn-primary" href="/resource/{{r.job_resource.resource.id}}">{{r.job_resource.resource.id}}</a></td>
-<td>{{r.job_resource.timestamp|date:"c"}}</td>
-<td>{{r.job_resource.resource.url}}</td>
+<td><a class="btn btn-md btn-primary" href="/resource/{{r.resource.id}}">{{r.resource.id}}</a></td>
+<td>{{r.resource.created_at|date:"c"}}</td>
+<td>{{r.resource.url}}</td>
 <td>
-{% for i in r.job_resource.host_info.ip_whois.all %}
-<img src="/static/images/flags/{{i.whois.country|lower}}.png" title="{{i.whois.country}}">{{i.ip}}<br>
+{% for i in r.host_info.ip_whois.all %}
+<img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}">{{i.ip}}<br>
 {% endfor %}
 </td>
-<td>{{r.job_resource.resource.http_status}}</td>
-<td>{{r.job_resource.resource.content.type}}</td>
-<td>{{r.job_resource.resource.content.length}}</td>
-<td>
-{% if r.job_resource.resource in j.new.all %}new
-{% elif r.job_resource.resource in j.changed.all %}changed
-{% elif r.job_resource.resource in j.not_changed.all %}not changed
-
-{% endif %}
-</td>
+<td>{{r.resource.http_status}}</td>
+<td>{{r.resource.content.type}}</td>
+<td>{{r.resource.content.length}}</td>
 </tr>
 {% endfor %}
 </tbody>

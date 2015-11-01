@@ -1,5 +1,5 @@
 from ..models import *
-from .ghost_task import execute_job
+from .job_task import execute_job
 
 from ..logger import getlogger
 import logging

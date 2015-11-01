@@ -1,9 +1,13 @@
+from ..celery import app
+
 from .parse_task import parse_hostname
 from .dns_resolve import dns_resolve
 from .whois_domain import whois_domain
 from .whois_ip import whois_ip
 
 from ..models import *
+
+import re
 
 from ..logger import getlogger
 import logging
@@ -31,10 +35,12 @@ def create_hostip(hostname, ips):
                         )
                         for i in ips:
                                 h.ip.add(i)
+			"""
                         for i in ip_new:
                                 h.ip_new.add(i)
                         for i in ip_out:
                                 h.ip_out.add(i)
+			"""
                         h.save()
                 else:
                         logger.debug("ip not changed: " + hostname.name)
@@ -47,58 +53,52 @@ def create_hostip(hostname, ips):
                 )
                 for i in ips:
                         h.ip.add(i)
-                        h.ip_new.add(i)
+                        #h.ip_new.add(i)
                 h.save()
 
 	return h
 
+@app.task
 def host_inspect(host):
+	logger.debug(host)
 	hostname = parse_hostname(host)
 
 	host_dr = dns_resolve(hostname.name)
-	last_hd = Host_DNS.objects.filter(hostname=hostname).order_by("-pk")
-	host_dns = None
-	if last_hd:
-		if host_dr == last_hd[0].dns:
-			host_dns = last_hd[0]
-			host_dns.save()
-	if not host_dns:
-		host_dns = Host_DNS.objects.create(
-			hostname = hostname,
-			dns = host_dr,
-		)
-
         ips = []
-	ipv4 = host_dns.dns.a.all()
-	for ip in ipv4:
-                if not ip in ips:
-                	ips.append(ip)
-	ipv6 = host_dns.dns.aaaa.all()
-	for ip in ipv6:
-                if not ip in ips:
-                	ips.append(ip)
+        if re.search("\[?([0-9a-f]*:[0-9a-f]*:[0-9a-f]+)\]?:?([0-9]{,5})?", hostname.name):
+		ip, created = IPAddress.objects.get_or_create(
+			ip = hostname.name
+		)
+		ips.append(ip)
+        elif re.search("^([0-9]{1,3}\.){3}[0-9]{1,3}$", hostname.name):
+		ip, created = IPAddress.objects.get_or_create(
+			ip = hostname.name
+		)
+		ips.append(ip)
+	elif host_dr:
+		ipv4 = host_dr.a.all()
+		for ip in ipv4:
+	                if not ip in ips:
+               			ips.append(ip)
+		ipv6 = host_dr.aaaa.all()
+		for ip in ipv6:
+               		if not ip in ips:
+	                	ips.append(ip)
+
 	host_ip = create_hostip(hostname, ips)
 
 	domain = hostname.domain
-	domain_dr = dns_resolve(domain.name)
-	last_dd = Domain_DNS.objects.filter(domain=domain).order_by("-pk")
-	domain_dns = None
-	if last_dd:
-		if domain_dr == last_dd[0].dns:
-			domain_dns = last_dd[0]
-			domain_dns.save()
-	if not domain_dns:
-		domain_dns = Domain_DNS.objects.create(
-			domain = domain,
-			dns = domain_dr,
-		)
-	domain_whois = whois_domain(domain.name)
+	domain_dr = None
+	domain_whois = None
+	if domain:
+		domain_dr = dns_resolve(domain.name)
+		domain_whois = whois_domain(domain.name)
 	
         host_info, created = Host_Info.objects.get_or_create(
                 hostname = hostname,
-                host_dns = host_dns,
-                host_ip = host_ip,
-                domain_dns = domain_dns,
+                host_dns = host_dr,
+                #host_ip = host_ip,
+                domain_dns = domain_dr,
                 domain_whois = domain_whois,
         )
 	if host_ip:

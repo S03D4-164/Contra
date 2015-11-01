@@ -57,13 +57,13 @@ $(document).ready(
 <th>contact</th>
 </tr></thead>
 <tbody>
-{% for d in dwh %}
+{% for d in dw %}
 <tr>
-<td><a class="btn btn-md btn-primary" href="/whois_domain/{{d.whois.id}}">{{d.whois.id}}</a></td>
+<td><a class="btn btn-md btn-primary" href="/whois_domain/{{d.id}}">{{d.id}}</a></td>
 <td>{{d.first_seen|date:"c"}}</td>
 <td>{{d.last_seen|date:"c"}}</td>
 <td><table class="table table-condensed">
-{% for c in d.whois.contact.all %}
+{% for c in d.contact.all %}
 <tr><th>{{c.type}}</th><td>{{c.person.email}}</td></tr>
 {% endfor %}
 </table>

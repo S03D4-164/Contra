@@ -17,7 +17,6 @@ def view(request):
 	
 def main(request, jobs):
 	job = Job.objects.filter(pk__in=jobs).order_by("pk")
-	jr = Job_Resource.objects.filter(job__in=job, resource__is_page=True).distinct().order_by("job__id")
 
 	status = None
 	for j in job:
@@ -31,7 +30,6 @@ def main(request, jobs):
 	rc = RequestContext(request, {
 		'form': QueryForm(),
 		'job': job,
-		'page': jr,
 		'status': status,
 	})
 	return rc 

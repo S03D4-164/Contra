@@ -11,7 +11,7 @@ import requests, pickle, gzip, hashlib, chardet, base64
 
 def view(request, id):
 	domain = Domain.objects.get(pk=id)
-	dwh = Domain_Whois_History.objects.filter(domain=domain)
+	dw = Domain_Whois.objects.filter(domain=domain)
 
 	dform = DomainConfigForm(instance=domain)
 	if request.method == "POST":
@@ -27,7 +27,7 @@ def view(request, id):
 		'authform': AuthenticationForm(),
 		'redirect': request.path,
 		'domain': domain,
-		'dwh': dwh,
+		'dw': dw,
 		'dform': dform,
 	})
 	return render_to_response("domain.html", c) 

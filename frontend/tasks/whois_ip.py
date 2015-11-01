@@ -1,3 +1,4 @@
+from django.db import transaction
 from ..celery import app
 
 from django.utils import timezone
@@ -5,6 +6,7 @@ from django.utils import timezone
 from ipwhois import IPWhois
 import requests, hashlib, datetime
 
+from ..api import ContraAPI
 from ..models import *
 
 from ..logger import getlogger
@@ -13,48 +15,90 @@ logger = getlogger()
 
 @app.task
 def whois_ip(input):
-        api = "http://localhost:8000/api/whois_ip"
+	api = ContraAPI()
         payload = {'ip':input}
-        res = requests.get(api, params=payload, verify=False)
-        results = res.json()
-        if not results:
+        res = requests.get(api.whois_ip, params=payload, verify=False)
+        result = res.json()
+        if not result:
                 return None
 
-	if results:
-		ip, created = IPAddress.objects.get_or_create(
-                                ip = results["query"]
-                )
-		nets = sorted(results["nets"], key=lambda n:n["cidr"], reverse=True)[0]
-		print nets
-		wi, created = Whois_IP.objects.get_or_create(
-			ip = ip,
-			creation_date = nets["created"],
-			updated_date = nets["updated"],
-		)
-	        if created:
-        	        logger.debug("ip whois created: " + ip.ip)
-	        else:
-        	        logger.debug("ip whois already exists: " + ip.ip)
+	ip = None
+	try:
+		with transaction.atomic():
+			ip, created = IPAddress.objects.get_or_create(
+        	                        #ip = result["query"]
+        	                        ip = input
+                	)
+	except Exception as e:
+		logger.error(str(e))
+		try:
+			ip = IPAddress.objects.get(
+        			#ip = result["query"]
+        			ip = input
+			)
+		except Exception as e:
+			logger.error(str(e))
+			return None
 
-		if not wi.result:
-			wi.result = results["raw"].encode("utf-8")
-		if not wi.md5:
-			wi.md5 = hashlib.md5(results["raw"].encode("utf-8")).hexdigest()
-		if not wi.country:
-			wi.country = nets["country"]
-		if not wi.description:
-			wi.description = nets["description"]
-		wi.save()
-
-		iwh, created = IP_Whois_History.objects.get_or_create(
-			ip = ip,
-			whois = wi,
-		)
-		if not iwh.reverse:
+	nets = None
+	if "nets" in result:
+		if result["nets"]:
+			nets = sorted(result["nets"], key=lambda n:n["cidr"], reverse=True)[0]
+			logger.debug(nets)
+	elif "error" in result:
+		if result["error"]:
 			try:
-				iwh.reverse = results["reverse"][0]
+				with transaction.atomic():
+					w, created = IP_Whois.objects.get_or_create(
+						ip = ip,
+						result = result["error"],
+					)
+					return w
 			except Exception as e:
 				logger.error(str(e))
-		iwh.save()
+				try:
+					w = IP_Whois.objects.get(
+						ip = ip,
+						result = result["error"],
+					)
+					return w
+				except Exception as e:
+					logger.error(str(e))
+					return None
+		
+	w = None
+	try:
+		with transaction.atomic():
+			w, created = IP_Whois.objects.get_or_create(
+				ip = ip,
+				creation_date = nets["created"],
+				updated_date = nets["updated"],
+			)
+		        if not created:
+        	        	logger.debug("ip whois already exists: " + ip.ip)
+	except Exception as e:
+		logger.error(str(e))
+		try:
+			w = IP_Whois.objects.get(
+				ip = ip,
+				creation_date = nets["created"],
+				updated_date = nets["updated"],
+			)
+		except Exception as e:
+			logger.error(str(e))
+			return None
 
-	return iwh
+	if not w.result:
+		w.result = result["raw"].encode("utf-8")
+	if not w.md5:
+		w.md5 = hashlib.md5(result["raw"].encode("utf-8")).hexdigest()
+	if not w.country:
+		w.country = nets["country"]
+	if not w.description:
+		w.description = nets["description"]
+	if not w.reverse and "reverse" in result:
+		if result["reverse"]:
+			w.reverse = result["reverse"][0]
+	w.save()
+
+	return w

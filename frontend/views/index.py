@@ -1,19 +1,20 @@
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
-from django.shortcuts import redirect
+from django.db import transaction
 
-from .auth import log_in
 from ..forms import *
 from ..models import *
-from ..tasks.ghost_task import execute_job
+#from ..tasks.ghost_task import execute_job
+from ..tasks.job_task import execute_job
 from ..tasks.whois_domain import whois_domain
 from ..tasks.whois_ip import whois_ip
 from ..tasks.dns_resolve import dns_resolve
 from ..tasks.host_inspect import host_inspect
-from progress import main as progress
+from .auth import log_in
+from .progress import main as progress
 
 import re, logging
 from ..logger import getlogger
@@ -36,34 +37,38 @@ def _query_job(request, form, jobs):
 	for i in line:
 		i.strip()
 		if re.match("^(ht|f)tps?://[^/]+", i):
-			#try:
-			if True:
-				q, created = Query.objects.get_or_create(
-					input = i,
-					registered_by=request.user,
-				)
-                        	job = Job.objects.create(
-              	               		query = q,
-                              		status = "Job Created",
-					user_agent = ua,
-					referer = referer,
-					additional_headers = additional_headers,
-					method = method,
-					post_data = post_data,
-					timeout = timeout,
-              			)
-				if proxy:
-					job.proxy = proxy
-					job.save()
-          			execute_job.delay(job.id)
-				jobs.append(job.id)
-			#except Exception as e:
-			#	messages.error(request, 'Error: ' + str(e))
+			try:
+				job = None
+				with transaction.atomic():
+					q, created = Query.objects.get_or_create(
+						input = i,
+						registered_by=request.user,
+					)
+      		                  	job = Job.objects.create(
+              		               		query = q,
+                        	      		status = "Job Created",
+						user_agent = ua,
+						referer = referer,
+						additional_headers = additional_headers,
+						method = method,
+						post_data = post_data,
+						timeout = timeout,
+              				)
+					if proxy:
+						job.proxy = proxy
+						job.save()
+				if job:
+	          			execute_job.delay(job.id)
+	          			#execute_job(job.id)
+					jobs.append(job.id)
+			except Exception as e:
+				messages.error(request, 'Error: ' + str(e))
 		else:
 			if i:
 				messages.error(request, 'Invalid Input: ' + str(i))
 
 	return request, jobs
+
 
 def view(request):
 	user = request.user
@@ -102,6 +107,8 @@ def view(request):
 			iform = InputForm(request.POST)
 			if iform.is_valid():
 				input = iform.cleaned_data["input"]
+				#res = dns_resolve.delay(input.strip())
+				#d = res.get()
 				d = dns_resolve(input.strip())
 				if d:
 					return redirect("/dns/" + str(d.id))
@@ -109,22 +116,27 @@ def view(request):
 			iform = InputForm(request.POST)
 			if iform.is_valid():
 				input = iform.cleaned_data["input"]
-				dwh = whois_domain(input.strip())
-				if dwh:
-					return redirect("/whois_domain/" + str(dwh.whois.id))
+				#res = whois_domain.delay(input.strip())
+				#wd = res.get()
+				wd = whois_domain(input.strip())
+				if wd:
+					return redirect("/whois_domain/" + str(wd.id))
+				else:
+					messages.warning(request, 'No Result.')
 		elif "whois_ip" in request.POST:
 			iform = InputForm(request.POST)
 			if iform.is_valid():
 				input = iform.cleaned_data["input"]
-				iwh = whois_ip(input.strip())
-				if iwh:
-					return redirect("/whois_ip/" + str(iwh.whois.id))
+				#res = whois_ip.delay(input.strip())
+				#wi = res.get()
+				wi = whois_ip(input.strip())
+				if wi:
+					return redirect("/whois_ip/" + str(wi.id))
 		elif "host_inspect" in request.POST:
 			iform = InputForm(request.POST)
 			if iform.is_valid():
 				input = iform.cleaned_data["input"]
 				hi = host_inspect(input.strip())
-
 	query = Query.objects.filter(restriction=2)
 	if user.is_authenticated():
 		query = Query.objects.filter(restriction=2) | Query.objects.filter(restriction=0)
@@ -135,28 +147,24 @@ def view(request):
 		except:
 			pass
 
-	jr = Job_Resource.objects.filter(job__query__in=query)
 	rc = RequestContext(request, {
 		'form': form,
 		'authform': AuthenticationForm(),
 		"redirect":request.path,
 		'query': query,
 		'job': Job.objects.filter(query=query),
-		'page': Job_Resource.objects.filter(resource__is_page=True, job__query=query).distinct(),
-		'resource': Job_Resource.objects.filter(resource__is_page=False, job__query=query).order_by("-pk").distinct(),
+		#'page': Job_Resource.objects.filter(resource__is_page=True, job__query=query).distinct(),
+		#'resource': Job_Resource.objects.filter(resource__is_page=False, job__query=query).order_by("-pk").distinct(),
 		#'domain': Domain.objects.all(),
 		#'hostname': Hostname.objects.all(),
 		'ua': UserAgent.objects.all(),
 		'uaform': UserAgentForm(),
 		'iform': InputForm(),
 		'dns':DNSRecord.objects.all(),
-		'whois_domain':Whois_Domain.objects.all(),
-		'whois_ip':Whois_IP.objects.all(),
-		'host_ip':Host_IP.objects.all(),
-		#'jr': Job_Resource.objects.all(),
+		'whois_domain':Domain_Whois.objects.all(),
+		'whois_ip':IP_Whois.objects.all(),
+		'host_info':Host_Info.objects.all(),
 		#'analysis': Analysis.objects.all(),
-		#'url': URL.objects.all(),
-		#'capture': Capture.objects.all(),
 	})
 	return render_to_response("index.html", rc) 
 

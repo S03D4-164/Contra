@@ -34,16 +34,15 @@ def create_b64thumb(image):
 
 def view(request, id):
 	page= Resource.objects.get(pk=id)
-
-	"""
-	jp = Job_Resource.objects.get(resource=page)
-        if not check_permission(request, jp.job.query.id):
-                messages.error(request, "Cannot access Page " + str(page.id))
-                return redirect("/")
-	"""
+	info = Resource_Info.objects.filter(resource=page).distinct()
 	user = request.user
-	jr = Job_Resource.objects.filter(resource=page)
-	if not jr.filter(job__query__registered_by=user):
+
+	j = None
+	if page.is_page:
+		j = Job.objects.filter(page__in=info).distinct().order_by("-id")
+	else:
+		j = Job.objects.filter(resources__in=info).distinct().order_by("-id")
+	if not j.filter(query__registered_by=user):
                 messages.error(request, "Cannot access Page " + str(page.id))
                 return redirect("/")
 
@@ -70,8 +69,8 @@ def view(request, id):
 			result = wappalyze(page.id)
 			print result
 	thumbnail = None
-	if page.capture:
-		thumbnail = create_b64thumb(appdir + "/" + page.capture.path)
+	#if job.capture:
+	#	thumbnail = create_b64thumb(appdir + "/" + page.capture.path)
 
 	matched = []
 	tags = []
@@ -101,17 +100,19 @@ def view(request, id):
 					if not desc["rule"] in rule:
 						rule.append(desc["rule"])
 
-	headers = ast.literal_eval(page.headers)
+	headers = None
+	if page.headers:
+		headers = ast.literal_eval(page.headers)
 	c = RequestContext(request, {
 		'p': page,
 		'size':os.path.getsize(appdir + "/" + page.content.path),
-		'job': jr,
+		'job': j,
 		'analysis':analysis,
 		'behavior': behavior,
 		'rule':rule,
 		'tags':tags,
 		'matched':matched,
-		'capture': page.capture,
+		#'capture': capture,
 		'thumbnail':thumbnail,
 		'headers': headers,
 		'form':QueryForm(),

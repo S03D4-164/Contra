@@ -17,9 +17,9 @@
 <div class="col-md-5">
 <table class="table">
 <tr><th class="col-md-3">id</th><td><a class="btn btn-md btn-primary" href="/whois_domain/{{wd.id}}">{{wd.id}}</a></td></tr>
+<tr><th>domain</th><td><a href="/domain/{{wd.domain.id}}">{{wd.domain}}</a></td></tr>
 <tr><th>creation_date</th><td>{{wd.creation_date|date:"c"}}</td></tr>
 <tr><th>updated_date</th><td>{{wd.updated_date|date:"c"}}</td></tr>
-<tr><th>domain</th><td><a href="/domain/{{wd.domain.id}}">{{wd.domain}}</a></td></tr>
 </table>
 </div>
 <div class="col-md-7">

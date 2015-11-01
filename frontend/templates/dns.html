@@ -17,17 +17,18 @@
 <div class="col-md-6">
 <table class="table">
 <tr><th class="col-md-3">id</th><td><a class="btn btn-md btn-primary" href="/dns/{{dns.id}}">{{dns.id}}</a></td></tr>
-<tr><th>timestamp</th><td>{{dns.timestamp|date:"c"}}</td></tr>
+<tr><th>first_seen</th><td>{{dns.first_seen|date:"c"}}</td></tr>
+<tr><th>last_seen</th><td>{{dns.last_seen|date:"c"}}</td></tr>
 <tr><th>query</th><td>{{dns.query}}</td></tr>
 <tr><th>md5</th><td>{{dns.md5}}</td></tr>
 <tr><th>A</th><td>{% for a in dns.a.all %}{{a}}<br>{% endfor%}</td></tr>
-<tr><th>AAAA</th><td>{% for aaaa in dns.aaaa.all %}{{aaaa}}<br>{% endfor%}</td></tr>
 </table>
 </div>
 <div class="col-md-6">
 <table class="table">
 <tr><th class="col-md-3">CNAME</th><td>{% for c in dns.cname.all %}{{c}}<br>{% endfor%}</td></tr>
 <tr><th>NS</th><td>{% for n in dns.ns.all %}{{n}}<br>{% endfor%}</td></tr>
+<tr><th>AAAA</th><td>{% for aaaa in dns.aaaa.all %}{{aaaa}}<br>{% endfor%}</td></tr>
 </table>
 </div>
 <div class="col-md-12">

@@ -1,5 +1,7 @@
+from django.db import transaction
 from ..celery import app
 
+from ..api import ContraAPI
 from ..models import *
 
 from django.utils import timezone
@@ -12,9 +14,9 @@ logger = getlogger()
 
 @app.task
 def whois_domain(input):
-        api = "http://localhost:8000/api/whois_domain"
+	api = ContraAPI()
         payload = {'domain':input}
-        res = requests.get(api, params=payload, verify=False)
+        res = requests.get(api.whois_domain, params=payload, verify=False)
         result = res.json()
 	if not result:
 		return None
@@ -22,55 +24,109 @@ def whois_domain(input):
         no_fetch_extract = tldextract.TLDExtract(suffix_list_url=False)
         ext = no_fetch_extract(input.encode("utf-8"))
         suffix = ext.suffix
-        name = ext.domain + '.'+ suffix
+	name = None
+	if suffix:
+        	name = ext.domain + '.'+ suffix
+
+	domain = None
         if name:
-       		domain, created = Domain.objects.get_or_create(
-               	        name = name,
-                       	suffix = suffix
-               	)
-	cdate = result["creation_date"]
-	udate = result["updated_date"]
-	
-	wd, created = Whois_Domain.objects.get_or_create(
-		domain = domain,
-		creation_date = cdate[0],
-		updated_date = udate[0],
-	)
-	if created:
-		logger.debug("domain whois created: " + domain.name)
-	else:
-		logger.debug("domain whois already exists: " + domain.name)
-	raw = result["raw"]
-	if raw:
-		wd.result = raw[0].encode("utf-8")
-		wd.md5 = hashlib.md5(raw[0].encode("utf-8")).hexdigest()
-		wd.save()
-
-	dwh, created = Domain_Whois_History.objects.get_or_create(
-		domain = domain,
-		whois = wd,
-	)
-	dwh.save()
-	logger.debug(result["contacts"])
-	for type in result["contacts"]:
-		c = result["contacts"][type]
 		try:
-			person, created = Person.objects.get_or_create(
-				email = c["email"],
-				name = c["name"],
-				organization = c["organization"],
-				#country = contact["country"],
-			)
-			if person:
-				contact, created = Contact.objects.get_or_create(
-					type = type,
-					person = person,
-				)
-				wd.contact.add(contact)
-				wd.save()
-				person.country = c["country"]
-				person.save()
+			with transaction.atomic():
+       				domain, created = Domain.objects.get_or_create(
+               	        		name = name,
+                       			suffix = suffix
+               			)
 		except Exception as e:
-			logger.debug(e)
+			logger.error(str(e))
+			try:
+       				domain = Domain.objects.get(
+               	        		name = name,
+                       			suffix = suffix
+				)
+			except Exception as e:
+				logger.error(str(e))
+				return None
+	cdate = None
+	if "creation_date" in result:
+		cdate = result["creation_date"]
 
-	return dwh
+	udate = None
+	if "updated_date" in result:
+		udate = result["updated_date"]
+
+	w = None
+	try:
+		with transaction.atomic():
+			w, created = Domain_Whois.objects.get_or_create(
+				domain = domain,
+				creation_date = cdate[0],
+				updated_date = udate[0],
+			)
+			if not created:
+				logger.debug("domain whois already exists: " + domain.name)
+	except Exception as e:
+		logger.debug(str(e))
+		try:
+			w = Domain_Whois.objects.get(
+				domain = domain,
+				creation_date = cdate[0],
+				updated_date = udate[0],
+			)
+        	except Exception as e:
+			logger.debug(str(e))
+			return None
+
+	raw = None
+	if "raw" in result:
+		raw = result["raw"]
+		if not w.result:
+			w.result = raw[0].encode("utf-8")
+		if not w.md5:
+			w.md5 = hashlib.md5(raw[0].encode("utf-8")).hexdigest()
+		w.save()
+
+	if "contacts" in result:
+		logger.debug(result["contacts"])
+		#set_contact.delay(w, result)
+		set_contact(w, result)
+	return w
+
+@app.task
+def set_contact(w, result):
+	if "contacts" in result:
+		for type in result["contacts"]:
+			c = result["contacts"][type]
+			try:
+				with transaction.atomic():
+					person, created = Person.objects.get_or_create(
+						email = c["email"],
+						name = c["name"],
+						organization = c["organization"],
+					)
+					contact, created = Contact.objects.get_or_create(
+						type = type,
+						person = person,
+					)
+					w.contact.add(contact)
+					w.save()
+					person.country = c["country"]
+					person.save()
+			except Exception as e:
+				logger.debug(e)
+				try:
+					person = Person.objects.get(
+						email = c["email"],
+						name = c["name"],
+						organization = c["organization"],
+					)
+					contact = Contact.objects.get_or_create(
+						type = type,
+						person = person,
+					)
+					w.contact.add(contact)
+					w.save()
+					person.country = c["country"]
+					person.save()
+				except:
+					logger.debug(e)
+

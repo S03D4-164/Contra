@@ -79,27 +79,27 @@ Page
 </div>
 <div class="panel-body">
 <table class="table table-striped table-hover ">
-{% for p in page %}
+{% for j in job %}
 <tr>
 <td>
 <table class="table table-condensed">
 <tr><th class="col-md-3">job/page</th>
 <td>
-<a class="btn btn-default" href="/job/{{p.job.id}}">{{p.job.id}}</a>
-<a class="btn btn-primary" href="/page/{{p.resource.id}}">{{p.resource.id}}</a>
+<a class="btn btn-default" href="/job/{{j.id}}">{{j.id}}</a>
+<a class="btn btn-primary" href="/page/{{j.page.resource.id}}">{{j.page.resource.id}}</a>
 </td></tr>
-<tr><th>url</th><td>{{p.resource.url}}</td></tr>
-<tr><th >status</th><td>{{p.resource.http_status}}</td></tr>
+<tr><th>url</th><td>{{j.page.resource.url}}</td></tr>
+<tr><th >status</th><td>{{j.page.resource.http_status}}</td></tr>
 <tr><th>ip</th><td>
-{% for i in p.host_info.ip_whois.all %}
-{{i.ip}}<img src="/static/images/flags/{{i.whois.country|lower}}.png"><br>
+{% for i in j.page.host_info.ip_whois.all %}
+{{i.ip}}<img title="{{i.country}}" src="/static/images/flags/{{i.country|lower}}.png"><br>
 {% endfor %}
 </td></tr>
 </table>
 </td>
 <td>
-<a class="colorbox" href="/{{p.resource.capture.path}}">
-<img src="data:image/png;base64,{{p.resource.capture.b64thumb}}"></a></td>
+<a class="colorbox" href="/{{j.capture.path}}">
+<img src="data:image/png;base64,{{j.capture.b64thumb}}"></a></td>
 </tr>
 {% endfor %}
 </table>

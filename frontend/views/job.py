@@ -15,14 +15,6 @@ def view(request, id):
                 messages.warning(request, "Cannot access Job " + str(job.id))
                 return redirect("/")
 
-	jrs = Job_Resource_Seq.objects.filter(job_resource__job=job)
-	page = None
-	try:
-		p = jrs.get(job_resource__resource__is_page=True)
-		page = p.job_resource
-	except:
-		pass
-	resource = jrs.filter(job_resource__resource__is_page=False).order_by("seq")
 	if request.method == "POST":
 		if "run" in request.POST:
 			j = Job.objects.create(
@@ -44,8 +36,8 @@ def view(request, id):
 		'form': QueryForm(),
 		'q': job.query,
 		'j': job,
-		'p': page,
-		'resource': resource,
+		'p': job.page,
+		'resource': job.resources.all(),
 		'redirect': request.path,
 	})
 	return render_to_response("job.html", c) 

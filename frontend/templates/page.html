@@ -11,7 +11,7 @@
 $(document).ready(
         function(){
                 $('a.colorbox').colorbox({'photo':true});
-                $('#jr_table').DataTable({"order":[0, 'desc']});
+                $('#job_table').DataTable({"order":[0, 'desc']});
 		prettyPrint();
         }
 );
@@ -74,7 +74,7 @@ $(document).ready(
 Job
 </div>
 <div class="panel-body">
-<table id="jr_table" class="table table-condensed">
+<table id="job_table" class="table table-condensed">
 <thead>
 <tr>
 <th class="col-md-1">Job</th>
@@ -89,19 +89,19 @@ Job
 <tbody>
 {% for j in job %}
 <tr>
-<td><a class="btn btn-primary" href="/job/{{j.job.id}}">{{j.job.id}}</a></td>
-<td><a class="btn btn-default" href="/query/{{j.job.query.id}}">{{j.job.query.id}}</a></td>
-<td>{{j.timestamp|date:"c"}}</td>
-<td>{{j.job.status}}</td>
+<td><a class="btn btn-primary" href="/job/{{j.id}}">{{j.id}}</a></td>
+<td><a class="btn btn-default" href="/query/{{j.query.id}}">{{j.query.id}}</a></td>
+<td>{{j.created_at|date:"c"}}</td>
+<td>{{j.status}}</td>
 <td>
-<a href="/dns/{{j.host_info.host_dns.dns.id}}">{{j.host_info.hostname}}</a><br>
-<a href="/dns/{{j.host_info.domain_dns.dns.id}}">{{j.host_info.hostname.domain}}</a><br>
+<a href="/dns/{{j.page.host_info.host_dns.id}}">{{j.page.host_info.host_dns.query}}</a><br>
+<a href="/dns/{{j.page.host_info.domain_dns.id}}">{{j.page.host_info.domain_dns.query}}</a><br>
 </td>
 <td>
-<a href="/whois_domain/{{j.host_info.domain_whois.whois.id}}">{{j.host_info.domain_whois.domain}}</a></td>
+<a href="/whois_domain/{{j.page.host_info.domain_whois.id}}">{{j.page.host_info.domain_whois.domain}}</a></td>
 <td>
-{% for i in j.host_info.ip_whois.all %}
-<a href="/whois_ip/{{i.whois.id}}">{{i.ip}}</a><br>
+{% for i in j.page.host_info.ip_whois.all %}
+<img src="/static/images/flags/{{i.country|lower}}.png" title="/static/images/flags/{{i.country|lower}}"><a href="/whois_ip/{{i.id}}">{{i.ip}}</a><br>
 {% endfor %}
 </td>
 </tr>
