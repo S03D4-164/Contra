@@ -13,9 +13,9 @@ app = Celery(
         backend='redis://',
         include=[
 		'backend.apis.run_ghost',
-		#'backend.apis.dns_resolve',
-		#'backend.apis.whois_domain',
-		#'backend.apis.whois_ip',
+		'backend.apis.dns_resolve',
+		'backend.apis.whois_domain',
+		'backend.apis.whois_ip',
 	])
 
 app.conf.update(
