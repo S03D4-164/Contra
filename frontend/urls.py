@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^job/(?P<id>[0-9]+)$', job.view),
     url(r'^page/(?P<id>[0-9]+)$', page.view),
     url(r'^resource/(?P<id>[0-9]+)$', page.view),
+    url(r'^search/$', search.view),
     url(r'^domain/(?P<id>[0-9]+)$', domain.view),
     url(r'^dns/(?P<id>[0-9]+)$', dns.view),
     url(r'^whois_domain/(?P<id>[0-9]+)$', whois_domain.view),

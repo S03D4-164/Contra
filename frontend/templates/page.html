@@ -2,7 +2,7 @@
 
 {% block title %}
 <title>
-{% if p.is_page %}Page{% else %}Resource{% endif %}
+{% if info.resource.is_page %}Page{% else %}Resource{% endif %}
 </title>
 {% endblock %}
 
@@ -26,22 +26,22 @@ $(document).ready(
 
 <div class="panel panel-primary ">
 <div class="panel-heading">
-{% if p.is_page %}Page{% else %}Resource{% endif %}
+{% if info.resource.is_page %}Page{% else %}Resource{% endif %} Information
 </div>
 <div class="panel-body">
 
 <div class="col-md-6">
 <table class="table table-condensed ">
 <tr><th class="col-md-3">
-{% if p.is_page %}Page{% else %}Resource{% endif %}
+{% if info.resource.is_page %}Page{% else %}Resource{% endif %}
 </th>
-<td><a class="btn btn-primary" href="/page/{{p.id}}">{{p.id}}</a></td></tr>
-<tr><th>Created at</th><td>{{p.created_at|date:"c"}}</td></tr>
-<tr><th>URL</th><td>{{p.url}}</td></tr>
-<tr><th >Status</th><td>{{p.http_status}}</td></tr>
+<td><a class="btn btn-primary" href="/page/{{info.resource.id}}">{{info.resource.id}}</a></td></tr>
+<tr><th>Created at</th><td>{{info.resource.created_at|date:"c"}}</td></tr>
+<tr><th>URL</th><td>{{info.resource.url}}</td></tr>
+<tr><th >Status</th><td>{{info.resource.http_status}}</td></tr>
 <tr><th >Webapp</th>
 <td>
-{% for w in p.webapp.all %}
+{% for w in info.webapp.all %}
 {{w}}<br>
 {% endfor %}
 </td></tr>
@@ -49,17 +49,19 @@ $(document).ready(
 </div>
 
 <div class="col-md-6">
-{% if capture %}
 <table class="table table-condensed">
 <tbody>
-<tr><th class="col-md-3">Capture</th><td>{{capture.path}}</td></tr>
-<tr><th>Commit</th><td>{{capture.commit}}</td></tr>
+<tr><th class="col-md-3">timestamp</th><td>{{info.timestamp|date:"c"}}</td></tr>
+<tr><th>dns</th><td><a href="/dns/{{info.host_info.domain_dns.id}}">{{info.host_info.domain_dns.query}}</a></td></tr>
+<tr><th>whois</th><td><a href="/whois_domain/{{info.host_info.domain_whois.id}}">{{info.host_info.domain_whois.domain}}</a></td></tr>
+<tr><th >ip</th>
+<td>
+{% for i in info.host_info.ip_whois.all %}
+<img src="/static/images/flags/{{i.country|lower}}.png" title="/static/images/flags/{{i.country|lower}}"><a href="/whois_ip/{{i.id}}">{{i.ip}}</a><br>
+{% endfor %}
+</td></tr>
 </tbody>
 </table>
-<a class="colorbox" href="/{{capture.path}}">
-<img src="data:image/png;base64,{{thumbnail}}" style="border:solid thin lightgrey;display: block;margin: 0 auto;">
-</a>
-{% endif %}
 </div>
 
 </div><!--.panel-body-->
@@ -81,9 +83,6 @@ Job
 <th class="col-md-1">Query</th>
 <th class="col-md-2">timestamp</th>
 <th class="col-md-2">status</th>
-<th>DNS</th>
-<th>whois(domain)</th>
-<th>whois(ip)</th>
 </tr>
 </thead>
 <tbody>
@@ -93,17 +92,6 @@ Job
 <td><a class="btn btn-default" href="/query/{{j.query.id}}">{{j.query.id}}</a></td>
 <td>{{j.created_at|date:"c"}}</td>
 <td>{{j.status}}</td>
-<td>
-<a href="/dns/{{j.page.host_info.host_dns.id}}">{{j.page.host_info.host_dns.query}}</a><br>
-<a href="/dns/{{j.page.host_info.domain_dns.id}}">{{j.page.host_info.domain_dns.query}}</a><br>
-</td>
-<td>
-<a href="/whois_domain/{{j.page.host_info.domain_whois.id}}">{{j.page.host_info.domain_whois.domain}}</a></td>
-<td>
-{% for i in j.page.host_info.ip_whois.all %}
-<img src="/static/images/flags/{{i.country|lower}}.png" title="/static/images/flags/{{i.country|lower}}"><a href="/whois_ip/{{i.id}}">{{i.ip}}</a><br>
-{% endfor %}
-</td>
 </tr>
 {% endfor %}
 </tbody>
@@ -166,15 +154,17 @@ Content
 <!--<input type="submit" value="wappalyze" name="wappalyze">-->
 </form>
 <table class="table">
-<tr><th  class="col-md-1">id</th><td>{{p.content.id}}</td></tr>
-<tr><th>created_at</th><td>{{p.content.created_at|date:"c"}}</td></tr>
-<tr><th>type</th><td>{{p.content.type}}</td></tr>
-<tr><th>lengtht</th><td>{{p.content.length}}</td></tr>
-<tr><th>md5</th><td>{{p.content.md5}}</td></tr>
-<tr><th>path</th><td>{{p.content.path}}</td></tr>
-<tr><th>commit</th><td>{{p.content.commit}}</td></tr>
+<tr><th  class="col-md-1">id</th><td>{{info.resource.content.id}}</td></tr>
+<tr><th>created_at</th><td>{{info.resource.content.created_at|date:"c"}}</td></tr>
+<tr><th>type</th><td>{{info.resource.content.type}}</td></tr>
+<tr><th>lengtht</th><td>{{info.resource.content.length}}</td></tr>
+<tr><th>md5</th><td>{{info.resource.content.md5}}</td></tr>
+<tr><th>sha1</th><td>{{info.resource.content.sha1}}</td></tr>
+<tr><th>sha256</th><td>{{info.resource.content.sha256}}</td></tr>
+<tr><th>path</th><td>{{info.resource.content.path}}</td></tr>
+<tr><th>commit</th><td>{{info.resource.content.commit}}</td></tr>
 </table>
-<pre class="prettyprint linenums" style="white-space: pre-wrap;">{{p.content.content}}</pre>
+<pre class="prettyprint linenums" style="white-space: pre-wrap;">{{info.resource.content.content}}</pre>
 </div>
 </div><!--.panel-->
 

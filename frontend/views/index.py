@@ -153,8 +153,6 @@ def view(request):
 		"redirect":request.path,
 		'query': query,
 		'job': Job.objects.filter(query=query),
-		#'page': Job_Resource.objects.filter(resource__is_page=True, job__query=query).distinct(),
-		#'resource': Job_Resource.objects.filter(resource__is_page=False, job__query=query).order_by("-pk").distinct(),
 		#'domain': Domain.objects.all(),
 		#'hostname': Hostname.objects.all(),
 		'ua': UserAgent.objects.all(),
@@ -163,7 +161,7 @@ def view(request):
 		'dns':DNSRecord.objects.all(),
 		'whois_domain':Domain_Whois.objects.all(),
 		'whois_ip':IP_Whois.objects.all(),
-		'host_info':Host_Info.objects.all(),
+		#'host_info':Host_Info.objects.all(),
 		#'analysis': Analysis.objects.all(),
 	})
 	return render_to_response("index.html", rc) 

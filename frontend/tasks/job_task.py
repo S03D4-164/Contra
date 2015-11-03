@@ -29,8 +29,10 @@ appdir = os.path.abspath(
 )
 
 
-def create_headers(jid):
+def create_payload(jid):
 	job = Job.objects.get(pk=jid)
+	u = parse_url(job.query.input)
+
 	headers = {
 		"Accept-Language":"ja; q=1.0, en; q=0.5",
 		"Accept":"text/html; q=1.0, text/*; q=0.8, image/gif; q=0.6, image/jpeg; q=0.6, image/*; q=0.5, */*; q=0.1",
@@ -45,18 +47,6 @@ def create_headers(jid):
 				key = l[0]
 				value= ":".join(l[1:])
 				headers[str(key)] = str(value)
-	return headers
-
-
-@app.task
-def execute_job(jid):
-	job = Job.objects.get(pk=jid)
-
-	job.status = "Parsing Input"
-	job.save()
-	u = parse_url(job.query.input)
-
-	headers = create_headers(jid)
 
 	user_agent = ""
 	if job.user_agent:
@@ -75,7 +65,21 @@ def execute_job(jid):
 		'method': job.method,
 		'post_data':job.post_data,
 	}
+
+	#return headers
+	return payload
+
+
+@app.task
+def execute_job(jid):
+	job = Job.objects.get(pk=jid)
+
+	job.status = "Parsing Input"
+	job.save()
+
+	payload = create_payload(jid)
 	logger.debug(json.dumps(payload))
+
 	job.status = "Sending Request to API"
 	job.save()
 	result = ghost_api(payload, timeout=job.timeout)
@@ -87,26 +91,33 @@ def execute_job(jid):
 		if "page" in data:
 			job.status = "Creating Page"
 			job.save()
-			try:
-			#if data["page"]:
-				page, savedir = save_resource(data["page"], is_page=True)
-				cap = save_capture(data["capture"], savedir, job.id)
+			savedir = get_savedir(data["page"]["url"], is_page=True)
+			#try:
+			if data["page"]:
+				#page,savedir = save_resource(data["page"], is_page=True)
+
+				page = save_resource(data["page"], savedir, is_page=True)
+				cap = save_capture(data["capture"], savedir, page.content.id)
 				job.capture = cap
 				job.save()
-				seq = data["page"]["seq"]
 				hostname = page.url.hostname.name
 				host_info = host_inspect(hostname)
-				info = Resource_Info.objects.create(
+				res_info = Resource_Info.objects.create(
 					resource = page,
-					seq = seq,
+					seq = data["page"]["seq"],
+					headers = data["page"]["headers"],
 					host_info = host_info,
 				)
-				job.page = info
+				job.page = res_info
+				job.save()
+		
+				wappalyze(res_info.id)
+
 				job.status = "Page Created"
 				job.save()
-			except Exception as e:
-				job.status = str(e)
-				job.save()
+			#except Exception as e:
+			#	job.status = str(e)
+			#	job.save()
 				
 		if "resources" in data:
 			total = len(data["resources"])
@@ -114,13 +125,14 @@ def execute_job(jid):
 			for r in data["resources"]:
 				count += 1
 				job.status = "Creating Resource: " + str(count) + "/" + str(total)
-				resource, savedir = save_resource(r)
-				seq = r["seq"]
+				savedir = get_savedir(r["url"])
+				resource = save_resource(r, savedir)
 				hostname = resource.url.hostname.name
 				host_info = host_inspect(hostname)
 				info = Resource_Info.objects.create(
 					resource = resource,
-					seq = seq,
+					seq = r["seq"],
+					headers = r["headers"],
 					host_info = host_info,
 				)
 				job.resources.add(info)
@@ -129,8 +141,10 @@ def execute_job(jid):
 		job.save()
 
 
-def get_savedir(uid, is_page=False):
-	u = URL.objects.get(pk=uid)
+#def get_savedir(uid, is_page=False):
+def get_savedir(url, is_page=False):
+	u = parse_url(url)
+	#u = URL.objects.get(pk=uid)
 	hostname = u.hostname.name.encode("utf-8")
 
 	repodir = None
@@ -162,14 +176,13 @@ def get_savedir(uid, is_page=False):
 		"contentdir": contentdir,
 		"fullpath": fullpath,
 	}
+	logger.debug(d)
 	return d
 
 
-def save_resource(data, is_page=False):
+def save_resource(data, savedir, is_page=False):
 	result = {}
 	url = parse_url(data["url"])
-
-	d = get_savedir(url.id, is_page=is_page)
 
 	s = StringIO()
 	s.write(data["content"])
@@ -185,12 +198,13 @@ def save_resource(data, is_page=False):
 	if "encoding" in cd:
 		if cd["encoding"]:
 		        decoded = content.decode(cd["encoding"], errors="ignore")
-			md5 = str(hashlib.md5(decoded.encode("utf-8")).hexdigest())
 		else:
 		        decoded = content.decode("utf-8", errors="ignore")
+		if decoded:
 			md5 = str(hashlib.md5(decoded.encode("utf-8")).hexdigest())
 	s.close()
 
+	d = savedir
 	file = d["fullpath"] + "/" + str(url.md5)
 	with open(file , "wb") as f:
 		f.write(data["content"])
@@ -213,6 +227,9 @@ def save_resource(data, is_page=False):
 				type = type,
 				length = length,
 			)
+			if c:
+				#set_hash.delay(c.id)
+				set_hash(c.id)
 	except Exception as e:
 		logger.error(str(e))
 		try:
@@ -228,6 +245,7 @@ def save_resource(data, is_page=False):
 			logger.error(str(e))
 
 	r = None
+	created = None
 	try:
 		with transaction.atomic():
 			r, created = Resource.objects.get_or_create(
@@ -250,14 +268,16 @@ def save_resource(data, is_page=False):
 		except Exception as e:
 			logger.error(str(e))
 
-	if r:
-		if not r.headers:
-			r.headers = data["headers"]
-			r.save()
-		wappalyze.delay(r.id)
+	return r
 
-	return r, d
-
+@app.task
+def set_hash(cid):
+	c = Content.objects.get(id=cid)
+	decoded = c.content
+	c.sha1 = str(hashlib.sha1(decoded.encode("utf-8")).hexdigest())
+	c.sha256 = str(hashlib.sha256(decoded.encode("utf-8")).hexdigest())
+	c.sha512 = str(hashlib.sha512(decoded.encode("utf-8")).hexdigest())
+	c.save()
 
 def save_capture(capture, d, id):
 	capdir = d["fullpath"] + "/capture"
@@ -303,6 +323,7 @@ def save_capture(capture, d, id):
 			cid = c.id
 		except Exception as e:
 			logger.error(str(e))
+
 	return c
 
 

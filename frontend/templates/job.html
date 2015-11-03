@@ -54,6 +54,7 @@ $(document).ready(
 {% if p %}
 <div id="page" class="col-md-12">
 
+
 <div class="panel panel-info">
 <div class="panel-heading">Page</div>
 {% if p.resource.http_status in "403 404" %}
@@ -61,34 +62,35 @@ $(document).ready(
 {% else %}
 <div class="panel-body">
 {% endif %}
+
+<div class="row">
+
+<div class="col-md-6">
+
 <table id="page_table" class="table table-condensed ">
-<thead><tr>
-<th class="col-md-1">id</th>
-<th class="col-md-2">created_at</th>
-<th>url</th>
-<th>ip</th>
-<th class="col-md-1">status</th>
-<th class="col-md-1">type</th>
-<th class="col-md-1">length</th>
-<th>capture</th>
-</tr></thead>
-<tbody><tr>
-<td><a class="btn btn-md btn-info" href="/page/{{p.resource.id}}">{{p.resource.id}}</a></td>
-<td>{{p.resource.created_at|date:"c"}}</td>
-<td>{{p.resource.url}}</td>
+<tr><th >id</th><td><a class="btn btn-md btn-info" href="/page/{{p.id}}">{{p.id}}</a></td></tr>
+<tr><th >created_at</th><td>{{p.resource.created_at|date:"c"}}</td>
+<tr><th>url</th><td>{{p.resource.url}}</td></tr>
+<tr><th>ip</th>
 <td>
 {% for i in p.host_info.ip_whois.all %}
 <img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}">{{i.ip}}<br>
 {% endfor %}
 </td>
-<td>{{p.resource.http_status}}</td>
-<td>{{p.resource.content.type}}</td>
-<td>{{p.resource.content.length}}</td>
-<td>
-<a class="colorbox" href="/{{j.capture.path}}">
-<img src="data:image/png;base64,{{j.capture.b64thumb}}"></a></td>
-</tr></tbody>
+</tr>
+<tr><th >status</th><td>{{p.resource.http_status}}</td></tr>
+<tr><th >type</th><td>{{p.resource.content.type}}</td></tr>
+<tr><th >length</th><td>{{p.resource.content.length}}</td></tr>
 </table>
+</div>
+
+<div class="col-md-6" style="height:300px;;;overflow:hidden;">
+<a class="colorbox" href="/{{j.capture.path}}">
+<!--<img src="data:image/png;base64,{{j.capture.b64thumb}}">-->
+<img src="/{{j.capture.path}}" style="width:50%;">
+</a>
+</div>
+
 </div><!--.panel-body-->
 
 </div><!--.panel-->
@@ -118,7 +120,7 @@ Resource(total:{{resource|length}})</div>
 {% for r in resource %}
 {% if r.resource.http_status in "403 404"%}
 <tr style="background-color:lightgrey;">
-{% elif r.resourceurl == p.resource.url %}
+{% elif r.resource.url == p.resource.url %}
 <tr class="info">
 {% elif r.resource.url.hostname == p.resource.url.hostname %}
 <tr class="warning">
@@ -126,7 +128,7 @@ Resource(total:{{resource|length}})</div>
 <tr>
 {% endif %}
 <td><a class="btn btn-md btn-default">{{r.seq}}</a></td>
-<td><a class="btn btn-md btn-primary" href="/resource/{{r.resource.id}}">{{r.resource.id}}</a></td>
+<td><a class="btn btn-md btn-primary" href="/resource/{{r.id}}">{{r.id}}</a></td>
 <td>{{r.resource.created_at|date:"c"}}</td>
 <td>{{r.resource.url}}</td>
 <td>

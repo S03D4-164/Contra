@@ -90,12 +90,10 @@ $(document).ready(
 <table id="job_table" class="table table-striped table-hover ">
 <thead><tr>
 <th class="col-md-1">id</th>
-<th class="col-md-2">created_at</th>
+<th class="col-md-3">created_at</th>
 <th class="col-md-4">query</th>
-<th class="col-md-2">status</th>
-<th class="col-md-1">method</th>
-<th class="col-md-1">user_agent</th>
-<th class="col-md-1">referer</th>
+<th class="col-md-2">result</th>
+<th class="col-md-2">capture</th>
 </tr></thead>
 <tbody>{% for j in job %}
 <tr>
@@ -103,9 +101,11 @@ $(document).ready(
 <td>{{j.created_at|date:"c"}}</td>
 <td>{{j.query.input}}</td>
 <td>{{j.status}}</td>
-<td>{{j.method}}</td>
-<td>{{j.user_agent}}</td>
-<td>{{j.referer}}</td>
+<td>
+<a class="colorbox" href="/{{j.capture.path}}">
+<img src="data:image/png;base64,{{j.capture.b64thumb}}">
+</a>
+</td>
 </tr>
 {% endfor %}</tbody>
 </table>
@@ -442,7 +442,7 @@ $(document).ready(
 </tr></thead>
 <tbody>{% for u in ua %}
 <tr>
-<td><a class="btn btn-primary" href="/ua/{{u.id}}">{{u.id}}</td>
+<td><a class="btn btn-primary">{{u.id}} </td>
 <td>{{u.created_at|date:"c"}}</td>
 <td>{{u.name}}</td>
 <td>{{u.strings}}</td>

@@ -33,41 +33,42 @@ def create_b64thumb(image):
 	return thumb
 
 def view(request, id):
-	page= Resource.objects.get(pk=id)
-	info = Resource_Info.objects.filter(resource=page).distinct()
+	#page= Resource.objects.get(pk=id)
+	info = Resource_Info.objects.get(id=id)
 	user = request.user
 
 	j = None
-	if page.is_page:
-		j = Job.objects.filter(page__in=info).distinct().order_by("-id")
+	if info.resource.is_page:
+		j = Job.objects.filter(page=info).distinct().order_by("-id")
 	else:
-		j = Job.objects.filter(resources__in=info).distinct().order_by("-id")
+		j = Job.objects.filter(resources=info).distinct().order_by("-id")
 	if not j.filter(query__registered_by=user):
-                messages.error(request, "Cannot access Page " + str(page.id))
+                messages.error(request, "Cannot access Resource " + str(info.id))
                 return redirect("/")
 
+	content = info.resource.content
 	analysis = None
 	try:
-		analysis = Analysis.objects.get(content=page.content)
+		analysis = Analysis.objects.get(content=content)
 	except Exception as e:
 		logger.error(e)
 	if request.method == "POST":
 		logger.debug(request.POST)
 		if "analysis" in request.POST:
-			result = content_analysis(page.id)
+			result = content_analysis(content.id)
 			if result:
-				analysis = Analysis.objects.filter(content=page.content)
+				analysis = Analysis.objects.filter(content=content)
 				for a in analysis:
 					a.delete()
 				analysis, created = Analysis.objects.get_or_create(
-					content = page.content,
+					content = content,
 					result = result
 				)
 				if analysis:
 					page.analysis = analysis
 		elif "wappalyze" in request.POST:
-			result = wappalyze(page.id)
-			print result
+			result = wappalyze(info.id)
+			logger.debug(result)
 	thumbnail = None
 	#if job.capture:
 	#	thumbnail = create_b64thumb(appdir + "/" + page.capture.path)
@@ -101,11 +102,11 @@ def view(request, id):
 						rule.append(desc["rule"])
 
 	headers = None
-	if page.headers:
-		headers = ast.literal_eval(page.headers)
+	if info.headers:
+		headers = ast.literal_eval(info.headers)
 	c = RequestContext(request, {
-		'p': page,
-		'size':os.path.getsize(appdir + "/" + page.content.path),
+		'info': info,
+		'size':os.path.getsize(appdir + "/" + content.path),
 		'job': j,
 		'analysis':analysis,
 		'behavior': behavior,

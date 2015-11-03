@@ -15,8 +15,13 @@ logger = getlogger()
 def dns_resolve(query):
 	api = ContraAPI()
 	payload = {'query':query}
-	res = requests.get(api.dns, params=payload, verify=False)
-	result = res.json()
+	result = None
+	try:
+		res = requests.get(api.dns, params=payload, verify=False)
+		result = res.json()
+	except Exception as e:
+		logger.debug(str(e))
+
 	d = None
 	created = None
 	if result:
@@ -51,16 +56,21 @@ def dns_resolve(query):
 				logger.debug(str(e))
 				return None
 		for a in result["A"]:
-			logger.debug(a)
-			ip, created = IPAddress.objects.get_or_create(
-				ip = a
-			)
-			d.a.add(ip)
+			ip = None
+			try:
+				ip = IPAddress.objects.create(ip = a)
+			except:
+				ip = IPAddress.objects.get(ip = a)
+			if ip:
+				d.a.add(ip)
 		for a in result["AAAA"]:
-			ip, created = IPAddress.objects.get_or_create(
-				ip = a
-			)
-			d.aaaa.add(ip)
+			ip = None
+			try:
+				ip = IPAddress.objects.create(ip = a)
+			except:
+				ip = IPAddress.objects.get(ip = a)
+			if ip:
+				d.a.add(ip)
 		for a in result["CNAME"]:
 			h = parse_hostname(a)
 			if h:
@@ -70,4 +80,5 @@ def dns_resolve(query):
 			if h:
 				d.ns.add(h)
 		d.save()
+
 	return d

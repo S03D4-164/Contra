@@ -1,0 +1,1 @@
+[{"fields": {"created_at": "2015-11-02T14:34:48.622", "name": "IE11", "strings": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; Trident/7.0; rv:11.0) like Gecko"}, "model": "frontend.useragent", "pk": 1}]

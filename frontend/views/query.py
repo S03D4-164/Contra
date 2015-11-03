@@ -5,7 +5,7 @@ from django.contrib import messages
 
 from ..forms import *
 from ..models import *
-from ..tasks.ghost_task import *
+from ..tasks.job_task import *
 from .progress import main as progress
 from .auth import check_permission
 

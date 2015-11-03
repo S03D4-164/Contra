@@ -24,22 +24,16 @@ def whois_ip(input):
 
 	ip = None
 	try:
-		with transaction.atomic():
-			ip, created = IPAddress.objects.get_or_create(
-        	                        #ip = result["query"]
-        	                        ip = input
-                	)
+		ip = IPAddress.objects.create(
+        		ip = input
+                )
 	except Exception as e:
 		logger.error(str(e))
-		try:
-			ip = IPAddress.objects.get(
-        			#ip = result["query"]
-        			ip = input
-			)
-		except Exception as e:
-			logger.error(str(e))
-			return None
-
+		ip = IPAddress.objects.get(
+        		#ip = result["query"]
+        		ip = input
+		)
+		
 	nets = None
 	if "nets" in result:
 		if result["nets"]:

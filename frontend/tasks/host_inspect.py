@@ -66,15 +66,19 @@ def host_inspect(host):
 	host_dr = dns_resolve(hostname.name)
         ips = []
         if re.search("\[?([0-9a-f]*:[0-9a-f]*:[0-9a-f]+)\]?:?([0-9]{,5})?", hostname.name):
-		ip, created = IPAddress.objects.get_or_create(
-			ip = hostname.name
-		)
-		ips.append(ip)
+		try:
+			ip = IPAddress.objects.create(ip = hostname.name)
+			ips.append(ip)
+		except:
+			ip = IPAddress.objects.get(ip = hostname.name)
+			ips.append(ip)
         elif re.search("^([0-9]{1,3}\.){3}[0-9]{1,3}$", hostname.name):
-		ip, created = IPAddress.objects.get_or_create(
-			ip = hostname.name
-		)
-		ips.append(ip)
+		try:
+			ip = IPAddress.objects.create(ip = hostname.name)
+			ips.append(ip)
+		except:
+			ip = IPAddress.objects.get(ip = hostname.name)
+			ips.append(ip)
 	elif host_dr:
 		ipv4 = host_dr.a.all()
 		for ip in ipv4:
@@ -85,7 +89,7 @@ def host_inspect(host):
                		if not ip in ips:
 	                	ips.append(ip)
 
-	host_ip = create_hostip(hostname, ips)
+	#host_ip = create_hostip(hostname, ips)
 
 	domain = hostname.domain
 	domain_dr = None
@@ -101,11 +105,20 @@ def host_inspect(host):
                 domain_dns = domain_dr,
                 domain_whois = domain_whois,
         )
+	"""
 	if host_ip:
         	for i in host_ip.ip.all():
                 	ip_whois = whois_ip(i.ip)
                 	if ip_whois:
                         	host_info.ip_whois.add(ip_whois)
+	if not host_info.ip_whois.all():
+	"""
+	if created:
+		for i in ips:
+      	        	ip_whois = whois_ip(i.ip)
+        	       	if ip_whois:
+                       		host_info.ip_whois.add(ip_whois)
+
         host_info.save()
 
 	return host_info

@@ -19,7 +19,7 @@ class InputForm(forms.Form):
 
 class QueryForm(forms.Form):
 	input = forms.CharField(widget=forms.Textarea(attrs={'rows':3}))
-	user_agent = forms.ModelChoiceField(queryset=UserAgent.objects.all().order_by("name"), required=False)
+	user_agent = forms.ModelChoiceField(queryset=UserAgent.objects.all().order_by("name"), required=False, initial=1)
 	referer = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
 	proxy = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
 	additional_headers = forms.CharField(widget=forms.Textarea(attrs={'rows':3}), required=False)
@@ -28,7 +28,7 @@ class QueryForm(forms.Form):
 	timeout = forms.ChoiceField(choices=TIMEOUT_CHOICES)
 
 class QueryRunForm(forms.Form):
-	user_agent = forms.ModelChoiceField(queryset=UserAgent.objects.all().order_by("name"), required=False)
+	user_agent = forms.ModelChoiceField(queryset=UserAgent.objects.all().order_by("name"), required=False, initial=1)
 	referer = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
 	proxy = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
 	additional_headers = forms.CharField(widget=forms.Textarea(attrs={'rows':3}), required=False)
@@ -69,3 +69,9 @@ class QueryConfigForm(forms.ModelForm):
         	super(QueryConfigForm, self).__init__(*args, **kwargs)
 	        self.fields['interval'].widget = forms.Select(choices=INTERVAL_CHOICES)
 	        self.fields['restriction'].widget = forms.Select(choices=RESTRICTION_CHOICES)
+
+class SearchForm(forms.Form):
+	url = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
+	ip = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
+	payload = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
+	webapp = forms.ModelMultipleChoiceField(queryset=Webapp.objects.all().order_by("name"), required=False)

@@ -20,7 +20,8 @@ def crawl(interval):
                         additional_headers = j.additional_headers,
                         method = j.method,
                         post_data = j.post_data,
-                        timeout = j.timeout,
+                        #timeout = j.timeout,
+                        timeout = 180,
                 )
                 if j.proxy:
                 	job.proxy = j.proxy

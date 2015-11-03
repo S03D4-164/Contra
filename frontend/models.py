@@ -229,9 +229,12 @@ class Host_Info(models.Model):
 
 class Resource_Info(models.Model):
 	resource = models.ForeignKey(Resource)
+	headers = models.TextField(blank=True, null=True)
 	seq = models.PositiveIntegerField()
-	host_info = models.ForeignKey(Host_Info) 
+	host_info = models.ForeignKey(Host_Info, blank=True, null=True) 
 	timestamp = models.DateTimeField(auto_now_add=True)
+	webapp = models.ManyToManyField(Webapp)
+	analysis = models.ForeignKey(Analysis, blank=True, null=True)
 
 class Job(models.Model):
 	query = models.ForeignKey(Query)
