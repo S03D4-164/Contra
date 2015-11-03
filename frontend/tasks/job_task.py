@@ -100,21 +100,22 @@ def execute_job(jid):
 				cap = save_capture(data["capture"], savedir, page.content.id)
 				job.capture = cap
 				job.save()
-				hostname = page.url.hostname.name
-				host_info = host_inspect(hostname)
-				res_info = Resource_Info.objects.create(
+				#hostname = page.url.hostname.name
+				#host_info = host_inspect(hostname)
+				info = Resource_Info.objects.create(
 					resource = page,
 					seq = data["page"]["seq"],
 					headers = data["page"]["headers"],
-					host_info = host_info,
+					#host_info = host_info,
 				)
-				job.page = res_info
-				job.save()
-		
-				wappalyze(res_info.id)
-
+				job.page = info
 				job.status = "Page Created"
 				job.save()
+		
+				wappalyze.delay(info.id)
+				set_hostinfo.delay(info.id)
+
+				#job.save()
 			#except Exception as e:
 			#	job.status = str(e)
 			#	job.save()
@@ -127,19 +128,30 @@ def execute_job(jid):
 				job.status = "Creating Resource: " + str(count) + "/" + str(total)
 				savedir = get_savedir(r["url"])
 				resource = save_resource(r, savedir)
-				hostname = resource.url.hostname.name
-				host_info = host_inspect(hostname)
+				#hostname = resource.url.hostname.name
+				#host_info = host_inspect(hostname)
 				info = Resource_Info.objects.create(
 					resource = resource,
 					seq = r["seq"],
 					headers = r["headers"],
-					host_info = host_info,
+					#host_info = host_info,
 				)
 				job.resources.add(info)
 				job.save()
+
+				wappalyze.delay(info.id)
+				set_hostinfo.delay(info.id)
+
 		job.status = "Completed"
 		job.save()
 
+@app.task
+def set_hostinfo(rid):
+	r = Resource_Info.objects.get(id=rid)
+	hostname = r.resource.url.hostname.name
+	host_info = host_inspect(hostname)
+	r.host_info = host_info
+	r.save()
 
 #def get_savedir(uid, is_page=False):
 def get_savedir(url, is_page=False):

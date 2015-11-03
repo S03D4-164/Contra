@@ -37,7 +37,7 @@ def view(request, id):
 		'q': job.query,
 		'j': job,
 		'p': job.page,
-		'resource': job.resources.all(),
+		'resource': job.resources.all().order_by("seq"),
 		'redirect': request.path,
 	})
 	return render_to_response("job.html", c) 

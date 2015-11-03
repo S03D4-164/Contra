@@ -17,10 +17,13 @@ logger = getlogger()
 def whois_ip(input):
 	api = ContraAPI()
         payload = {'ip':input}
-        res = requests.get(api.whois_ip, params=payload, verify=False)
-        result = res.json()
-        if not result:
-                return None
+	result = None
+	try:
+        	res = requests.get(api.whois_ip, params=payload, verify=False)
+	        result = res.json()
+	except Exception as e:
+		logger.error(str(e))
+		return None
 
 	ip = None
 	try:
@@ -28,7 +31,7 @@ def whois_ip(input):
         		ip = input
                 )
 	except Exception as e:
-		logger.error(str(e))
+		logger.debug(str(e))
 		ip = IPAddress.objects.get(
         		#ip = result["query"]
         		ip = input

@@ -17,8 +17,11 @@ def whois_domain(input):
 	api = ContraAPI()
         payload = {'domain':input}
         res = requests.get(api.whois_domain, params=payload, verify=False)
-        result = res.json()
-	if not result:
+	result = None
+	try:
+	        result = res.json()
+	except Exception as e:
+		logger.error(str(e))
 		return None
 
         no_fetch_extract = tldextract.TLDExtract(suffix_list_url=False)
@@ -87,46 +90,48 @@ def whois_domain(input):
 
 	if "contacts" in result:
 		logger.debug(result["contacts"])
-		#set_contact.delay(w, result)
-		set_contact(w, result)
+		set_contact.delay(w, result)
+		#set_contact(w, result)
+
 	return w
 
 @app.task
 def set_contact(w, result):
-	if "contacts" in result:
-		for type in result["contacts"]:
-			c = result["contacts"][type]
+	for type in result["contacts"]:
+		c = result["contacts"][type]
+		try:
+			with transaction.atomic():
+				person, created = Person.objects.get_or_create(
+					email = c["email"],
+					name = c["name"],
+					organization = c["organization"],
+				)
+				contact, created = Contact.objects.get_or_create(
+					type = type,
+					person = person,
+				)
+				w.contact.add(contact)
+				w.save()
+				if "country" in c:
+					person.country = c["country"]
+					person.save()
+		except Exception as e:
+			logger.debug(e)
 			try:
-				with transaction.atomic():
-					person, created = Person.objects.get_or_create(
-						email = c["email"],
-						name = c["name"],
-						organization = c["organization"],
-					)
-					contact, created = Contact.objects.get_or_create(
-						type = type,
-						person = person,
-					)
-					w.contact.add(contact)
-					w.save()
+				person = Person.objects.get(
+					email = c["email"],
+					name = c["name"],
+					organization = c["organization"],
+				)
+				contact = Contact.objects.get_or_create(
+					type = type,
+					person = person,
+				)
+				w.contact.add(contact)
+				w.save()
+				if "country" in c:
 					person.country = c["country"]
 					person.save()
-			except Exception as e:
+			except:
 				logger.debug(e)
-				try:
-					person = Person.objects.get(
-						email = c["email"],
-						name = c["name"],
-						organization = c["organization"],
-					)
-					contact = Contact.objects.get_or_create(
-						type = type,
-						person = person,
-					)
-					w.contact.add(contact)
-					w.save()
-					person.country = c["country"]
-					person.save()
-				except:
-					logger.debug(e)
 
