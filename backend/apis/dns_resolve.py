@@ -8,9 +8,10 @@ from ..logger import getlogger
 import logging
 logger = getlogger()
 
-@app.task(soft_time_limit=30)
+@app.task(soft_time_limit=10)
 def _dns_resolve(query):
-	result = {}
+	#result = {}
+	result = {"query":query}
 	rr = ["A", "AAAA", "CNAME", "MX", "NS", "SOA", "TXT"]
 	for r in rr:
 		rdata = []
@@ -39,8 +40,12 @@ def dns_resolve(request):
 		return JsonResponse(result)
 
 	logger.debug("dns resolve: " + str(query.encode("utf-8"))) 
-	res = _dns_resolve.delay(query.encode("utf-8"))
-	result = res.get()
+	try:
+		res = _dns_resolve.delay(query.encode("utf-8"))
+		result = res.get()
+	except Exception as e:
+		logger.error(str(e))
+		result = {"error":str(error)}
 	cache.set(key, result, 60)
 	return JsonResponse(result)
 

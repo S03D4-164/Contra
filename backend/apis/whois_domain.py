@@ -11,11 +11,11 @@ from ..logger import getlogger
 import logging
 logger = getlogger()
 
-@app.task(soft_time_limit=30)
+@app.task(soft_time_limit=10)
 def _whois_domain(domain):
 	result = {}
 	try:
-		pythonwhois.net.socket.setdefaulttimeout(30)
+		pythonwhois.net.socket.setdefaulttimeout(10)
 		result = pythonwhois.get_whois(domain)
 	except Exception as e:
 		logger.debug("domain whois error: " + str(e))
@@ -35,8 +35,13 @@ def whois_domain(request):
 		return JsonResponse(result)
 
         logger.debug("domain whois: " + str(domain.encode("utf-8")))
-	res = _whois_domain.delay(domain.encode("utf-8")) 
-	result = res.get()
+	try:
+		res = _whois_domain.delay(domain.encode("utf-8")) 
+		result = res.get()
+	except Exception as e:
+		logger.debug(str(key))
+		result = {"error":str(e)}
+
 	cache.set(key, result, 60)
 	return JsonResponse(result)
 

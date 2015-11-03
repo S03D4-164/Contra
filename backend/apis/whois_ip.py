@@ -11,7 +11,7 @@ from ..logger import getlogger
 import logging
 logger = getlogger()
 
-@app.task(soft_time_limit=30)
+@app.task(soft_time_limit=10)
 def _whois_ip(ip):
         result = {}
         try:
@@ -44,8 +44,13 @@ def whois_ip(request):
                 return JsonResponse(result)
 
         logger.debug("ip whois: " + ip.encode("utf-8"))
-        res = _whois_ip.delay(ip.encode("utf-8"))
-        result = res.get()
+	try:
+	        res = _whois_ip.delay(ip.encode("utf-8"))
+	        result = res.get()
+	except Exception as e:
+                logger.debug(str(key))
+		result = {"error":str(e)}
+
         cache.set(key, result, 60)
 	return JsonResponse(result)
 
