@@ -26,22 +26,22 @@ $(document).ready(
 
 <div class="panel panel-primary ">
 <div class="panel-heading">
-{% if info.resource.is_page %}Page{% else %}Resource{% endif %} Information
+{% if resource.is_page %}Page{% else %}Resource{% endif %} Information
 </div>
 <div class="panel-body">
 
 <div class="col-md-6">
 <table class="table table-condensed ">
 <tr><th class="col-md-3">
-{% if info.resource.is_page %}Page{% else %}Resource{% endif %}
+{% if resource.is_page %}Page{% else %}Resource{% endif %}
 </th>
-<td><a class="btn btn-primary" href="/page/{{info.resource.id}}">{{info.resource.id}}</a></td></tr>
-<tr><th>Created at</th><td>{{info.resource.created_at|date:"c"}}</td></tr>
-<tr><th>URL</th><td>{{info.resource.url}}</td></tr>
-<tr><th >Status</th><td>{{info.resource.http_status}}</td></tr>
+<td><a class="btn btn-sm btn-primary" href="/page/{{resource.id}}">{{resource.id}}</a></td></tr>
+<tr><th>Created at</th><td>{{resource.created_at|date:"c"}}</td></tr>
+<tr><th>URL</th><td>{{resource.url}}</td></tr>
+<tr><th >Status</th><td>{{resource.http_status}}</td></tr>
 <tr><th >Webapp</th>
 <td>
-{% for w in info.webapp.all %}
+{% for w in resource.webapp.all %}
 {{w}}<br>
 {% endfor %}
 </td></tr>
@@ -51,12 +51,11 @@ $(document).ready(
 <div class="col-md-6">
 <table class="table table-condensed">
 <tbody>
-<tr><th class="col-md-3">timestamp</th><td>{{info.timestamp|date:"c"}}</td></tr>
-<tr><th>dns</th><td><a href="/dns/{{info.host_info.domain_dns.id}}">{{info.host_info.domain_dns.query}}</a></td></tr>
-<tr><th>whois</th><td><a href="/whois_domain/{{info.host_info.domain_whois.id}}">{{info.host_info.domain_whois.domain}}</a></td></tr>
+<tr><th>dns</th><td><a href="/dns/{{resource.host_info.domain_dns.id}}">{{resource.host_info.domain_dns.query}}</a></td></tr>
+<tr><th>whois</th><td><a href="/whois_domain/{{resource.host_info.domain_whois.id}}">{{resource.host_info.domain_whois.domain}}</a></td></tr>
 <tr><th >ip</th>
 <td>
-{% for i in info.host_info.ip_whois.all %}
+{% for i in resource.host_info.ip_whois.all %}
 <img src="/static/images/flags/{{i.country|lower}}.png" title="/static/images/flags/{{i.country|lower}}"><a href="/whois_ip/{{i.id}}">{{i.ip}}</a><br>
 {% endfor %}
 </td></tr>
@@ -88,16 +87,17 @@ Job
 <tbody>
 {% for j in job %}
 <tr>
-<td><a class="btn btn-primary" href="/job/{{j.id}}">{{j.id}}</a></td>
-<td><a class="btn btn-default" href="/query/{{j.query.id}}">{{j.query.id}}</a></td>
+<td><a class="btn btn-sm btn-primary" href="/job/{{j.id}}">{{j.id}}</a></td>
+<td><a class="btn btn-sm btn-default" href="/query/{{j.query.id}}">{{j.query.id}}</a></td>
 <td>{{j.created_at|date:"c"}}</td>
 <td>{{j.status}}</td>
 </tr>
 {% endfor %}
 </tbody>
 </table>
-</div>
+</div><!--.panel-body-->
 </div><!--.panel-->
+</div><!--job-->
 
 
 
@@ -149,22 +149,22 @@ Analysis
 Content
 </div>
 <div class="panel-body">
-<form method="post" action="/page/{{p.id}}">{% csrf_token %}
+<form method="post" action="/page/{{resource.id}}">{% csrf_token %}
 <input type="submit" value="analysis" name="analysis">
 <!--<input type="submit" value="wappalyze" name="wappalyze">-->
 </form>
 <table class="table">
-<tr><th  class="col-md-1">id</th><td>{{info.resource.content.id}}</td></tr>
-<tr><th>created_at</th><td>{{info.resource.content.created_at|date:"c"}}</td></tr>
-<tr><th>type</th><td>{{info.resource.content.type}}</td></tr>
-<tr><th>lengtht</th><td>{{info.resource.content.length}}</td></tr>
-<tr><th>md5</th><td>{{info.resource.content.md5}}</td></tr>
-<tr><th>sha1</th><td>{{info.resource.content.sha1}}</td></tr>
-<tr><th>sha256</th><td>{{info.resource.content.sha256}}</td></tr>
-<tr><th>path</th><td>{{info.resource.content.path}}</td></tr>
-<tr><th>commit</th><td>{{info.resource.content.commit}}</td></tr>
+<tr><th  class="col-md-1">id</th><td>{{resource.content.id}}</td></tr>
+<tr><th>created_at</th><td>{{resource.content.created_at|date:"c"}}</td></tr>
+<tr><th>type</th><td>{{resource.content.type}}</td></tr>
+<tr><th>lengtht</th><td>{{resource.content.length}}</td></tr>
+<tr><th>md5</th><td>{{resource.content.md5}}</td></tr>
+<tr><th>sha1</th><td>{{resource.content.sha1}}</td></tr>
+<tr><th>sha256</th><td>{{resource.content.sha256}}</td></tr>
+<tr><th>path</th><td>{{resource.content.path}}</td></tr>
+<tr><th>commit</th><td>{{resource.content.commit}}</td></tr>
 </table>
-<pre class="prettyprint linenums" style="white-space: pre-wrap;">{{info.resource.content.content}}</pre>
+<pre class="prettyprint linenums" style="white-space: pre-wrap;">{{resource.content.content}}</pre>
 </div>
 </div><!--.panel-->
 

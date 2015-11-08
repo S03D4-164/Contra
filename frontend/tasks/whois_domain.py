@@ -90,8 +90,8 @@ def whois_domain(input):
 
 	if "contacts" in result:
 		logger.debug(result["contacts"])
-		set_contact.delay(w, result)
-		#set_contact(w, result)
+		#set_contact.delay(w, result)
+		w = set_contact(w, result)
 
 	return w
 
@@ -134,4 +134,6 @@ def set_contact(w, result):
 					person.save()
 			except:
 				logger.debug(e)
+
+	return w
 

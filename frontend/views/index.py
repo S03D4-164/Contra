@@ -161,7 +161,7 @@ def view(request):
 		'dns':DNSRecord.objects.all(),
 		'whois_domain':Domain_Whois.objects.all(),
 		'whois_ip':IP_Whois.objects.all(),
-		#'host_info':Host_Info.objects.all(),
+		'host_info':Host_Info.objects.all(),
 		#'analysis': Analysis.objects.all(),
 	})
 	return render_to_response("index.html", rc) 

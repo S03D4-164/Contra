@@ -9,7 +9,7 @@
 $(document).ready(
         function(){
 		$('a.colorbox').colorbox({'photo':true});
-                $('#query_table').DataTable({"order":[0, 'desc']});
+                $('#query_table').DataTable({"order":[4, 'desc']});
                 $('#job_table').DataTable({"order":[0, 'desc']});
                 $('#page_table').DataTable({"order":[0, 'desc']});
                 $('#resource_table').DataTable({"order":[0, 'desc']});
@@ -330,7 +330,7 @@ $(document).ready(
 <th class="col-md-2">first_seen</th>
 <th class="col-md-2">query</th>
 <th class="col-md-2">A</th>
-<th class="col-md-7">SOA</th>
+<th class="col-md-7">TXT</th>
 </tr></thead>
 <tbody>{% for d in dns %}
 <tr>
@@ -342,7 +342,7 @@ $(document).ready(
 {{a.ip}}<br>
 {% endfor %}
 </td>
-<td>{{d.soa}}</td>
+<td>{{d.txt}}</td>
 </tr>
 {% endfor %}</tbody>
 </table>
@@ -372,7 +372,7 @@ $(document).ready(
 </tr></thead>
 <tbody>{% for h in host_info %}
 <tr>
-<td><a class="btn btn-primary" >{{h.hostname.id}}</td>
+<td><a class="btn btn-primary" >{{h.id}}</td>
 <td>{{h.first_seen|date:"c"}}</td>
 <td>{{h.last_seen|date:"c"}}</td>
 <td>{{h.hostname}}</td>

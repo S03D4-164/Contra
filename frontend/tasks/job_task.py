@@ -66,97 +66,151 @@ def create_payload(jid):
 		'post_data':job.post_data,
 	}
 
-	#return headers
 	return payload
 
 
-@app.task
+@app.task(time_limit=3600)
 def execute_job(jid):
 	job = Job.objects.get(pk=jid)
 
-	job.status = "Parsing Input"
+	job.status = "Creating Request Payload"
 	job.save()
-
-	payload = create_payload(jid)
-	logger.debug(json.dumps(payload))
-
+	try:
+		payload = create_payload(jid)
+		logger.debug(json.dumps(payload))
+	except Exception as e:
+		logger.error(str(e))
+		job.status = "error: " + str(e)
+		job.save()
+		return
+	
 	job.status = "Sending Request to API"
 	job.save()
-	result = ghost_api(payload, timeout=job.timeout)
+	result = None
+	try:
+		result = ghost_api(payload, timeout=job.timeout)
+	except Exception as e:
+		logger.error(str(e))
+		result = {"error":str(e)}
+
 	if "error" in result:
-		job.status = result["error"]
+		job.status = "error: " + str(result["error"])
 		job.save()
 	elif "data" in result:
 		data = result["data"]
 		if "page" in data:
 			job.status = "Creating Page"
 			job.save()
-			savedir = get_savedir(data["page"]["url"], is_page=True)
 			#try:
 			if data["page"]:
-				#page,savedir = save_resource(data["page"], is_page=True)
+				job = set_resource(job.id, data["page"], is_page=True)
 
-				page = save_resource(data["page"], savedir, is_page=True)
-				cap = save_capture(data["capture"], savedir, page.content.id)
-				job.capture = cap
-				job.save()
-				#hostname = page.url.hostname.name
-				#host_info = host_inspect(hostname)
-				info = Resource_Info.objects.create(
-					resource = page,
-					seq = data["page"]["seq"],
-					headers = data["page"]["headers"],
-					#host_info = host_info,
-				)
-				job.page = info
-				job.status = "Page Created"
-				job.save()
-		
-				wappalyze.delay(info.id)
-				set_hostinfo.delay(info.id)
-
-				#job.save()
 			#except Exception as e:
 			#	job.status = str(e)
 			#	job.save()
-				
+
+			savedir = get_savedir(data["page"]["url"], is_page=True)
+			cap = save_capture(data["capture"], savedir, job.id)
+			job.capture = cap
+			job.save()
+
 		if "resources" in data:
 			total = len(data["resources"])
 			count = 0
 			for r in data["resources"]:
 				count += 1
 				job.status = "Creating Resource: " + str(count) + "/" + str(total)
-				savedir = get_savedir(r["url"])
-				resource = save_resource(r, savedir)
-				#hostname = resource.url.hostname.name
-				#host_info = host_inspect(hostname)
-				info = Resource_Info.objects.create(
-					resource = resource,
-					seq = r["seq"],
-					headers = r["headers"],
-					#host_info = host_info,
-				)
-				job.resources.add(info)
 				job.save()
-
-				wappalyze.delay(info.id)
-				set_hostinfo.delay(info.id)
+				
+				set_resource.delay(job.id, r, is_page=False)
+				#set_resource(job.id, r, is_page=False)
 
 		job.status = "Completed"
 		job.save()
 
 @app.task
+def set_resource(jid, data, is_page=False):
+	job = Job.objects.get(id=jid)
+	savedir = None
+	try:
+		savedir = get_savedir(data["url"], is_page=is_page)
+	except Exception as e:
+		logger.error(str(e))
+		return None
+
+	content = None
+	try:
+		content = save_content(data, savedir, is_page=is_page)
+	except Exception as e:
+		logger.error(str(e))
+		return None
+
+	resource = None
+	created = None
+	try:
+		with transaction.atomic():
+			resource, created = Resource.objects.get_or_create(
+			#resource = Resource.objects.create(
+				url = content.url,
+				http_status = data["http_status"],
+				content = content,
+				headers = data["headers"],
+				is_page = is_page,
+				seq = data["seq"],
+			)
+
+	except Exception as e:
+		logger.error(str(e))
+		try:
+			resource = Resource.objects.create(
+				url = content.url,
+				http_status = data["http_status"],
+				content = content,
+				headers = data["headers"],
+				is_page = is_page,
+				seq = data["seq"],
+			)
+		except Exception as e:
+			logger.error(str(e))
+			return None
+
+	if resource.is_page == True:
+		job.page = resource
+		job.status = "Page Created."
+		job.save()
+	elif resource.is_page == False:
+		job.resources.add(resource)
+		job.save()
+
+	#if job.page.host_info:
+	#	if job.page.host_info.hostname == resource.url.hostname:
+	#		resource.host_info = job.page.host_info
+	r = job.resources.all().filter(host_info__hostname=resource.url.hostname).order_by("-pk")
+	if r:
+		logger.debug("host_info already created in same job.")
+		resource.host_info = r[0].host_info
+		resource.save()
+	else:
+		set_hostinfo(resource.id)
+		#set_hostinfo.delay(resource.id)
+
+	#wappalyze.delay(resource.id)
+	resource = wappalyze(resource.id)
+
+	return job
+
+@app.task
 def set_hostinfo(rid):
-	r = Resource_Info.objects.get(id=rid)
-	hostname = r.resource.url.hostname.name
+	r = Resource.objects.get(id=rid)
+	hostname = r.url.hostname.name
 	host_info = host_inspect(hostname)
 	r.host_info = host_info
+	r.host_info.save()
 	r.save()
+	return host_info
 
-#def get_savedir(uid, is_page=False):
 def get_savedir(url, is_page=False):
 	u = parse_url(url)
-	#u = URL.objects.get(pk=uid)
 	hostname = u.hostname.name.encode("utf-8")
 
 	repodir = None
@@ -169,7 +223,7 @@ def get_savedir(url, is_page=False):
 
 	comdir = None
 	if u.type and u.data:
-		comdir = "data/" + str(u.type)
+		bcomdir = "data/" + str(u.type)
 	elif re.match("^[0-9a-f]*:[0-9a-f]*:[0-9a-f]+$", hostname):
 		comdir = "ipv6/" + str(hostname)
 	elif re.match("^([0-9]{1,3}\.){3}[0-9]{1,3}$", hostname):
@@ -192,7 +246,7 @@ def get_savedir(url, is_page=False):
 	return d
 
 
-def save_resource(data, savedir, is_page=False):
+def save_content(data, savedir, is_page=False):
 	result = {}
 	url = parse_url(data["url"])
 
@@ -238,10 +292,11 @@ def save_resource(data, savedir, is_page=False):
 				path = path,
 				type = type,
 				length = length,
+				url = url,
 			)
 			if c:
 				#set_hash.delay(c.id)
-				set_hash(c.id)
+				c = set_hash(c.id)
 	except Exception as e:
 		logger.error(str(e))
 		try:
@@ -252,35 +307,12 @@ def save_resource(data, savedir, is_page=False):
 				path = path,
 				type = type,
 				length = length,
+				url = url,
 			)
 		except Exception as e:
 			logger.error(str(e))
+	return c
 
-	r = None
-	created = None
-	try:
-		with transaction.atomic():
-			r, created = Resource.objects.get_or_create(
-				url = url,
-				http_status = data["http_status"],
-				content = c,
-				#headers = data["headers"],
-				is_page = is_page,
-			)
-	except Exception as e:
-		logger.error(str(e))
-		try:
-			r = Resource.objects.get(
-				url = url,
-				http_status = data["http_status"],
-				content = c,
-				#headers = data["headers"],
-				is_page = is_page,
-			)
-		except Exception as e:
-			logger.error(str(e))
-
-	return r
 
 @app.task
 def set_hash(cid):
@@ -290,21 +322,25 @@ def set_hash(cid):
 	c.sha256 = str(hashlib.sha256(decoded.encode("utf-8")).hexdigest())
 	c.sha512 = str(hashlib.sha512(decoded.encode("utf-8")).hexdigest())
 	c.save()
+	return c
 
-def save_capture(capture, d, id):
-	capdir = d["fullpath"] + "/capture"
+
+def save_capture(capture, d, jid):
+	job = Job.objects.get(id=jid)
+	capdir = d["fullpath"] + "/capture/" + job.page.url.md5
 	if not os.path.exists(capdir):
 		os.makedirs(capdir)
-	filename = str(id) + ".png"
+	filename = str(jid) + ".png"
 	file = capdir + "/" + filename
 	with open(file, 'wb') as f:
 		f.write(capture)
 
 	commit = None
 	if os.path.isfile(file):
-		compath = d["comdir"] + "/capture/" + filename 
+	#if True:
+		compath = d["comdir"] + "/capture/" + job.page.url.md5 + "/" + filename 
 		commit = git_commit(compath, d["repopath"])
-		cappath = d["contentdir"] + "/capture/" + filename
+		cappath = d["contentdir"] + "/capture/" + job.page.url.md5 + "/" + filename
 		path = cappath.decode("utf-8")
 		im = Image.open(file)
 		im.thumbnail((150,150))
@@ -313,7 +349,7 @@ def save_capture(capture, d, id):
 		thumb = s.getvalue()
 		s.close()
 
-	cid = None
+	c = None
 	try:
 		with transaction.atomic():
 			c, created = Capture.objects.get_or_create(
@@ -322,7 +358,7 @@ def save_capture(capture, d, id):
 				base64 = base64.b64encode(capture),
 				b64thumb = base64.b64encode(thumb),
 			)
-			cid = c.id
+			#cid = c.id
 	except Exception as e:
 		logger.error(str(e))
 		try:
@@ -332,7 +368,7 @@ def save_capture(capture, d, id):
 				base64 = base64.b64encode(capture),
 				b64thumb = base64.b64encode(thumb),
 			)
-			cid = c.id
+			#cid = c.id
 		except Exception as e:
 			logger.error(str(e))
 

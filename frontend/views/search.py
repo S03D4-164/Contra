@@ -11,14 +11,18 @@ def search(sform):
 	url = sform.cleaned_data["url"]
 	ip = sform.cleaned_data["ip"]
 	payload = sform.cleaned_data["payload"]
+	webapp = sform.cleaned_data["webapp"]
+	print webapp
 
-	res = Resource_Info.objects.all()
+	res = Resource.objects.all()
 	if url:
-		res = res.filter(resource__url__url__iregex=url)
+		res = res.filter(url__url__iregex=url)
 	if ip:
 		res = res.filter(host_info__host_dns__a__ip__iregex=ip)
 	if payload:
-		res = res.filter(resource__content__content__iregex=payload)
+		res = res.filter(content__content__iregex=payload)
+	if webapp:
+		res = res.filter(webapp__in=webapp)
 
 	return res
 

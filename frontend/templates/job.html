@@ -26,8 +26,8 @@ $(document).ready(
 
 <div class="col-md-6">
 <table id="job_table" class="table table-condensed">
-<tr><th class="col-md-3">Job/Query</th><td><a class="btn btn-md btn-primary" href="/job/{{j.id}}">{{j.id}}</a>
-<a class="btn btn-md btn-default" href="/query/{{j.query.id}}">{{j.query.id}}</a></td></tr>
+<tr><th class="col-md-3">Job/Query</th><td><a class="btn btn-sm btn-primary" href="/job/{{j.id}}">{{j.id}}</a>
+<a class="btn btn-sd btn-default" href="/query/{{j.query.id}}">{{j.query.id}}</a></td></tr>
 <tr><th>input</th><td>{{j.query.input}}</td></tr>
 <tr><th>status</th><td>{{j.status}}</td></tr>
 <tr><th>created_at</th><td>{{j.created_at|date:"c"}}</td></tr>
@@ -51,13 +51,12 @@ $(document).ready(
 </div><!--panel-->
 </div>
 
-{% if p %}
 <div id="page" class="col-md-12">
 
 
 <div class="panel panel-info">
 <div class="panel-heading">Page</div>
-{% if p.resource.http_status in "403 404" %}
+{% if p.http_status in "403 404" %}
 <div class="panel-body" style="background-color:lightgrey;">
 {% else %}
 <div class="panel-body">
@@ -68,26 +67,26 @@ $(document).ready(
 <div class="col-md-6">
 
 <table id="page_table" class="table table-condensed ">
-<tr><th >id</th><td><a class="btn btn-md btn-info" href="/page/{{p.id}}">{{p.id}}</a></td></tr>
-<tr><th >created_at</th><td>{{p.resource.created_at|date:"c"}}</td>
-<tr><th>url</th><td>{{p.resource.url}}</td></tr>
+<tr><th >id</th><td><a class="btn btn-sm btn-info" href="/page/{{p.id}}">{{p.id}}</a></td></tr>
+<tr><th >created_at</th><td>{{p.created_at|date:"c"}}</td>
+<tr><th>url</th><td>{{j.page.url}}</td></tr>
 <tr><th>ip</th>
 <td>
 {% for i in p.host_info.ip_whois.all %}
-<img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}">{{i.ip}}<br>
+<img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}"><a href="/whois_ip/{{i.id}}">{{i.ip}}</a><br>
 {% endfor %}
 </td>
 </tr>
-<tr><th >status</th><td>{{p.resource.http_status}}</td></tr>
-<tr><th >type</th><td>{{p.resource.content.type}}</td></tr>
-<tr><th >length</th><td>{{p.resource.content.length}}</td></tr>
+<tr><th >status</th><td>{{p.http_status}}</td></tr>
+<tr><th >type</th><td>{{p.content.type}}</td></tr>
+<tr><th >length</th><td>{{p.content.length}}</td></tr>
 </table>
 </div>
 
-<div class="col-md-6" style="height:300px;;;overflow:hidden;">
+<div class="col-md-6" style="height:300px;overflow:hidden;">
 <a class="colorbox" href="/{{j.capture.path}}">
-<!--<img src="data:image/png;base64,{{j.capture.b64thumb}}">-->
-<img src="/{{j.capture.path}}" style="width:50%;">
+<img src="data:image/png;base64,{{thumbnail}}" style="width:70%;">
+<!--<img src="/{{j.capture.path}}" style="width:50%;">-->
 </a>
 </div>
 
@@ -96,14 +95,19 @@ $(document).ready(
 </div><!--.panel-->
 
 </div><!--.page-->
-{% endif %}
 
-{% if resource %}
-<div id="resource" class="col-sm-12">
 
-<div class="panel panel-default">
-<div class="panel-heading">
-Resource(total:{{resource|length}})</div>
+<div id="list" class="col-md-12">
+
+<ul class="nav nav-pills">
+<li class="active"><a data-toggle="pill" href="#resource">Resource({{notimage|length}})</a></li>
+<li ><a data-toggle="pill" href="#image">image({{image|length}})</a></li>
+</ul>
+
+<div class="tab-content ">
+
+<div id="resource" class="panel panel-primary tab-pane in active">
+<div class="panel-heading"></div>
 <div class="panel-body">
 <table class="table table-condensed table-hover " style="table-layout: fixed;">
 <thead><tr>
@@ -117,38 +121,83 @@ Resource(total:{{resource|length}})</div>
 <th class="col-md-1">length</th>
 </tr></thead>
 <tbody>
-{% for r in resource %}
-{% if r.resource.http_status in "403 404"%}
+{% for r in notimage %}
+{% if r.http_status in "403 404"%}
 <tr style="background-color:lightgrey;">
-{% elif r.resource.url == p.resource.url %}
+{% elif r.url == p.url %}
 <tr class="info">
-{% elif r.resource.url.hostname == p.resource.url.hostname %}
+{% elif r.url.hostname == p.url.hostname %}
 <tr class="warning">
 {% else %}
 <tr>
 {% endif %}
-<td><a class="btn btn-md btn-default">{{r.seq}}</a></td>
-<td><a class="btn btn-md btn-primary" href="/resource/{{r.id}}">{{r.id}}</a></td>
-<td>{{r.resource.created_at|date:"c"}}</td>
-<td>{{r.resource.url}}</td>
+<td><a class="btn btn-sm btn-default">{{r.seq}}</a></td>
+<td><a class="btn btn-sm btn-primary" href="/resource/{{r.id}}">{{r.id}}</a></td>
+<td>{{r.created_at|date:"c"}}</td>
+<td>{{r.url}}</td>
 <td>
 {% for i in r.host_info.ip_whois.all %}
-<img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}">{{i.ip}}<br>
+<img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}"><a href="/whois_ip/{{i.id}}">{{i.ip}}</a><br>
 {% endfor %}
 </td>
-<td>{{r.resource.http_status}}</td>
-<td>{{r.resource.content.type}}</td>
-<td>{{r.resource.content.length}}</td>
+<td>{{r.http_status}}</td>
+<td>{{r.content.type}}</td>
+<td>{{r.content.length}}</td>
 </tr>
 {% endfor %}
 </tbody>
 </table>
 </div><!--.panel-body-->
-
-</div><!--.panel-->
-
 </div><!--.resource-->
+
+<div id="image" class="panel panel-primary tab-pane">
+<div class="panel-heading"></div>
+<div class="panel-body">
+<table class="table table-condensed table-hover " style="table-layout: fixed;">
+<thead><tr>
+<th class="col-md-1">seq</th>
+<th class="col-md-1">id</th>
+<th class="col-md-2">timestamp</th>
+<th class="col-md-2">url</th>
+<th class="col-md-2">ip</th>
+<th class="col-md-1">status</th>
+<th class="col-md-1">type</th>
+<th class="col-md-1">length</th>
+</tr></thead>
+<tbody>
+{% for r in image %}
+{% if r.http_status in "403 404"%}
+<tr style="background-color:lightgrey;">
+{% elif r.url == p.url %}
+<tr class="info">
+{% elif r.url.hostname == p.url.hostname %}
+<tr class="warning">
+{% else %}
+<tr>
 {% endif %}
+<td><a class="btn btn-sm btn-default">{{r.seq}}</a></td>
+<td><a class="btn btn-sm btn-primary" href="/resource/{{r.id}}">{{r.id}}</a></td>
+<td>{{r.created_at|date:"c"}}</td>
+<td>{{r.url}}</td>
+<td>
+{% for i in r.host_info.ip_whois.all %}
+<img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}"><a href="/whois_ip/{{i.id}}">{{i.ip}}</a><br>
+{% endfor %}
+</td>
+<td>{{r.http_status}}</td>
+<td>{{r.content.type}}</td>
+<td>{{r.content.length}}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div><!--.panel-body-->
+</div><!--.resource-->
+
+
+</div><!--tab-->
+
+</div><!--list-->
 
 </div><!--.row-->
 

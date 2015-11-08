@@ -42,7 +42,6 @@ def view(request, id):
 		messages.error(request, "Cannot access Query " + str(query.id))
 		return redirect("/")
 
-	job = Job.objects.filter(query=query)
 	cform = QueryConfigForm(instance=query)
 	if request.method == "POST":
 		if "run" in request.POST:
@@ -65,6 +64,11 @@ def view(request, id):
 				query.counter = counter
 				query.restriction = restriction
 				query.save()
+
+	job = Job.objects.filter(query=query)
+
+	#cid = job.values_list("capture_id", flat=True)
+	#capture = Capture.objects.filter(id__in=cid)
 	c = RequestContext(request, {
 		'form': QueryForm(),
 		'authform': AuthenticationForm(),
@@ -73,6 +77,7 @@ def view(request, id):
 		'q': query,
 		'job': job,
 		'cform': cform,
+		#'capture':capture,
 	})
 	return render_to_response("query.html", c) 
 

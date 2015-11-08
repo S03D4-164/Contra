@@ -27,7 +27,8 @@ $(document).ready(
 
 <div id="sform" class="col-md-12">
 <form method="post" >{% csrf_token %}
-<table class="table">
+<table class="table table-condensed">
+<tr><th class="col-md-3"></th><td></td></tr>
 {{sform.as_table}}
 </table>
 <button type="search" class="btn btn-md btn-info" value="search" name="search">Search</button>
@@ -58,25 +59,31 @@ $(document).ready(
 <th class="col-md-2">created_at</th>
 <th class="col-md-2">url</th>
 <th class="col-md-2">ip</th>
+<th class="col-md-1">webapp</th>
 <th class="col-md-1">status</th>
 <th class="col-md-1">length</th>
 </tr></thead>
 <tbody>{% for r in resource %}
-{% if r.resource.http_status in "403 404" %}
+{% if r.http_status in "403 404" %}
 <tr style="background-color:lightgrey">
 {% else %}
 <tr>
 {% endif %}
 <td><a class="btn btn-md btn-primary" href="/resource/{{r.id}}">{{r.id}}</td>
-<td>{{r.resource.created_at|date:"c"}}</td>
-<td>{{r.resource.url}}</td>
+<td>{{r.created_at|date:"c"}}</td>
+<td>{{r.url}}</td>
 <td>
 {% for i in r.host_info.ip_whois.all %}
-<img src="/static/images/flags/{{i.country|lower}}.png">{{i.ip}}<br>
+<img src="/static/images/flags/{{i.country|lower}}.png"><a href="/whois_ip/{{i.id}}">{{i.ip}}</a><br>
 {% endfor %}
 </td>
-<td>{{r.resource.http_status}}</td>
-<td>{{r.resource.content.length}}</td>
+<td>
+{% for w in r.webapp.all %}
+{{w}}<br>
+{% endfor %}
+</td>
+<td>{{r.http_status}}</td>
+<td>{{r.content.length}}</td>
 </tr>
 {% endfor %}</tbody>
 </table>

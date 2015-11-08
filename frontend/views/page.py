@@ -33,25 +33,26 @@ def create_b64thumb(image):
 	return thumb
 
 def view(request, id):
-	#page= Resource.objects.get(pk=id)
-	info = Resource_Info.objects.get(id=id)
+	resource = Resource.objects.get(id=id)
 	user = request.user
 
 	j = None
-	if info.resource.is_page:
-		j = Job.objects.filter(page=info).distinct().order_by("-id")
+	if resource.is_page:
+		j = Job.objects.filter(page=resource).distinct().order_by("-id")
 	else:
-		j = Job.objects.filter(resources=info).distinct().order_by("-id")
+		j = Job.objects.filter(resources=resource).distinct().order_by("-id")
+
 	if not j.filter(query__registered_by=user):
-                messages.error(request, "Cannot access Resource " + str(info.id))
+                messages.error(request, "Cannot access Resource " + str(resource.id))
                 return redirect("/")
 
-	content = info.resource.content
+	content = resource.content
 	analysis = None
 	try:
 		analysis = Analysis.objects.get(content=content)
 	except Exception as e:
 		logger.error(e)
+
 	if request.method == "POST":
 		logger.debug(request.POST)
 		if "analysis" in request.POST:
@@ -102,10 +103,11 @@ def view(request, id):
 						rule.append(desc["rule"])
 
 	headers = None
-	if info.headers:
-		headers = ast.literal_eval(info.headers)
+	if resource.headers:
+		headers = ast.literal_eval(resource.headers)
+	print resource.host_info.id
 	c = RequestContext(request, {
-		'info': info,
+		'resource': resource,
 		'size':os.path.getsize(appdir + "/" + content.path),
 		'job': j,
 		'analysis':analysis,

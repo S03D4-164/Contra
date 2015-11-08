@@ -75,3 +75,6 @@ class SearchForm(forms.Form):
 	ip = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
 	payload = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
 	webapp = forms.ModelMultipleChoiceField(queryset=Webapp.objects.all().order_by("name"), required=False)
+	def __init__(self, *args, **kwargs):
+        	super(SearchForm, self).__init__(*args, **kwargs)
+	        self.fields['webapp'].widget.attrs['style'] = 'height:150px;width:30%;'

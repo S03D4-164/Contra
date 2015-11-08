@@ -39,16 +39,6 @@ class URL(models.Model):
                 return self.url
 
 
-class Host_IP(models.Model):
-	hostname = models.ForeignKey(Hostname)
-	ip = models.ManyToManyField(IPAddress)
-	#ip_new = models.ManyToManyField(IPAddress, related_name="ip_new")
-	#ip_out = models.ManyToManyField(IPAddress, related_name="ip_out")
-	#timestamp = models.DateTimeField(auto_now_add=True)
-	first_seen = models.DateTimeField(auto_now_add=True)
-	last_seen = models.DateTimeField(auto_now=True)
-
-
 class IP_Whois(models.Model):
 	ip = models.ForeignKey(IPAddress)
 	reverse = models.CharField(max_length=2000, blank=True, null=True)
@@ -61,15 +51,8 @@ class IP_Whois(models.Model):
 	#timestamp = models.DateTimeField(auto_now_add=True)
 	first_seen = models.DateTimeField(auto_now_add=True)
 	last_seen = models.DateTimeField(auto_now=True)
-
-"""
-class IP_Whois_History(models.Model):
-	first_seen = models.DateTimeField(auto_now_add=True)
-	last_seen = models.DateTimeField(auto_now=True)
-	ip = models.ForeignKey(IPAddress)
-	reverse = models.CharField(max_length=2000, blank=True, null=True)
-	whois = models.ForeignKey(Whois_IP)
-"""
+	class Meta:
+        	unique_together = ('ip', 'creation_date', 'updated_date')
 
 class Person(models.Model):
 	email = models.EmailField()
@@ -93,14 +76,8 @@ class Domain_Whois(models.Model):
 	#timestamp = models.DateTimeField(auto_now_add=True)
 	first_seen = models.DateTimeField(auto_now_add=True)
 	last_seen = models.DateTimeField(auto_now=True)
-
-"""
-class Domain_Whois_History(models.Model):
-	first_seen = models.DateTimeField(auto_now_add=True)
-	last_seen = models.DateTimeField(auto_now=True)
-	domain = models.ForeignKey(Domain)
-	whois = models.ForeignKey(Whois_Domain)
-"""
+	class Meta:
+        	unique_together = ('domain', 'creation_date', 'updated_date')
 
 
 class DNSRecord(models.Model):
@@ -117,22 +94,24 @@ class DNSRecord(models.Model):
 	#timestamp = models.DateTimeField(auto_now_add=True)
 	first_seen = models.DateTimeField(auto_now_add=True)
 	last_seen = models.DateTimeField(auto_now=True)
+	class Meta:
+        	unique_together = ('query', 'serialized')
 
-"""
-class Domain_DNS(models.Model):
-	first_seen = models.DateTimeField(auto_now_add=True)
-	last_seen = models.DateTimeField(auto_now=True)
-	domain = models.ForeignKey(Domain)
-	dns = models.ForeignKey(DNSRecord)
 
-class Host_DNS(models.Model):
-	first_seen = models.DateTimeField(auto_now_add=True)
-	last_seen = models.DateTimeField(auto_now=True)
+class Host_Info(models.Model):
 	hostname = models.ForeignKey(Hostname)
-	dns = models.ForeignKey(DNSRecord)
-"""
+	host_dns = models.ForeignKey(DNSRecord, related_name="host_dns", blank=True, null=True)
+	domain_dns = models.ForeignKey(DNSRecord, related_name="domain_dns", blank=True, null=True)
+	domain_whois = models.ForeignKey(Domain_Whois, blank=True, null=True)
+	ip_whois = models.ManyToManyField(IP_Whois)
+	#timestamp = models.DateTimeField(auto_now_add=True)
+	first_seen = models.DateTimeField(auto_now_add=True)
+	last_seen = models.DateTimeField(auto_now=True)
+	class Meta:
+        	unique_together = ('hostname', 'host_dns', 'domain_dns', 'domain_whois')
 
 class Content(models.Model):
+	url = models.ForeignKey(URL)
 	content = models.TextField(blank=True, null=True)
 	md5 = models.CharField(max_length=32, blank=True, null=True)
 	sha1 = models.CharField(max_length=40, blank=True, null=True)
@@ -145,6 +124,8 @@ class Content(models.Model):
 	type = models.CharField(max_length=200, blank=True, null=True)
 	length = models.PositiveIntegerField(blank=True, null=True)
 	#analysis = models.ForeignKey(Analysis, blank=True, null=True)
+	class Meta:
+        	unique_together = ('url', 'md5', 'path')
 
 class Analysis(models.Model):
 	content = models.ForeignKey(Content, blank=True, null=True)
@@ -160,17 +141,15 @@ class Capture(models.Model):
 	base64 = models.TextField(blank=True, null=True)
 	b64thumb = models.TextField(blank=True, null=True)
 
-#class Headers(models.Model):
-#	serialized = models.TextField(blank=True, null=True)
-#	created_at = models.DateTimeField(auto_now_add=True)
 
 class Webapp(models.Model):
- 	name = models.CharField(max_length=2000)
+ 	name = models.CharField(max_length=2000, unique=True)
         def __unicode__(self):
                 return self.name
 
 class Resource(models.Model):
 	url = models.ForeignKey(URL, blank=True, null=True)
+	host_info = models.ForeignKey(Host_Info, blank=True, null=True) 
 	http_status = models.CharField(max_length=200, blank=True, null=True)
 	headers = models.TextField(blank=True, null=True)
 	#headers = models.ManyToManyField(Headers)
@@ -179,6 +158,7 @@ class Resource(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True)
 	webapp = models.ManyToManyField(Webapp)
 	analysis = models.ForeignKey(Analysis, blank=True, null=True)
+	seq = models.PositiveIntegerField()
 
 RESTRICTION_CHOICES = (
     (0, 'login_user'),
@@ -197,12 +177,14 @@ class Query(models.Model):
         def __unicode__(self):
                 return self.input
 
+
 class UserAgent(models.Model):
 	name = models.CharField(max_length=200)
 	strings = models.CharField(max_length=2000)
 	created_at = models.DateTimeField(auto_now_add=True)
         def __unicode__(self):
                 return self.name
+
 
 METHOD_CHOICES = (
     ('GET', 'GET'),
@@ -217,25 +199,6 @@ TIMEOUT_CHOICES = (
 )
 
 
-class Host_Info(models.Model):
-	hostname = models.ForeignKey(Hostname)
-	host_dns = models.ForeignKey(DNSRecord, related_name="host_dns", blank=True, null=True)
-	domain_dns = models.ForeignKey(DNSRecord, related_name="domain_dns", blank=True, null=True)
-	domain_whois = models.ForeignKey(Domain_Whois, blank=True, null=True)
-	ip_whois = models.ManyToManyField(IP_Whois)
-	#timestamp = models.DateTimeField(auto_now_add=True)
-	first_seen = models.DateTimeField(auto_now_add=True)
-	last_seen = models.DateTimeField(auto_now=True)
-
-class Resource_Info(models.Model):
-	resource = models.ForeignKey(Resource)
-	headers = models.TextField(blank=True, null=True)
-	seq = models.PositiveIntegerField()
-	host_info = models.ForeignKey(Host_Info, blank=True, null=True) 
-	timestamp = models.DateTimeField(auto_now_add=True)
-	webapp = models.ManyToManyField(Webapp)
-	analysis = models.ForeignKey(Analysis, blank=True, null=True)
-
 class Job(models.Model):
 	query = models.ForeignKey(Query)
 	status = models.CharField(max_length=2000, blank=True, null=True)
@@ -248,9 +211,12 @@ class Job(models.Model):
 	timeout = models.PositiveSmallIntegerField(choices=TIMEOUT_CHOICES, default=60)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)
-	page = models.ForeignKey(Resource_Info, blank=True, null=True, related_name="page")
+	#result = models.ForeignKey(Job_Result, blank=True, null=True)
 	capture = models.ForeignKey(Capture, blank=True, null=True)
-	resources = models.ManyToManyField(Resource_Info, related_name="resources")
+	page = models.ForeignKey(Resource, blank=True, null=True, related_name="page")
+	resources = models.ManyToManyField(Resource, related_name="resources")
+
+
 	#new = models.ManyToManyField(Resource, related_name="new")
 	#out = models.ManyToManyField(Resource, related_name="out")
 	#changed = models.ManyToManyField(Resource, related_name="changed")

@@ -12,7 +12,7 @@ app = Celery(
 	broker='redis://',
         backend='redis://',
         include=[
-		'frontend.tasks.ghost_task',
+		#'frontend.tasks.ghost_task',
 		'frontend.tasks.crawl_task',
 		#'frontend.tasks.whois_domain',
 		#'frontend.tasks.whois_ip',
@@ -23,7 +23,7 @@ app.conf.update(
 	CELERY_QUEUES = (
 	    Queue('frontend', Exchange('frontend'), routing_key='frontend'),
 	),
-	#CELERY_IGNORE_RESULT = True,
+	CELERY_IGNORE_RESULT = True,
 	CELERY_TASK_RESULT_EXPIRES = 600,
 	CELERY_MAX_CACHED_RESULTS = -1,
 	CELERYD_TASK_TIME_LIMIT = 600,

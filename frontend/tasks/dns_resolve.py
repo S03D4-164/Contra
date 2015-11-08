@@ -5,7 +5,7 @@ from ..api import ContraAPI
 from ..models import *
 from .parse_task import parse_hostname
 
-import requests, hashlib
+import requests, hashlib, json
 
 from ..logger import getlogger
 import logging
@@ -18,23 +18,26 @@ def dns_resolve(query):
 	result = None
 	try:
 		res = requests.get(api.dns, params=payload, verify=False)
+		#result = res.json()
 		result = res.json()
 	except Exception as e:
 		logger.debug(str(e))
+		return None
 
 	d = None
 	created = None
 	if result:
-		logger.debug(result)
-		md5 = hashlib.md5(str(result)).hexdigest()
+		serialized = str(json.dumps(result, sort_keys=True))
+		logger.debug(serialized)
+		md5 = hashlib.md5(serialized).hexdigest()
 		try:
 			with transaction.atomic():
 				d, created = DNSRecord.objects.get_or_create(
 					query = query,
 					md5 = md5,
-					serialized = str(result),
+					serialized = serialized,
 					mx = "\n".join(result["MX"]),
-					soa = "\n".join(result["SOA"]),
+					#soa = "\n".join(result["SOA"]),
 					txt = "\n".join(result["TXT"]),
 				)
 			if not created:
@@ -46,9 +49,9 @@ def dns_resolve(query):
 				d = DNSRecord.objects.get(
 					query = query,
 					md5 = md5,
-					serialized = str(result),
+					serialized = str(serialized),
 					mx = "\n".join(result["MX"]),
-					soa = "\n".join(result["SOA"]),
+					#soa = "\n".join(result["SOA"]),
 					txt = "\n".join(result["TXT"]),
 				)
 				return d

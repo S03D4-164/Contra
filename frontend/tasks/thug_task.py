@@ -21,11 +21,11 @@ def content_analysis(cid):
 
         payload = {
                 'content': c.content.encode('utf-8'),
-                'resource': r.id,
+                'resource': c.id,
         }
-	res = requests.post(api, data=payload)
-	if res.content:
+	try:
+		res = requests.post(api, data=payload)
 		return res.content
-	else:
-		#return None
+	except Exception as e:
+		result["error"] = str(e)
 		return result

@@ -11,17 +11,14 @@ from ..logger import getlogger
 logger = getlogger()
 
 @app.task
-def wappalyze(res_id):
-	r = Resource_Info.objects.get(pk=res_id)
+def wappalyze(rid):
+	r = Resource.objects.get(pk=rid)
 
 	wappalyzer = Wappalyzer.latest()
 	webpage = WebPage(
-		url=r.resource.url.url,
-		html=r.resource.content.content,
+		url=r.url.url,
+		html=r.content.content,
 		headers=ast.literal_eval(r.headers),
-		#url=url,
-		#html=content,
-		#headers=ast.literal_eval(headers),
 	)
 	apps = wappalyzer.analyze(webpage)
 	logger.debug(apps)
@@ -31,4 +28,5 @@ def wappalyze(res_id):
 		)
 		r.webapp.add(webapp)
 	r.save()
+	return r
 		

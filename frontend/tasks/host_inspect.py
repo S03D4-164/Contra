@@ -1,3 +1,4 @@
+from django.db import transaction
 from ..celery import app
 
 from .parse_task import parse_hostname
@@ -13,50 +14,6 @@ from ..logger import getlogger
 import logging
 logger = getlogger()
 
-def create_hostip(hostname, ips):
-        hostips = Host_IP.objects.filter(hostname=hostname).order_by("-last_seen")
-        last = None
-        if hostips:
-                last = hostips[0]
-	h = None
-        if last:
-                ip_new = []
-                ip_out = []
-                for i in ips:
-                        if not i in last.ip.all():
-                                ip_new.append(i)
-                for i in last.ip.all():
-                        if not i in ips:
-                                ip_out.append(i)
-                if ip_new or ip_out:
-                        logger.debug("ip changed: " + hostname.name)
-                        h = Host_IP.objects.create(
-                                hostname = hostname,
-                        )
-                        for i in ips:
-                                h.ip.add(i)
-			"""
-                        for i in ip_new:
-                                h.ip_new.add(i)
-                        for i in ip_out:
-                                h.ip_out.add(i)
-			"""
-                        h.save()
-                else:
-                        logger.debug("ip not changed: " + hostname.name)
-                        h = last
-                        h.save()
-	else:
-                logger.debug("new hostname: " + hostname.name)
-                h = Host_IP.objects.create(
-                        hostname = hostname,
-                )
-                for i in ips:
-                        h.ip.add(i)
-                        #h.ip_new.add(i)
-                h.save()
-
-	return h
 
 @app.task
 def host_inspect(host):
@@ -88,6 +45,7 @@ def host_inspect(host):
 		for ip in ipv6:
                		if not ip in ips:
 	                	ips.append(ip)
+	logger.debug(ips)
 
 	#host_ip = create_hostip(hostname, ips)
 
@@ -97,28 +55,36 @@ def host_inspect(host):
 	if domain:
 		domain_dr = dns_resolve(domain.name)
 		domain_whois = whois_domain(domain.name)
-	
-        host_info, created = Host_Info.objects.get_or_create(
-                hostname = hostname,
-                host_dns = host_dr,
-                #host_ip = host_ip,
-                domain_dns = domain_dr,
-                domain_whois = domain_whois,
-        )
-	"""
-	if host_ip:
-        	for i in host_ip.ip.all():
-                	ip_whois = whois_ip(i.ip)
-                	if ip_whois:
-                        	host_info.ip_whois.add(ip_whois)
-	if not host_info.ip_whois.all():
-	"""
+
+	host_info = None
+	created = None
+	try:
+		with transaction.atomic():
+		        host_info, created = Host_Info.objects.get_or_create(
+		                hostname = hostname,
+                		host_dns = host_dr,
+		                #host_ip = host_ip,
+                		domain_dns = domain_dr,
+		                domain_whois = domain_whois,
+        		)
+	except Exception as e:
+		logger.error(str(e))
+		try:
+		        host_info = Host_Info.objects.get(
+		                hostname = hostname,
+                		host_dns = host_dr,
+		                #host_ip = host_ip,
+                		domain_dns = domain_dr,
+		                domain_whois = domain_whois,
+        		)
+		except Exception as e:
+			logger.error(str(e))
+
 	if created:
 		for i in ips:
       	        	ip_whois = whois_ip(i.ip)
         	       	if ip_whois:
                        		host_info.ip_whois.add(ip_whois)
-
-        host_info.save()
+				host_info.save()
 
 	return host_info
