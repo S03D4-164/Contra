@@ -57,8 +57,8 @@ $(document).ready(
 <thead><tr>
 <th class="col-md-1">id</th>
 <th class="col-md-2">created_at</th>
-<th class="col-md-2">url</th>
-<th class="col-md-2">ip</th>
+<th class="col-md-3">url</th>
+<th class="col-md-3">ip</th>
 <th class="col-md-1">webapp</th>
 <th class="col-md-1">status</th>
 <th class="col-md-1">length</th>
@@ -73,9 +73,15 @@ $(document).ready(
 <td>{{r.created_at|date:"c"}}</td>
 <td>{{r.url}}</td>
 <td>
+<table>
 {% for i in r.host_info.ip_whois.all %}
-<img src="/static/images/flags/{{i.country|lower}}.png"><a href="/whois_ip/{{i.id}}">{{i.ip}}</a><br>
+<tr>
+<td><a href="/whois_ip/{{i.id}}">{{i.ip}}</a></td>
+<td><img src="/static/images/flags/{{i.country|lower}}.png"></td>
+<td>{{i.description}}</td>
+</tr>
 {% endfor %}
+</table>
 </td>
 <td>
 {% for w in r.webapp.all %}

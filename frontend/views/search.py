@@ -45,7 +45,7 @@ def view(request):
 		if sform.is_valid():
 			result = search(sform)
 			r_ids = Job.objects.filter(query=query).values_list('resources', flat=True)
-			r = result.filter(id__in=r_ids)
+			r = result.filter(id__in=r_ids).distinct()
 
 	c = RequestContext(request, {
 		'form': QueryForm(),
