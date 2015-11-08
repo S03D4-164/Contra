@@ -24,8 +24,8 @@ def main(url, output):
 	t = ThugAPI(url)
 	t.set_web_tracking()
 	t.disable_honeyagent()
-	#t.set_verbose()
-	#t.set_debug()
+	t.set_verbose()
+	t.set_debug()
 	#t.set_ast_debug()
 	#t.set_http_debug()
 	t.set_extensive()
@@ -44,8 +44,10 @@ def main(url, output):
 	#t.run_remote(url)
 
 	matches = log.URLClassifier.rules.match(url, callback=None)
+	pprint(matches)
 	for m in matches:
 		match = matches[m]
+		pprint(match)
 		#rule = []
 		#tags = []
 		for i in match:

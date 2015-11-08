@@ -12,7 +12,8 @@ logger = getlogger()
 def _dns_resolve(query):
 	#result = {}
 	result = {"query":query}
-	rr = ["A", "AAAA", "CNAME", "MX", "NS", "SOA", "TXT"]
+	#rr = ["A", "AAAA", "CNAME", "MX", "NS", "SOA", "TXT"]
+	rr = ["A", "AAAA", "CNAME", "MX", "NS", "TXT"]
 	for r in rr:
 		rdata = []
         	try:
@@ -21,7 +22,7 @@ def _dns_resolve(query):
 				if not str(a) in rdata:
 					rdata.append(str(a))
 	        except Exception as e:
-        	        logger.error(str(e))
+        	        logger.debug(str(e))
 		if rdata:
 			rdata.sort()
 		result[r] = rdata
