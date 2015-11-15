@@ -25,7 +25,7 @@ appdir = os.path.abspath(
 def create_b64thumb(image):
 	thumb = None
         im = Image.open(image)
-       	im.thumbnail((480,270))
+       	im.thumbnail((400,300))
        	#im = ImageOps.fit(im, (480,270), centering=(0.0, 0.0))
 	tmp = StringIO()
         im.save(tmp, format="PNG")
@@ -47,49 +47,38 @@ def view(request, id):
                 return redirect("/")
 
 	content = resource.content
-	analysis = None
-	try:
-		analysis = Analysis.objects.get(content=content)
-	except Exception as e:
-		logger.error(e)
+	analysis = resource.analysis
 
 	if request.method == "POST":
-		logger.debug(request.POST)
 		if "analysis" in request.POST:
-			result = content_analysis(content.id)
-			if result:
-				analysis = Analysis.objects.filter(content=content)
-				for a in analysis:
-					a.delete()
-				analysis, created = Analysis.objects.get_or_create(
-					content = content,
-					result = result
-				)
-				if analysis:
-					page.analysis = analysis
+			aid = content_analysis(content.id)
+			try:
+				analysis = Analysis.objects.get(pk=aid)
+				resource.analysis = analysis
+				resource.save()
+			except Exception as e:
+				logger.error(str(e))
 		elif "wappalyze" in request.POST:
 			result = wappalyze(info.id)
 			logger.debug(result)
+
 	thumbnail = None
 	#if job.capture:
 	#	thumbnail = create_b64thumb(appdir + "/" + page.capture.path)
 
 	matched = []
-	tags = []
-	rule = []
-	behavior = None
+	result = None
 	if analysis:
-		results = None
 		try:
-			results = json.loads(analysis.result)
+			result = ast.literal_eval(analysis.result)
 		except Exception as e:
 			logger.error(e)
-		if results:
-			behavior = results["behavior"]
-			for b in behavior:
+		if result:
+			yara = result["yara_matched"]
+			for y in yara:
 				desc = None
 				try:
-					desc = ast.literal_eval(b["description"])
+					desc = ast.literal_eval(y["description"])
 				except:
 					pass
 				if desc:
@@ -97,23 +86,21 @@ def view(request, id):
 					for s in strings:
 						if not s["data"] in matched:
 							matched.append(s["data"])
-					if not desc["tags"][0] in tags:
-						tags.append(desc["tags"][0])
-					if not desc["rule"] in rule:
-						rule.append(desc["rule"])
 
 	headers = None
 	if resource.headers:
 		headers = ast.literal_eval(resource.headers)
-	print resource.host_info.id
+
+	size = None
+	if content:
+		size = os.path.getsize(appdir + "/" + content.path),
+		
 	c = RequestContext(request, {
 		'resource': resource,
-		'size':os.path.getsize(appdir + "/" + content.path),
+		'size':size,
 		'job': j,
 		'analysis':analysis,
-		'behavior': behavior,
-		'rule':rule,
-		'tags':tags,
+		'result': result,
 		'matched':matched,
 		#'capture': capture,
 		'thumbnail':thumbnail,

@@ -47,8 +47,6 @@ def host_inspect(host):
 	                	ips.append(ip)
 	logger.debug(ips)
 
-	#host_ip = create_hostip(hostname, ips)
-
 	domain = hostname.domain
 	domain_dr = None
 	domain_whois = None
@@ -63,7 +61,6 @@ def host_inspect(host):
 		        host_info, created = Host_Info.objects.get_or_create(
 		                hostname = hostname,
                 		host_dns = host_dr,
-		                #host_ip = host_ip,
                 		domain_dns = domain_dr,
 		                domain_whois = domain_whois,
         		)
@@ -73,7 +70,6 @@ def host_inspect(host):
 		        host_info = Host_Info.objects.get(
 		                hostname = hostname,
                 		host_dns = host_dr,
-		                #host_ip = host_ip,
                 		domain_dns = domain_dr,
 		                domain_whois = domain_whois,
         		)

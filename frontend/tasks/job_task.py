@@ -80,7 +80,7 @@ def execute_job(jid):
 		logger.debug(json.dumps(payload))
 	except Exception as e:
 		logger.error(str(e))
-		job.status = "error: " + str(e)
+		job.status = "Error: " + str(e)
 		job.save()
 		return
 	
@@ -91,28 +91,26 @@ def execute_job(jid):
 		result = ghost_api(payload, timeout=job.timeout)
 	except Exception as e:
 		logger.error(str(e))
-		result = {"error":str(e)}
+		result = {"Error":str(e)}
 
 	if "error" in result:
-		job.status = "error: " + str(result["error"])
-		job.save()
-	elif "data" in result:
+		if result["error"]:
+			job.status = "Error: " + str(result["error"])
+			job.save()
+			return
+
+	if "data" in result:
 		data = result["data"]
 		if "page" in data:
 			job.status = "Creating Page"
 			job.save()
-			#try:
 			if data["page"]:
 				job = set_resource(job.id, data["page"], is_page=True)
 
-			#except Exception as e:
-			#	job.status = str(e)
-			#	job.save()
-
-			savedir = get_savedir(data["page"]["url"], is_page=True)
-			cap = save_capture(data["capture"], savedir, job.id)
-			job.capture = cap
-			job.save()
+				savedir = get_savedir(data["page"]["url"], is_page=True)
+				cap = save_capture(data["capture"], savedir, job.id)
+				job.capture = cap
+				job.save()
 
 		if "resources" in data:
 			total = len(data["resources"])
@@ -122,8 +120,8 @@ def execute_job(jid):
 				job.status = "Creating Resource: " + str(count) + "/" + str(total)
 				job.save()
 				
-				set_resource.delay(job.id, r, is_page=False)
-				#set_resource(job.id, r, is_page=False)
+				#set_resource.delay(job.id, r, is_page=False)
+				set_resource(job.id, r, is_page=False)
 
 		job.status = "Completed"
 		job.save()
@@ -131,19 +129,21 @@ def execute_job(jid):
 @app.task
 def set_resource(jid, data, is_page=False):
 	job = Job.objects.get(id=jid)
-	savedir = None
-	try:
-		savedir = get_savedir(data["url"], is_page=is_page)
-	except Exception as e:
-		logger.error(str(e))
-		return None
 
+	url = None
 	content = None
+	http_status = None
 	try:
-		content = save_content(data, savedir, is_page=is_page)
+		url = parse_url(data["url"])
+		http_status = data["http_status"]
+		if http_status:
+			savedir = get_savedir(data["url"], is_page=is_page)
+			content = save_content(data, savedir, is_page=is_page)
+		elif not http_status:
+			http_status = data["error"]
 	except Exception as e:
 		logger.error(str(e))
-		return None
+		#return None
 
 	resource = None
 	created = None
@@ -151,8 +151,8 @@ def set_resource(jid, data, is_page=False):
 		with transaction.atomic():
 			resource, created = Resource.objects.get_or_create(
 			#resource = Resource.objects.create(
-				url = content.url,
-				http_status = data["http_status"],
+				url = url,
+				http_status = http_status,
 				content = content,
 				headers = data["headers"],
 				is_page = is_page,
@@ -163,8 +163,8 @@ def set_resource(jid, data, is_page=False):
 		logger.error(str(e))
 		try:
 			resource = Resource.objects.create(
-				url = content.url,
-				http_status = data["http_status"],
+				url = url,
+				http_status = http_status,
 				content = content,
 				headers = data["headers"],
 				is_page = is_page,
@@ -182,9 +182,6 @@ def set_resource(jid, data, is_page=False):
 		job.resources.add(resource)
 		job.save()
 
-	#if job.page.host_info:
-	#	if job.page.host_info.hostname == resource.url.hostname:
-	#		resource.host_info = job.page.host_info
 	r = job.resources.all().filter(host_info__hostname=resource.url.hostname).order_by("-pk")
 	if r:
 		logger.debug("host_info already created in same job.")
@@ -233,7 +230,10 @@ def get_savedir(url, is_page=False):
 	contentdir = repodir + "/" + comdir
 	fullpath = appdir + "/" + contentdir
 	if not os.path.exists(fullpath):
-		os.makedirs(fullpath)
+		try:
+			os.makedirs(fullpath)
+		except Exception as e:
+			logger.error(str(e))
 	d = {
 		"appdir": appdir,
 		"repodir": repodir,
@@ -329,7 +329,11 @@ def save_capture(capture, d, jid):
 	job = Job.objects.get(id=jid)
 	capdir = d["fullpath"] + "/capture/" + job.page.url.md5
 	if not os.path.exists(capdir):
-		os.makedirs(capdir)
+		try:
+			os.makedirs(capdir)
+		except Exception as e:
+			logger.error(str(e))
+
 	filename = str(jid) + ".png"
 	file = capdir + "/" + filename
 	with open(file, 'wb') as f:
@@ -339,7 +343,7 @@ def save_capture(capture, d, jid):
 	if os.path.isfile(file):
 	#if True:
 		compath = d["comdir"] + "/capture/" + job.page.url.md5 + "/" + filename 
-		commit = git_commit(compath, d["repopath"])
+		#commit = git_commit(compath, d["repopath"])
 		cappath = d["contentdir"] + "/capture/" + job.page.url.md5 + "/" + filename
 		path = cappath.decode("utf-8")
 		im = Image.open(file)
@@ -354,7 +358,7 @@ def save_capture(capture, d, jid):
 		with transaction.atomic():
 			c, created = Capture.objects.get_or_create(
 				path = path,
-				commit = commit,
+				#commit = commit,
 				base64 = base64.b64encode(capture),
 				b64thumb = base64.b64encode(thumb),
 			)
@@ -364,7 +368,7 @@ def save_capture(capture, d, jid):
 		try:
 			c = Capture.objects.get(
 				path = path,
-				commit = commit,
+				#commit = commit,
 				base64 = base64.b64encode(capture),
 				b64thumb = base64.b64encode(thumb),
 			)

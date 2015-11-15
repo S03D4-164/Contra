@@ -52,7 +52,7 @@ class IP_Whois(models.Model):
 	first_seen = models.DateTimeField(auto_now_add=True)
 	last_seen = models.DateTimeField(auto_now=True)
 	class Meta:
-        	unique_together = ('ip', 'creation_date', 'updated_date')
+        	unique_together = (('ip', 'creation_date', 'updated_date'))
 
 class Person(models.Model):
 	email = models.EmailField()
@@ -77,7 +77,7 @@ class Domain_Whois(models.Model):
 	first_seen = models.DateTimeField(auto_now_add=True)
 	last_seen = models.DateTimeField(auto_now=True)
 	class Meta:
-        	unique_together = ('domain', 'creation_date', 'updated_date')
+        	unique_together = (('domain', 'creation_date', 'updated_date'))
 
 
 class DNSRecord(models.Model):
@@ -95,7 +95,7 @@ class DNSRecord(models.Model):
 	first_seen = models.DateTimeField(auto_now_add=True)
 	last_seen = models.DateTimeField(auto_now=True)
 	class Meta:
-        	unique_together = ('query', 'serialized')
+        	unique_together = (('query', 'md5'))
 
 
 class Host_Info(models.Model):
@@ -108,7 +108,20 @@ class Host_Info(models.Model):
 	first_seen = models.DateTimeField(auto_now_add=True)
 	last_seen = models.DateTimeField(auto_now=True)
 	class Meta:
-        	unique_together = ('hostname', 'host_dns', 'domain_dns', 'domain_whois')
+        	unique_together = (('hostname', 'host_dns', 'domain_dns', 'domain_whois'))
+
+class YaraTag(models.Model):
+	name = models.CharField(max_length=200, unique=True)
+	created_at = models.DateTimeField(auto_now_add=True)
+        def __unicode__(self):
+                return self.name
+
+class YaraRule(models.Model):
+	name = models.CharField(max_length=200, unique=True)
+	tag = models.ManyToManyField(YaraTag)
+	created_at = models.DateTimeField(auto_now_add=True)
+        def __unicode__(self):
+                return self.name
 
 class Content(models.Model):
 	url = models.ForeignKey(URL)
@@ -125,18 +138,18 @@ class Content(models.Model):
 	length = models.PositiveIntegerField(blank=True, null=True)
 	#analysis = models.ForeignKey(Analysis, blank=True, null=True)
 	class Meta:
-        	unique_together = ('url', 'md5', 'path')
+        	unique_together = (('url', 'md5', 'path', 'commit'))
 
 class Analysis(models.Model):
-	content = models.ForeignKey(Content, blank=True, null=True)
+	#content = models.ForeignKey(Content, blank=True, null=True)
+	content = models.OneToOneField(Content)
 	result = models.TextField(blank=True, null=True)
-	rule = models.CharField(max_length=200, blank=True, null=True)
-	tag = models.CharField(max_length=200, blank=True, null=True)
+	rule = models.ManyToManyField(YaraRule)
 	created_at = models.DateTimeField(auto_now_add=True)
 
 class Capture(models.Model):
 	path = models.FilePathField(path=os.path.abspath(os.path.dirname(__file__)), max_length=2000)
-	commit = models.CharField(max_length=200, blank=True, null=True)
+	#commit = models.CharField(max_length=200, blank=True, null=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	base64 = models.TextField(blank=True, null=True)
 	b64thumb = models.TextField(blank=True, null=True)
@@ -167,7 +180,7 @@ RESTRICTION_CHOICES = (
 )
 
 class Query(models.Model):
-	input = models.URLField(max_length=20000)
+	input = models.URLField(max_length=20000, unique=True)
 	registered_by = models.ForeignKey(User)
 	restriction = models.PositiveSmallIntegerField(choices=RESTRICTION_CHOICES, default=0)
 	interval = models.PositiveSmallIntegerField(default=0)
@@ -184,6 +197,8 @@ class UserAgent(models.Model):
 	created_at = models.DateTimeField(auto_now_add=True)
         def __unicode__(self):
                 return self.name
+	class Meta:
+        	unique_together = (('name', 'strings'))
 
 
 METHOD_CHOICES = (

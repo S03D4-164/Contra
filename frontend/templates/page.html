@@ -7,12 +7,18 @@
 {% endblock %}
 
 {% block script %}
+<script src="/static/js/jquery.highlight.js"></script>
 <script>
 $(document).ready(
         function(){
                 $('a.colorbox').colorbox({'photo':true});
                 $('#job_table').DataTable({"order":[0, 'desc']});
 		prettyPrint();
+		$("pre.prettyprint").highlight([
+		{% for m in matched %}
+		"{{m}}",
+		{% endfor %}
+		]);
         }
 );
 </script>
@@ -99,8 +105,7 @@ Job
 </div><!--.panel-->
 </div><!--job-->
 
-
-
+{% if headers %}
 <div id="headers" class="col-md-12">
 
 <div class="panel panel-primary">
@@ -114,6 +119,7 @@ Header
 </div><!--.panel-->
 
 </div><!--.headers-->
+{% endif %}
 
 {% if analysis %}
 <div id="analysis" class="col-md-12">
@@ -124,15 +130,29 @@ Analysis
 </div>
 <div class="panel-body">
 <table class="table">
-<tr><th class="col-md-1">content_id</th><td>{{analysis.content.id}}</td></tr>
-<tr><th>rule</th><td>{% for r in rule %}{{r}}
-{% endfor %}</td></tr>
-<tr><th>tag</th><td>{% for t in tags %}{{t}}
-{% endfor %}</td></tr>
-<tr><th>matched</th><td>{% for m in matched %}{{m}}
-{% endfor %}</td></tr>
-<tr><th>behavior</th><td><pre class="prettyprint linenums" style="white-space: pre-wrap;">
-{{analysis.result}}
+<tr><th class="col-md-2">analysis/content</th>
+<td>
+<a class="btn btn-sm btn-primary">{{analysis.id}}</a>
+<a class="btn btn-sm btn-default">{{analysis.content.id}}</a>
+</td></tr>
+<tr><th>yara matched</th><td>
+{% for r in analysis.rule.all %}
+{{r.name}}(
+{% for t in r.tag.all %}
+{{t.name}},
+{% endfor %}
+)
+{% endfor %}
+</td></tr>
+<tr><th>matched</th>
+<td>
+{% for m in matched %}
+<pre>{{m}}</pre></br>
+{% endfor %}
+</td>
+</tr>
+<tr><th>result</th><td><pre class="prettyprint linenums" style="white-space: pre-wrap;">
+{{result}}
 </pre></td></tr>
 </table>
 </div>
@@ -141,7 +161,7 @@ Analysis
 </div><!--.analysis-->
 {% endif %}
 
-
+{% if resource.content %}
 <div id="content" class="col-md-12">
 
 <div class="panel panel-primary">
@@ -169,7 +189,7 @@ Content
 </div><!--.panel-->
 
 </div><!--.content-->
-
+{% endif %}
 
 </div><!--.row-->
 

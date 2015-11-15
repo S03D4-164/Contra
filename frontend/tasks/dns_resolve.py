@@ -18,7 +18,6 @@ def dns_resolve(query):
 	result = None
 	try:
 		res = requests.get(api.dns, params=payload, verify=False)
-		#result = res.json()
 		result = res.json()
 	except Exception as e:
 		logger.debug(str(e))

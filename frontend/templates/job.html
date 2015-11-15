@@ -51,8 +51,8 @@ $(document).ready(
 </div><!--panel-->
 </div>
 
+{% if p %}
 <div id="page" class="col-md-12">
-
 
 <div class="panel panel-info">
 <div class="panel-heading">Page</div>
@@ -91,10 +91,9 @@ $(document).ready(
 </div>
 
 </div><!--.panel-body-->
-
 </div><!--.panel-->
-
 </div><!--.page-->
+{% endif %}
 
 
 <div id="list" class="col-md-12">
@@ -122,7 +121,7 @@ $(document).ready(
 </tr></thead>
 <tbody>
 {% for r in notimage %}
-{% if r.http_status in "403 404"%}
+{% if r.http_status in "403 404" or not r.content %}
 <tr style="background-color:lightgrey;">
 {% elif r.url == p.url %}
 <tr class="info">
@@ -166,7 +165,7 @@ $(document).ready(
 </tr></thead>
 <tbody>
 {% for r in image %}
-{% if r.http_status in "403 404"%}
+{% if r.http_status in "403 404" or not r.content %}
 <tr style="background-color:lightgrey;">
 {% elif r.url == p.url %}
 <tr class="info">
