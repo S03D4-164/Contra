@@ -47,11 +47,13 @@ def main(url, output):
 	pprint(matches)
 	for m in matches:
 		match = matches[m]
-		pprint(match)
+		#pprint(match)
 		#rule = []
 		#tags = []
 		for i in match:
-			pprint(i)
+			log.ThugLogging.add_yara_matched(i)
+			"""
+			#pprint(i)
 			#rule.append(str(i["rule"]))
 			rule = str(i["rule"])
 			tags = []
@@ -64,7 +66,8 @@ def main(url, output):
 				if not d in strings:
 					strings.append(d)
 			#log.ThugLogging.add_behavior_warn("[yara matched] %s (Rule: %s, Classification: %s)" % (strings, rule, ", ".join(tags), ))
-			log.ThugLogging.add_behavior_warn(i)
+			#log.ThugLogging.add_behavior_warn(i)
+			"""
 		#log.ThugLogging.add_behavior_warn("[URL Classifier] URL: %s (Rule: %s, Classification: %s)" % (url, ", ".join(rule), ", ".join(tags), ))
 
 	t.log_event()
