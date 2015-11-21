@@ -161,7 +161,8 @@ class Webapp(models.Model):
        return self.name
 
 class Resource(models.Model):
-    url = models.ForeignKey(URL, blank=True, null=True)
+    #url = models.ForeignKey(URL, blank=True, null=True)
+    url = models.ForeignKey(URL)
     host_info = models.ForeignKey(Host_Info, blank=True, null=True) 
     http_status = models.CharField(max_length=200, blank=True, null=True)
     headers = models.TextField(blank=True, null=True)

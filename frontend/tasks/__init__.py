@@ -1,4 +1,4 @@
-import ghost_task
-import thug_task
-import parse_task
-import repository
+from . import ghost_task
+from . import thug_task
+from . import parse_task
+from . import repository

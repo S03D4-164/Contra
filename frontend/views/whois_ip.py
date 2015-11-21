@@ -8,13 +8,13 @@ from ..models import *
 from .auth import check_permission
 
 def view(request, id):
-	w = IP_Whois.objects.get(pk=id)
+    w = IP_Whois.objects.get(pk=id)
 
-	c = RequestContext(request, {
-		'form': QueryForm(),
-		'authform': AuthenticationForm(),
-		'redirect': request.path,
-		'wi': w,
-	})
-	return render_to_response("whois_ip.html", c) 
+    c = RequestContext(request, {
+        'form': QueryForm(),
+        'authform': AuthenticationForm(),
+        'redirect': request.path,
+        'wi': w,
+    })
+    return render_to_response("whois_ip.html", c) 
 
