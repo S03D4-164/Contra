@@ -1,103 +1,114 @@
-from django.http import FileResponse
+from django.http import HttpResponse, FileResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from StringIO import StringIO
-import pickle
 
 import docker
-import os, sys
+import os, sys, json, pickle
 
 import logging
 from ..logger import getlogger
 #logger = getlogger(logging.DEBUG, logging.StreamHandler())
 logger = getlogger()
-	
+    
 appdir = os.path.abspath(
-	os.path.join(os.path.dirname(__file__), "..")
+    os.path.join(os.path.dirname(__file__), "..")
 )
 
 def _container(cli):
-	cid = None
-	if cli:
-        	container = cli.create_container(
-		image="contra:latest",
-                #name="contra",
-		user="contra",
-		working_dir="/home/contra/artifacts",
-		#command="/usr/bin/run.sh",
-		stdin_open=True,
-		tty=True,
-		volumes=['/home/contra/artifacts'],
-		host_config=docker.utils.create_host_config(
-			binds={
-				appdir + '/static/artifacts': {
-            				'bind': '/home/contra/artifacts',
-            				'mode': 'rw',
-        				},
-				}),
-		)
-		cid = container.get('Id')
-
-	return cid
-
-
-def ghost_api(request):
-	res = {}
-	if request.method == "GET":
-		if "url" in request.GET:
-			target = request.GET["url"]
-			qid = request.GET["query"]
-			jid = request.GET["job"]
-			#cid = request.GET["container"]
-			option = {}
-			if "user_agent" in request.GET:
-				optiion["user_agent"] =  request.GET["user_agent"]
-			if "timeout" in request.GET:
-				optiion["wait_timeout"] =  request.GET["user_agent"]
-			#output = "ghost/" + str(qid) + "/" + str(jid)
-			output = str(qid) + "/" + str(jid)
-			#result = run_ghost(target, output, cid, option=option)
-			result = run_ghost(target, output, option=option)
-                        if result:
-                                fh = open(result, 'rb')
-                                logger.debug(len(fh.read()))
-                                fh.seek(0)
-                                res = FileResponse(fh)
-        return res
-
-def run_ghost(url, output=None, container=None, option={}):
-	cli = docker.Client(base_url='unix://var/run/docker.sock')
-	"""
-	cid = None
-	if container:
-		cid = container
-	else:
-	"""
-	cid = _container(cli)
-	logger.debug(cid)
-
-	response = cli.start(container=cid)
-	logger.debug(response)
-
-	command = ["/opt/thug/src/run_ghost.py", url]
-	if output:
-		command.append(output)
-	if option:
-		command.append(option)
-	logger.debug(command)
-        e = cli.exec_create(
-                cid,
-		command,
-		#user="contra",
+    cid = None
+    if cli:
+        container = cli.create_container(
+        image="contra:latest",
+        #name="contra",
+        user="contra",
+        working_dir="/home/contra/files",
+        #command="/usr/bin/run.sh",
+        stdin_open=True,
+        tty=True,
+        volumes=['/home/contra/artifacts'],
+        host_config=docker.utils.create_host_config(
+            binds={
+                appdir + '/static/artifacts': {
+                        'bind': '/home/contra/artifacts',
+                        'mode': 'rw',
+                    },
+                }),
         )
-	logger.debug(e)
-        logger.debug(cli.exec_start(e["Id"], stream=False))
-	cli.stop(cid, timeout=300)
+        cid = container.get('Id')
 
-	pkl = appdir + "/static/artifacts/ghost/" + output + "/ghost.pkl"
-	logger.debug(pkl)
-	cli.remove_container(cid)
-	if  os.path.isfile(pkl):
-		return pkl
-	return None
+    return cid
+
+@csrf_exempt
+def ghost_api(request):
+    url = None
+    output = None
+    option = {}
+    if request.method == "POST":
+        received = None
+        try:
+            received = json.loads(request.body)
+        except Exception as e:
+            logger.debug(str(e))
+        if "url" in received:
+            url = received["url"]
+            qid = received["query"]
+            jid = received["job"]
+            output = str(qid) + "/" + str(jid)
+            option["wait_timeout"] = received["timeout"]
+            option["user_agent"] = received["user_agent"]
+            option["headers"] = received["headers"]
+            option["proxy"] = received["proxy"]
+            option["method"] = received["method"]
+            option["body"] = received["post_data"]
+    elif request.method == "GET":
+        if "url" in request.GET:
+            url = request.GET["url"]
+            output = "get"
+
+    if url:
+        result = run_ghost(url, output, option=option)
+        if result:
+            fh = open(result, 'rb')
+            logger.debug(len(fh.read()))
+            fh.seek(0)
+            response = FileResponse(fh)
+            response['Content-Disposition'] = 'attachment; filename=ghost.pkl'
+            return response
+
+    return HttpResponse("Invalid Request", status=400)
+
+def run_ghost(url, output=None, option={}):
+    cli = docker.Client(base_url='unix://var/run/docker.sock')
+    cid = _container(cli)
+    """
+    if container:
+        cid = container
+    """
+    logger.debug(cid)
+
+    response = cli.start(container=cid)
+    #logger.debug(response)
+
+    command = ["./run_ghost.py", url]
+    if output:
+        command.append(output)
+    if option:
+        command.append(json.dumps(option))
+    logger.debug(command)
+    e = cli.exec_create(
+        cid,
+        command,
+        #user="contra",
+    )
+    logger.debug(e)
+    logger.debug(cli.exec_start(e["Id"], stream=False))
+    cli.stop(cid, timeout=300)
+
+    pkl = appdir + "/static/artifacts/ghost/" + output + "/ghost.pkl"
+    logger.debug(pkl)
+    cli.remove_container(cid)
+    if  os.path.isfile(pkl):
+        return pkl
+    return None
 

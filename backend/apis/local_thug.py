@@ -8,44 +8,36 @@ import os, sys
 import logging
 from ..logger import getlogger
 logger = getlogger()
-	
+    
 appdir = os.path.abspath(
-	os.path.join(os.path.dirname(__file__), "..")
+    os.path.join(os.path.dirname(__file__), "..")
 )
 
 @csrf_exempt
 def thug_api(request):
-	if request.method == "POST":
-		if "content" in request.POST:
-			content = request.POST["content"]
-			rid = request.POST["resource"]
-			output = str(rid)
-			result = _thug_api(content, output)
-                        if result:
-                                fh = open(result, 'rb')
-                                logger.debug(len(fh.read()))
-                                fh.seek(0)
-        			return FileResponse(fh)
+    if request.method == "POST":
+        if "content" in request.POST:
+            try:
+                data = request.POST["content"]
+                id = request.POST["id"]
+                savedir = appdir + "/static/artifacts/thug/" + str(id)
+                if not os.path.exists(savedir):
+                    os.makedirs(savedir)
 
-	return HttpResponse(status=400)
-	
-def _thug_api(data, output):
-	logger.debug(output)
-	contentdir = appdir + "/static/artifacts/thug/" + output
-	content = contentdir + "/content"
-	logger.debug(contentdir)
-	if not os.path.exists(contentdir):
-		os.makedirs(contentdir)
-	with open(content, 'wb') as fh:
-		try:
-			fh.write(data.encode("utf-8"))
-		except Exception as e:
-			logger.error(e)
+                content = savedir + "/content"
+                with open(content, 'wb') as fh:
+                    fh.write(data.encode("utf-8"))
+                result = run_thug(content, savedir)
+                if result:
+                    json = savedir + "/analysis/json/analysis.json"
+                    if os.path.isfile(json):
+                        fh = open(json, 'rb')
+                        logger.debug(len(fh.read()))
+                        fh.seek(0)
+                        return FileResponse(fh)
+            except Exception as e:
+                logger.error(e)
+                return HttpResponse(str(e), status=400)
 
-	result = run_thug(content, output)
+    return HttpResponse("Invalid Request", status=400)
 
-	json = appdir + "/static/artifacts/thug/" + output + "/analysis/json/analysis.json"
-	if  os.path.isfile(json):
-		return json
-
-	return None
