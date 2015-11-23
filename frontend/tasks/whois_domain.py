@@ -25,7 +25,7 @@ def whois_domain(input):
         return None
 
     no_fetch_extract = tldextract.TLDExtract(suffix_list_url=False)
-    ext = no_fetch_extract(input.encode("utf-8"))
+    ext = no_fetch_extract(str(input))
     suffix = ext.suffix
     name = None
     if suffix:

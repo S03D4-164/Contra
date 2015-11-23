@@ -269,7 +269,7 @@ $(document).ready(
 <td><a class="btn btn-primary" href="/whois_domain/{{d.id}}">{{d.id}}</td>
 <td>{{d.creation_date|date:"c"}}</td>
 <td>{{d.updated_date|date:"c"}}</td>
-<td><a href="/domain/{{d.domain.id}}">{{d.domain}}</a></td>
+<td><a href="/domain/{{d.domain.id}}">{{d.domain.name}}</a></td>
 <td>
 <table>
 {% for c in d.contact.all %}
@@ -409,7 +409,7 @@ $(document).ready(
 <td><a class="btn btn-primary" href="/whois_ip/{{i.id}}">{{i.id}}</td>
 <td>{{i.creation_date|date:"c"}}</td>
 <td>{{i.updated_date|date:"c"}}</td>
-<td>{{i.ip}}</td>
+<td>{{i.ip.ip}}</td>
 <td>
 <img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}">
 {{i.country}}

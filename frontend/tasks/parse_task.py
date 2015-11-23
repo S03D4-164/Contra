@@ -84,7 +84,7 @@ def parse_ipv4url(p):
 
 def parse_hostname(hostname):
     no_fetch_extract = tldextract.TLDExtract(suffix_list_url=False)
-    ext = no_fetch_extract(hostname.encode("utf-8"))
+    ext = no_fetch_extract(str(hostname).encode("utf-8"))
     logger.debug(ext)
     suffix = ext.suffix
     domain = None

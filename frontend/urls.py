@@ -1,6 +1,8 @@
 from django.conf.urls import include, url
 from django.contrib import admin
-from views import *
+from .views import index, query, job, page, \
+            search, domain, dns, whois_domain, whois_ip, \
+            progress, auth
 
 urlpatterns = [
     url(r'^$', index.view),

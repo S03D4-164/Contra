@@ -26,7 +26,7 @@ def dns_resolve(query):
     d = None
     created = None
     if result:
-        serialized = str(json.dumps(result, sort_keys=True))
+        serialized = str(json.dumps(result, sort_keys=True)).encode('utf-8')
         logger.debug(serialized)
         md5 = hashlib.md5(serialized).hexdigest()
         try:

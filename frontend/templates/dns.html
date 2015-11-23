@@ -25,7 +25,7 @@
 <div class="col-md-6">
 <table class="table">
 <tr><th class="col-md-3">query</th><td>{{dns.query}}</td></tr>
-<tr><th >A</th><td>{% for a in dns.a.all %}{{a}}<br>{% endfor%}</td></tr>
+<tr><th >A</th><td>{% for a in dns.a.all %}{{a.ip}}<br>{% endfor%}</td></tr>
 <tr><th>AAAA</th><td>{% for aaaa in dns.aaaa.all %}{{aaaa}}<br>{% endfor%}</td></tr>
 <tr><th>NS</th><td>{% for n in dns.ns.all %}{{n}}<br>{% endfor%}</td></tr>
 <tr><th>CNAME</th><td>{% for c in dns.cname.all %}{{c}}<br>{% endfor%}</td></tr>
