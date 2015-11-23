@@ -7,7 +7,6 @@ from django.db import transaction
 
 from ..forms import *
 from ..models import *
-#from ..tasks.ghost_task import execute_job
 from ..tasks.job_task import execute_job
 from ..tasks.whois_domain import whois_domain
 from ..tasks.whois_ip import whois_ip

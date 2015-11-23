@@ -136,11 +136,11 @@ def set_resource(jid, data, is_page=False):
     try:
         url = parse_url(data["url"])
         http_status = data["http_status"]
+        if not http_status:
+            http_status = data["error"]
         #if http_status:
         savedir = get_savedir(data["url"], is_page=is_page)
         content = save_content(data, savedir, is_page=is_page)
-        #elif not http_status:
-        #    http_status = data["error"]
     except Exception as e:
         logger.error(str(e))
         #return None

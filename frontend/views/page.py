@@ -69,23 +69,21 @@ def view(request, id):
     matched = []
     result = None
     if analysis:
-        try:
-            result = ast.literal_eval(analysis.result)
-        except Exception as e:
-            logger.error(e)
+        result = analysis.result
         if result:
-            yara = result["yara_matched"]
+            yara = {}
+            try:
+                r = json.loads(result)
+                yara = r["yara_matched"]
+            except Exception as e:
+                logger.error(e)
             for y in yara:
-                desc = None
-                try:
-                    desc = ast.literal_eval(y["description"])
-                except:
-                    pass
+                desc = ast.literal_eval(y["description"])
                 if desc:
                     strings = desc["strings"]
                     for s in strings:
-                        if not s["data"] in matched:
-                            matched.append(s["data"])
+                        if not s in matched:
+                            matched.append(s)
 
     headers = None
     if resource.headers:

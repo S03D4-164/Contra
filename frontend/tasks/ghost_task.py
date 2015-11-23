@@ -16,8 +16,6 @@ appdir = os.path.abspath(
 )
 
 def ghost_api(payload, timeout=60):
-    #api="http://localhost:8000/api/local/ghost/"
-    #api="http://localhost:8000/api/docker/ghost/"
     api = ContraAPI()
 
     result = {}
@@ -25,7 +23,8 @@ def ghost_api(payload, timeout=60):
     try:
     #if True:
         h = {'content-type': 'application/json'}
-        r = requests.post(api.local_ghost, data=json.dumps(payload), headers=h, stream=True, timeout=timeout, verify=False)
+        #r = requests.post(api.local_ghost, data=json.dumps(payload), headers=h, stream=True, timeout=timeout, verify=False)
+        r = requests.post(api.docker_ghost, data=json.dumps(payload), headers=h, stream=True, timeout=timeout, verify=False)
         logger.debug(r.status_code)
         result["status_code"] = r.status_code
     except Exception as e:

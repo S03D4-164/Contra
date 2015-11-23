@@ -27,7 +27,7 @@ $(document).ready(
 <div class="col-md-6">
 <table id="job_table" class="table table-condensed">
 <tr><th class="col-md-3">Job/Query</th><td><a class="btn btn-sm btn-primary" href="/job/{{j.id}}">{{j.id}}</a>
-<a class="btn btn-sd btn-default" href="/query/{{j.query.id}}">{{j.query.id}}</a></td></tr>
+<a class="btn btn-sm btn-default" href="/query/{{j.query.id}}">{{j.query.id}}</a></td></tr>
 <tr><th>input</th><td>{{j.query.input}}</td></tr>
 <tr><th>status</th><td>{{j.status}}</td></tr>
 <tr><th>created_at</th><td>{{j.created_at|date:"c"}}</td></tr>

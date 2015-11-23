@@ -13,20 +13,19 @@ logger = getlogger(logging.DEBUG)
 
 @app.task(soft_time_limit=30)
 def content_analysis(cid):
-    #api="http://localhost:8000/api/docker/thug/"
-    #api="http://localhost:8000/api/local/thug/"
 
     c = Content.objects.get(pk=cid)
     payload = {
         'content': c.content.encode('utf-8'),
-        'resource': c.id,
+        'id': c.id,
     }
     raw = {}
     result = {}
     yara = None
     try:
         api = ContraAPI()
-        res = requests.post(api.local_thug, data=payload)
+        #res = requests.post(api.local_thug, data=payload)
+        res = requests.post(api.docker_thug, data=payload)
         raw = res.content
         result = res.json()
         if result:
@@ -39,10 +38,8 @@ def content_analysis(cid):
     rules = []
     for y in yara:
         desc = None
-        try:
+        if "description" in y:
             desc = ast.literal_eval(y["description"])
-        except Exception as e:
-            logger.debug(str(e))
         if desc:
             rule = None
             if "rule" in desc:
@@ -70,12 +67,6 @@ def content_analysis(cid):
                     if rule:
                         rule.tag.add(tag)
                         rule.save()
-            """
-            if "stings" in desc:
-                for s in desc["strings"]:
-                    if not s["data"] in matched:
-                        matched.append(s["data"])
-            """
     analysis = None
     try:
         analysis = Analysis.objects.get(
