@@ -43,9 +43,9 @@ def whois_ip(request):
         logger.debug(str(key))
         return JsonResponse(result)
 
-    logger.debug("ip whois: " + ip.encode("utf-8"))
+    logger.debug("ip whois: " + str(ip))
     try:
-        res = _whois_ip.delay(ip.encode("utf-8"))
+        res = _whois_ip.delay(str(ip))
         result = res.get()
     except Exception as e:
         logger.debug(str(key))

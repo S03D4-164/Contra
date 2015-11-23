@@ -42,7 +42,7 @@ def dns_resolve(request):
 
     logger.debug("dns resolve: " + str(query.encode("utf-8"))) 
     try:
-        res = _dns_resolve.delay(query.encode("utf-8"))
+        res = _dns_resolve.delay(query)
         result = res.get()
     except Exception as e:
         logger.error(str(e))

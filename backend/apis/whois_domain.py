@@ -28,15 +28,15 @@ def whois_domain(request):
         if "domain" in request.GET:
             domain = request.GET["domain"]
 
-    key = "domain_"+ str(hashlib.md5(domain.encode("utf-8")).hexdigest())
+    key = "domain_"+ str(hashlib.md5(str(domain).encode("utf-8")).hexdigest())
     result = cache.get(key)
     if result:
         logger.debug(str(key))
         return JsonResponse(result)
 
-    logger.debug("domain whois: " + str(domain.encode("utf-8")))
+    logger.debug("domain whois: " + str(domain))
     try:
-        res = _whois_domain.delay(domain.encode("utf-8")) 
+        res = _whois_domain.delay(str(domain)) 
         result = res.get()
     except Exception as e:
         logger.debug(str(key))
