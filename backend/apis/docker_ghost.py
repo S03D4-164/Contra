@@ -1,8 +1,6 @@
 from django.http import HttpResponse, FileResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from StringIO import StringIO
-
 import docker
 import os, sys, json, pickle
 
@@ -27,7 +25,7 @@ def _container(cli):
         stdin_open=True,
         tty=True,
         volumes=['/home/contra/artifacts'],
-        host_config=docker.utils.create_host_config(
+        host_config=cli.create_host_config(
             binds={
                 appdir + '/static/artifacts': {
                         'bind': '/home/contra/artifacts',
@@ -67,15 +65,18 @@ def ghost_api(request):
             output = "get"
 
     if url:
-        result = run_ghost(url, output, option=option)
-        if result:
+        try:
+        #if True:
+            result = run_ghost(url, output, option=option)
             fh = open(result, 'rb')
             logger.debug(len(fh.read()))
             fh.seek(0)
             response = FileResponse(fh)
             response['Content-Disposition'] = 'attachment; filename=ghost.pkl'
             return response
-
+        except Exception as e:
+            return HttpResponse(str(e), status=400)
+            
     return HttpResponse("Invalid Request", status=400)
 
 def run_ghost(url, output=None, option={}):

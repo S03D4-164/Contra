@@ -17,66 +17,66 @@ appdir = os.path.abspath(
 thugdir = appdir + "/static/artifacts/thug"
 
 def mycallback(data):
-	import yara
-	print(data)
-	yara.CALLBACK_CONTINUE
+    import yara
+    print(data)
+    yara.CALLBACK_CONTINUE
 
 #def main(url, output):
 def main(url, savedir=thugdir):
-	t = ThugAPI(url)
-	t.set_web_tracking()
-	t.disable_honeyagent()
-	t.set_verbose()
-	t.set_debug()
-	#t.set_ast_debug()
-	#t.set_http_debug()
-	t.set_extensive()
+    t = ThugAPI(url)
+    t.set_web_tracking()
+    t.disable_honeyagent()
+    t.set_verbose()
+    t.set_debug()
+    #t.set_ast_debug()
+    #t.set_http_debug()
+    t.set_extensive()
 
-	t.set_file_logging()
-	t.set_json_logging()
-	#t.set_mongodb_address("172.17.42.1:27017")
-	t.log_init(url)
+    t.set_file_logging()
+    t.set_json_logging()
+    #t.set_mongodb_address("172.17.42.1:27017")
+    t.log_init(url)
 
-	#logdir = appdir + "/static/artifacts/thug"
-        t.add_urlclassifier(thugdir + "/rule")
-	#if output:
-	#	logdir = logdir + "/" + output
-	t.set_log_dir(savedir)
-	
-	t.set_no_fetch()
-	t.run_local(url)
-	#t.run_remote(url)
+    #logdir = appdir + "/static/artifacts/thug"
+    t.add_urlclassifier(thugdir + "/rule")
+    #if output:
+    #    logdir = logdir + "/" + output
+    t.set_log_dir(savedir)
+    
+    t.set_no_fetch()
+    t.run_local(url)
+    #t.run_remote(url)
 
-	#matches = log.URLClassifier.rules.match(url, callback=None)
-        matches = []
-        rules = log.URLClassifier.rules
-        with open(url, 'rb') as data:
-            matches = rules.match(url)
-	for m in matches:
-		rule = str(m.rule)
-		tags = []
-		for tag in m.tags:
-		    if not tag in tags:
-		        tags.append(str(tag))
-		strings = []
-		for s in m.strings:
-		    d = s[2]
-		    if not d in strings:
-		        strings.append(d)
+    #matches = log.URLClassifier.rules.match(url, callback=None)
+    matches = []
+    rules = log.URLClassifier.rules
+    with open(url, 'rb') as data:
+        matches = rules.match(url)
+    for m in matches:
+        rule = str(m.rule)
+        tags = []
+        for tag in m.tags:
+            if not tag in tags:
+                tags.append(str(tag))
+        strings = []
+        for s in m.strings:
+            d = s[2]
+            if not d in strings:
+                strings.append(d)
                 result = {
                     "strings":strings,
                     "rule":rule,
                     "tags":tags,
                 }
-		log.ThugLogging.add_yara_matched(result)
-		#log.ThugLogging.add_behavior_warn("[URL Classifier] URL: %s (Rule: %s, Classification: %s)" % (url, ", ".join(rule), ", ".join(tags), ))
+        log.ThugLogging.add_yara_matched(result)
+        #log.ThugLogging.add_behavior_warn("[URL Classifier] URL: %s (Rule: %s, Classification: %s)" % (url, ", ".join(rule), ", ".join(tags), ))
 
-	t.log_event()
-	return savedir
+    t.log_event()
+    return savedir
 
 if __name__ == '__main__':
-	target = sys.argv[1]
-	output = None
-	if len(sys.argv) > 2:
-		output = sys.argv[2]
-	main(target, output)
+    target = sys.argv[1]
+    output = None
+    if len(sys.argv) > 2:
+        output = sys.argv[2]
+    main(target, output)

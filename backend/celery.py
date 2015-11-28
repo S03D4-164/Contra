@@ -2,20 +2,20 @@ from __future__ import absolute_import
 from kombu import Queue, Exchange
 
 import os
-os.environ['DJANGO_SETTINGS_MODULE'] = 'myproject2.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'myproject.settings'
 
 from celery import Celery
 from datetime import timedelta
 
 app = Celery(
-    'backend',
+    'Contra.backend',
     broker='redis://',
     backend='redis://',
     include=[
-        'backend.apis.run_ghost',
-        'backend.apis.dns_resolve',
-        'backend.apis.whois_domain',
-        'backend.apis.whois_ip',
+        'Contra.backend.apis.run_ghost',
+        #'Contra.backend.apis.dns_resolve',
+        #'Contra.backend.apis.whois_domain',
+        #'Contra.backend.apis.whois_ip',
     ])
 
 app.conf.update(

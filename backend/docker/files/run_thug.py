@@ -56,12 +56,12 @@ def main(url, output):
         tags = []
         for tag in m.tags:
             if not tag in tags:
-            tags.append(str(tag))
+                tags.append(str(tag))
         strings = []
         for s in m.strings:
             d = s[2]
             if not d in strings:
-            strings.append(d)
+                strings.append(d)
         result = {
             "strings":strings,
             "rule":rule,

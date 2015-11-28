@@ -5,7 +5,6 @@ from .run_ghost import main as run_ghost
 
 import os, sys, pickle, json
 from multiprocessing import Process
-from StringIO import StringIO
 
 appdir = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..")

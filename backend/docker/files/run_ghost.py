@@ -45,8 +45,8 @@ def main(url, output, option={}):
             body = str(option["body"])
     logger.info(defaults)
     ghost = Ghost(
-        log_level=logging.DEBUG,
-        #log_level=logging.INFO,
+        #log_level=logging.DEBUG,
+        log_level=logging.INFO,
         plugin_path=[ appdir + '/plugins', '/usr/lib/mozilla/plugins', ],
         defaults=defaults,
     )

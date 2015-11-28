@@ -1,7 +1,6 @@
 from django.http import FileResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from StringIO import StringIO
 import pickle
 
 import docker
@@ -10,7 +9,8 @@ import os, sys
 import logging
 from ..logger import getlogger
 
-logger = getlogger(logging.DEBUG, logging.StreamHandler())
+#logger = getlogger(logging.DEBUG, logging.StreamHandler())
+logger = getlogger()
     
 appdir = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..")
@@ -28,7 +28,7 @@ def _container(cli):
         stdin_open=True,
         tty=True,
         volumes=['/home/contra/artifacts'],
-        host_config=docker.utils.create_host_config(
+        host_config=cli.create_host_config(
             binds={
                 appdir + '/static/artifacts': {
                         'bind': '/home/contra/artifacts',

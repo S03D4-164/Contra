@@ -1,7 +1,7 @@
-import local_ghost
-import local_thug
-import docker_ghost
-import docker_thug
-import dns_resolve
-import whois_domain
-import whois_ip
+#from . import local_ghost
+#from . import local_thug
+from . import docker_ghost
+from . import docker_thug
+from . import dns_resolve
+from . import whois_domain
+from . import whois_ip
