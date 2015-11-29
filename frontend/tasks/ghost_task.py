@@ -1,6 +1,6 @@
 from ..api import ContraAPI
 
-import requests, pickle, os, json
+import requests, pickle, os, json, umsgpack
 
 try:
     from cStringIO import StringIO
@@ -33,7 +33,6 @@ def ghost_api(payload, timeout=60):
         return result
 
     s = None
-    #if r.status_code == 200:
     try:
         block_size = 1024*1024
         progress = 0
@@ -43,7 +42,11 @@ def ghost_api(payload, timeout=60):
             logger.debug(progress)
             s.write(chunk)
         s.seek(0)
-        result["data"] = pickle.load(s)
+        #result["data"] = pickle.load(s)
+        if not r.status_code == 200:
+            result["error"] = str(e)
+            return result
+        result["data"] = umsgpack.load(s)
         return result
     except Exception as e:
         logger.error(str(e))
