@@ -50,14 +50,16 @@ def ghost_api(request):
             logger.debug(str(e))
         if "url" in received:
             url = received["url"]
+        if "query" in received and "job" in received :
             qid = received["query"]
             jid = received["job"]
             output = str(qid) + "/" + str(jid)
+        if "method" in received:
+            option["method"] = received["method"]
             option["wait_timeout"] = received["timeout"]
             option["user_agent"] = received["user_agent"]
             option["headers"] = received["headers"]
             option["proxy"] = received["proxy"]
-            option["method"] = received["method"]
             option["body"] = received["post_data"]
     elif request.method == "GET":
         if "url" in request.GET:
@@ -81,11 +83,8 @@ def ghost_api(request):
 
 def run_ghost(url, output=None, option={}):
     cli = docker.Client(base_url='unix://var/run/docker.sock')
-    cid = _container(cli)
-    """
-    if container:
-        cid = container
-    """
+    #cid = _container(cli)
+    cid = "contra"
     logger.debug(cid)
 
     response = cli.start(container=cid)
@@ -108,7 +107,7 @@ def run_ghost(url, output=None, option={}):
 
     pkl = appdir + "/static/artifacts/ghost/" + output + "/ghost.pkl"
     logger.debug(pkl)
-    cli.remove_container(cid)
+    #cli.remove_container(cid)
     if  os.path.isfile(pkl):
         return pkl
     return None
