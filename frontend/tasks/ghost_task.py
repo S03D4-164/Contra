@@ -1,6 +1,10 @@
 from ..api import ContraAPI
 
+<<<<<<< HEAD
 import requests, os, json, pickle, umsgpack
+=======
+import requests, pickle, os, json, umsgpack
+>>>>>>> 193225a34ee98a06ac32f037ccce017b6b1bfb44
 
 try:
     from StringIO import StringIO as BytesIO
@@ -33,8 +37,12 @@ def ghost_api(payload, timeout=60):
         result["error"] = str(e)
         return result
 
+<<<<<<< HEAD
     #s = None
     #if r.status_code == 200:
+=======
+    s = None
+>>>>>>> 193225a34ee98a06ac32f037ccce017b6b1bfb44
     try:
         block_size = 1024*1024
         progress = 0
@@ -45,6 +53,7 @@ def ghost_api(payload, timeout=60):
             logger.debug(progress)
             s.write(chunk)
         s.seek(0)
+<<<<<<< HEAD
 
         data = {}
         if not r.status_code == 200:
@@ -67,6 +76,13 @@ def ghost_api(payload, timeout=60):
                 resources.append(dict([(k.decode(), v) for k,v in r.items()]))
             result["resources"] = resources
         """
+=======
+        #result["data"] = pickle.load(s)
+        if not r.status_code == 200:
+            result["error"] = str(e)
+            return result
+        result["data"] = umsgpack.load(s)
+>>>>>>> 193225a34ee98a06ac32f037ccce017b6b1bfb44
         return result
     except Exception as e:
         logger.error(str(e))

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os, sys, pickle, gzip, json
+import os, sys, pickle, gzip, json, umsgpack
 from ghost import Ghost
 
 import logging
@@ -99,7 +99,7 @@ def main(url, output, option={}):
                 "headers":page.headers,
                 "content":session.content.encode("utf-8"),
                 "seq":0,
-                "error":page.error,
+                "error":str(page.error),
             }
             capture = savedir + "/capture.png"
             try:
@@ -119,14 +119,14 @@ def main(url, output, option={}):
                     "headers":r.headers,
                     "content":r.content,
                     "seq":seq,
-                    "error":r.error,
+                    "error":str(r.error),
                 }
                 result["resources"].append(dict)
                 #logger.debug(r.url)
         dump = savedir +  "/ghost.pkl"
-        print dump
         with open(dump, 'wb') as d:
-            pickle.dump(result, d)
+            #pickle.dump(result, d)
+            umsgpack.dump(result, d)
             logger.debug(dump)
     ghost.exit()
     return dump

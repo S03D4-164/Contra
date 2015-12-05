@@ -58,12 +58,20 @@ def ghost_api(request):
 
         if "url" in received:
             url = received["url"]
+<<<<<<< HEAD
         if "query" in received and "job" in received:
+=======
+        if "query" in received and "job" in received :
+>>>>>>> 193225a34ee98a06ac32f037ccce017b6b1bfb44
             qid = received["query"]
             jid = received["job"]
             output = str(qid) + "/" + str(jid)
         if "method" in received:
             option["method"] = received["method"]
+<<<<<<< HEAD
+=======
+            option["wait_timeout"] = received["timeout"]
+>>>>>>> 193225a34ee98a06ac32f037ccce017b6b1bfb44
             option["user_agent"] = received["user_agent"]
             option["wait_timeout"] = received["timeout"]
             option["headers"] = received["headers"]
@@ -91,7 +99,11 @@ def ghost_api(request):
 
 def run_ghost(url, output=None, option={}):
     cli = docker.Client(base_url='unix://var/run/docker.sock')
+<<<<<<< HEAD
     #cid = contra_container(cli)
+=======
+    #cid = _container(cli)
+>>>>>>> 193225a34ee98a06ac32f037ccce017b6b1bfb44
     cid = "contra"
     logger.debug(cid)
 
@@ -118,8 +130,14 @@ def run_ghost(url, output=None, option={}):
     #cli.remove_container(cid)
 
     pkl = appdir + "/static/artifacts/ghost/" + output + "/ghost.pkl"
+<<<<<<< HEAD
     if os.path.isfile(pkl):
         logger.debug(pkl)
+=======
+    logger.debug(pkl)
+    #cli.remove_container(cid)
+    if  os.path.isfile(pkl):
+>>>>>>> 193225a34ee98a06ac32f037ccce017b6b1bfb44
         return pkl
     return None
 
