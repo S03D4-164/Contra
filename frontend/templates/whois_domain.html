@@ -16,8 +16,8 @@
 <div class="row">
 <div class="col-md-5">
 <table class="table">
-<tr><th class="col-md-3">id</th><td><a class="btn btn-md btn-primary" href="/whois_domain/{{wd.id}}">{{wd.id}}</a></td></tr>
-<tr><th>domain</th><td><a href="/domain/{{wd.domain.id}}">{{wd.domain}}</a></td></tr>
+<tr><th class="col-md-4">id</th><td><a class="btn btn-md btn-primary" href="/whois_domain/{{wd.id}}">{{wd.id}}</a></td></tr>
+<tr><th>domain</th><td><a href="/domain/{{wd.domain.id}}">{{wd.domain.name}}</a></td></tr>
 <tr><th>creation_date</th><td>{{wd.creation_date|date:"c"}}</td></tr>
 <tr><th>updated_date</th><td>{{wd.updated_date|date:"c"}}</td></tr>
 <tr><th>diff</th><td>{{wd.updated_date|timesince:wd.first_seen}}</td></tr>
@@ -29,7 +29,7 @@
 <div class="col-md-7">
 {% for c in wd.contact.all %}
 <table class="table table-condensed">
-<tr><th>{{c.type}}</td></th>
+<tr><th class="col-md-4">{{c.type}}</td></th>
 <tr><th>email</th><td>{{c.person.email}}</td></tr>
 <tr><th>name</th><td>{{c.person.name}}</td></tr>
 <tr><th>organization</th><td>{{c.person.organization}}</td></tr>

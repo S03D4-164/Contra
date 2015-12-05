@@ -4,15 +4,18 @@ from django.views.decorators.csrf import csrf_exempt
 import docker
 import os, sys, json, pickle
 
+from .docker_container import contra_container
+
 import logging
 from ..logger import getlogger
-#logger = getlogger(logging.DEBUG, logging.StreamHandler())
-logger = getlogger()
+logger = getlogger(logging.DEBUG, logging.StreamHandler())
+#logger = getlogger()
     
 appdir = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..")
 )
 
+"""
 def _container(cli):
     cid = None
     if cli:
@@ -36,28 +39,35 @@ def _container(cli):
         cid = container.get('Id')
 
     return cid
+"""
 
 @csrf_exempt
 def ghost_api(request):
     url = None
-    output = None
+    output = ""
     option = {}
+
     if request.method == "POST":
         received = None
         try:
-            received = json.loads(request.body)
+        #if True:
+            body = request.body.decode()
+            received = json.loads(body)
         except Exception as e:
             logger.debug(str(e))
+
         if "url" in received:
             url = received["url"]
+        if "query" in received and "job" in received:
             qid = received["query"]
             jid = received["job"]
             output = str(qid) + "/" + str(jid)
-            option["wait_timeout"] = received["timeout"]
+        if "method" in received:
+            option["method"] = received["method"]
             option["user_agent"] = received["user_agent"]
+            option["wait_timeout"] = received["timeout"]
             option["headers"] = received["headers"]
             option["proxy"] = received["proxy"]
-            option["method"] = received["method"]
             option["body"] = received["post_data"]
     elif request.method == "GET":
         if "url" in request.GET:
@@ -81,11 +91,8 @@ def ghost_api(request):
 
 def run_ghost(url, output=None, option={}):
     cli = docker.Client(base_url='unix://var/run/docker.sock')
-    cid = _container(cli)
-    """
-    if container:
-        cid = container
-    """
+    #cid = contra_container(cli)
+    cid = "contra"
     logger.debug(cid)
 
     response = cli.start(container=cid)
@@ -95,7 +102,9 @@ def run_ghost(url, output=None, option={}):
     if output:
         command.append(output)
     if option:
-        command.append(json.dumps(option))
+        opt = json.dumps(option)
+        command.append(opt)
+        #command.append(json.dumps(option))
     logger.debug(command)
     e = cli.exec_create(
         cid,
@@ -103,13 +112,14 @@ def run_ghost(url, output=None, option={}):
         #user="contra",
     )
     logger.debug(e)
-    logger.debug(cli.exec_start(e["Id"], stream=False))
+    result = cli.exec_start(e["Id"], stream=False)
+    logger.debug(result.decode())
     cli.stop(cid, timeout=300)
+    #cli.remove_container(cid)
 
     pkl = appdir + "/static/artifacts/ghost/" + output + "/ghost.pkl"
-    logger.debug(pkl)
-    cli.remove_container(cid)
-    if  os.path.isfile(pkl):
+    if os.path.isfile(pkl):
+        logger.debug(pkl)
         return pkl
     return None
 

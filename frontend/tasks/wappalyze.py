@@ -1,10 +1,10 @@
 from ..celery import app
 
-from Wappalyzer import Wappalyzer, WebPage
+from .Wappalyzer import Wappalyzer, WebPage
 
 from ..models import *
 
-import ast
+import ast, json
 
 import logging
 from ..logger import getlogger
@@ -22,12 +22,16 @@ def wappalyze(rid):
     if r.content:
         content = r.content.content
 
-    headers = None
+    headers = {}
     if r.headers:
-        headers=ast.literal_eval(r.headers)
-
+        h = ast.literal_eval(r.headers)
+        for k,v in h.items():
+            headers[k] = v
+        headers = json.dumps(headers)
     if url and content and headers:
+        print("foo")
         wappalyzer = Wappalyzer.latest()
+        print("bar")
         webpage = WebPage(
             url=url,
             html=content,

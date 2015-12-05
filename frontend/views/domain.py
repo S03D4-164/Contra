@@ -7,7 +7,7 @@ from ..forms import *
 from ..models import *
 #from .auth import check_permission
 
-import requests, pickle, gzip, hashlib, chardet, base64
+import requests
 
 def view(request, id):
     domain = Domain.objects.get(pk=id)

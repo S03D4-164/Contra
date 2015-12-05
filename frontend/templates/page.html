@@ -43,7 +43,7 @@ $(document).ready(
 </th>
 <td><a class="btn btn-sm btn-primary" href="/page/{{resource.id}}">{{resource.id}}</a></td></tr>
 <tr><th>Created at</th><td>{{resource.created_at|date:"c"}}</td></tr>
-<tr><th>URL</th><td>{{resource.url}}</td></tr>
+<tr><th>URL</th><td>{{resource.url.url}}</td></tr>
 <tr><th >Status</th><td>{{resource.http_status}}</td></tr>
 <tr><th >Webapp</th>
 <td>

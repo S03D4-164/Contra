@@ -17,7 +17,8 @@ from .progress import main as progress
 
 import re, logging
 from ..logger import getlogger
-logger = getlogger()
+#logger = getlogger()
+logger = getlogger(logging.DEBUG, logging.StreamHandler())  
 
 @login_required
 def _query_job(request, form, jobs):
@@ -57,8 +58,8 @@ def _query_job(request, form, jobs):
                         job.proxy = proxy
                         job.save()
                 if job:
-                    execute_job.delay(job.id)
-                    #execute_job(job.id)
+                    #execute_job.delay(job.id)
+                    execute_job(job.id)
                     jobs.append(job.id)
             except Exception as e:
                 messages.error(request, 'Error: ' + str(e))

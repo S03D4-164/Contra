@@ -26,14 +26,15 @@ class Hostname(models.Model):
        return self.name
 
 class URL(models.Model):
-    url = models.URLField(max_length=20000, unique=True)
+    md5 = models.CharField(max_length=200, unique=True)
+    #url = models.URLField(max_length=20000, unique=True)
+    url = models.TextField(blank=True, null=True)
     hostname = models.ForeignKey(Hostname, blank=True, null=True)
     port = models.PositiveIntegerField(blank=True, null=True)
     protocol = models.CharField(max_length=200, blank=True, null=True)
     type = models.CharField(max_length=200, blank=True, null=True)
     data = models.TextField(blank=True, null=True)
     path = models.CharField(max_length=20000, blank=True, null=True)
-    md5 = models.CharField(max_length=200, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     def __unicode__(self):
        return self.url

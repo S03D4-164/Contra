@@ -10,8 +10,6 @@ from ..tasks.wappalyze import wappalyze
 from .auth import check_permission
 
 import ast, base64, json
-from StringIO import StringIO
-from PIL import Image, ImageOps
 from pprint import pprint
 
 import logging
@@ -22,15 +20,6 @@ appdir = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..")
 )
 
-def create_b64thumb(image):
-    thumb = None
-    im = Image.open(image)
-    im.thumbnail((400,300))
-    #im = ImageOps.fit(im, (480,270), centering=(0.0, 0.0))
-    tmp = StringIO()
-    im.save(tmp, format="PNG")
-    thumb = base64.b64encode(tmp.getvalue())
-    return thumb
 
 def view(request, id):
     resource = Resource.objects.get(id=id)
@@ -61,10 +50,6 @@ def view(request, id):
         elif "wappalyze" in request.POST:
             result = wappalyze(info.id)
             logger.debug(result)
-
-    thumbnail = None
-    #if job.capture:
-    #    thumbnail = create_b64thumb(appdir + "/" + page.capture.path)
 
     matched = []
     result = None
@@ -100,8 +85,6 @@ def view(request, id):
         'analysis':analysis,
         'result': result,
         'matched':matched,
-        #'capture': capture,
-        'thumbnail':thumbnail,
         'headers': headers,
         'form':QueryForm(),
         'authform': AuthenticationForm(),

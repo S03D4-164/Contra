@@ -8,7 +8,11 @@ from ..tasks.ghost_task import *
 from .auth import check_permission 
 
 import ast, base64, json
-from StringIO import StringIO
+try:
+    from StringIO import StringIO as BytesIO
+except ImportError:
+    from io import StringIO
+    from io import BytesIO
 from PIL import Image, ImageOps
 
 
@@ -17,7 +21,8 @@ def create_b64thumb(image):
     im = Image.open(image)
     #im.thumbnail((480,270))
     im = ImageOps.fit(im, (480,270), centering=(0.0, 0.0))
-    tmp = StringIO()
+    #tmp = StringIO()
+    tmp = BytesIO()
     im.save(tmp, format="PNG")
     thumb = base64.b64encode(tmp.getvalue())
     return thumb

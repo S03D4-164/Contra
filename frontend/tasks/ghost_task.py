@@ -1,11 +1,12 @@
 from ..api import ContraAPI
 
-import requests, pickle, os, json
+import requests, os, json, pickle, umsgpack
 
 try:
-    from cStringIO import StringIO
-except:
-    from StringIO import StringIO
+    from StringIO import StringIO as BytesIO
+except ImportError:
+    from io import StringIO
+    from io import BytesIO
 
 import logging
 from ..logger import getlogger
@@ -32,18 +33,40 @@ def ghost_api(payload, timeout=60):
         result["error"] = str(e)
         return result
 
-    s = None
+    #s = None
     #if r.status_code == 200:
     try:
         block_size = 1024*1024
         progress = 0
-        s = StringIO()
+        #s = StringIO()
+        s = BytesIO()
         for chunk in r.iter_content(chunk_size=block_size):
             progress +=  len(chunk)
             logger.debug(progress)
             s.write(chunk)
         s.seek(0)
-        result["data"] = pickle.load(s)
+
+        data = {}
+        if not r.status_code == 200:
+            result["error"] = str(s.getvalue().decode())
+            #return result
+        else:
+            data = umsgpack.load(s)
+            #data = pickle.load(s, encoding="bytes")
+        s.close()
+        if b"error" in data:
+            result["error"] = data[b"error"]
+        if b"capture" in data:
+            result["capture"] = data[b"capture"]
+        if b"page" in data:
+            result["page"] = dict([(k.decode(), v) for k,v in data[b"page"].items()])
+        """
+        if b"resources" in data:
+            resources = []
+            for r in data[b"resources"]:
+                resources.append(dict([(k.decode(), v) for k,v in r.items()]))
+            result["resources"] = resources
+        """
         return result
     except Exception as e:
         logger.error(str(e))

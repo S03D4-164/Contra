@@ -61,10 +61,9 @@ $(document).ready(
 <thead><tr>
 <th class="col-md-1">id</th>
 <th class="col-md-3">input</th>
-<th class="col-md-2">created_at</th>
 <th class="col-md-2">updated_at</th>
-<th class="col-md-1">registered_by</th>
-<th class="col-md-1">restriction</th>
+<th class="col-md-2">owner</th>
+<th class="col-md-2">restriction</th>
 <th class="col-md-1">interval</th>
 <th class="col-md-1">counter</th>
 </tr></thead>
@@ -72,7 +71,6 @@ $(document).ready(
 <tr>
 <td><a class="btn btn-primary" href="/query/{{q.id}}">{{q.id}}</td>
 <td>{{q.input}}</td>
-<td>{{q.created_at|date:"c"}}</td>
 <td>{{q.updated_at|date:"c"}}</td>
 <td>{{q.registered_by}}</td>
 <td>{{q.restriction}}</td>
@@ -375,10 +373,10 @@ $(document).ready(
 <td><a class="btn btn-primary" >{{h.id}}</td>
 <td>{{h.first_seen|date:"c"}}</td>
 <td>{{h.last_seen|date:"c"}}</td>
-<td>{{h.hostname}}</td>
-<td>{% for i in h.ip_whois.all %}{{i.ip}}<br>{% endfor %}</td>
+<td>{{h.hostname.name}}</td>
+<td>{% for i in h.ip_whois.all %}<a href="/whois_ip/{{i.id}}">{{i.ip.ip}}</a><br>{% endfor %}</td>
 <td>{{h.domain_dns.serialized}}</td>
-<td><pre>{{h.domain_whois.result}}</pre></td>
+<td><a href="/whois_domain/{{h.domain_whois.id}}">{{h.domain_whois.domain.name}}</a></pre></td>
 </tr>
 {% endfor %}</tbody>
 </table>

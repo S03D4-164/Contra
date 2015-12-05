@@ -1,8 +1,6 @@
 from django.http import FileResponse
 from django.views.decorators.csrf import csrf_exempt
 
-import pickle
-
 import docker
 import os, sys
 

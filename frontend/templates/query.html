@@ -142,7 +142,7 @@ Are you sure?
 <td><a class="btn btn-md btn-primary" href="/job/{{j.id}}">{{j.id}}</td>
 <td>{{j.created_at|date:"c"}}</td>
 <td>{{j.status}}</td>
-<td>{{j.page.url}}</td>
+<td>{{j.page.url.url}}</td>
 <td>
 {% for i in j.page.host_info.ip_whois.all %}
 <img src="/static/images/flags/{{i.country|lower}}.png"><a href="/whois_ip/{{i.id}}">{{i.ip}}<br>

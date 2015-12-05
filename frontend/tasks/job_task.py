@@ -16,9 +16,10 @@ import requests, hashlib, chardet, base64, re, magic, json, datetime
 from PIL import Image
 
 try:
-    from cStringIO import StringIO
-except:
-    from StringIO import StringIO
+    from StringIO import StringIO as BytesIO
+except ImportError:
+    from io import StringIO
+    from io import BytesIO
 
 import logging
 from ..logger import getlogger
@@ -55,7 +56,7 @@ def create_payload(jid):
     if job.proxy:
         proxy = job.proxy.url
     payload = {
-        'url': u.url,
+        'url': str(u.url),
         'query': job.query.id,
         'job': job.id,
         'user_agent':user_agent,
@@ -75,56 +76,61 @@ def execute_job(jid):
 
     job.status = "Creating Request Payload"
     job.save()
-    try:
+    #try:
+    if True:
         payload = create_payload(jid)
         logger.debug(json.dumps(payload))
+    """
     except Exception as e:
         logger.error(str(e))
         job.status = "Error: " + str(e)
         job.save()
         return
+    """
     
     job.status = "Sending Request to API"
     job.save()
     result = None
-    try:
-        result = ghost_api(payload, timeout=job.timeout)
-    except Exception as e:
-        logger.error(str(e))
-        result = {"Error":str(e)}
+    #try:
+    if True:
+        res = ghost_api(payload, timeout=job.timeout)
+    #except Exception as e:
+    #    logger.error(str(e))
+    #    result = {"Error":str(e)}
+    #if "data" in result:
+    #    data = result["data"]
 
-    if "error" in result:
-        if result["error"]:
-            job.status = "Error: " + str(result["error"])
+        if "error" in res:
+            job.status = "Error: " + str(res["error"])
             job.save()
             return
 
-    if "data" in result:
-        data = result["data"]
-        if "page" in data:
+        if "page" in res:
             job.status = "Creating Page"
             job.save()
-            if data["page"]:
-                job = set_resource(job.id, data["page"], is_page=True)
-
-                savedir = get_savedir(data["page"]["url"], is_page=True)
-                cap = save_capture(data["capture"], savedir, job.id)
+            #if data["page"]:
+            page = res["page"]
+            job = set_resource(job.id, page, is_page=True)
+            if "capture" in res:
+                savedir = get_savedir(page["url"], is_page=True)
+                cap = save_capture(res["capture"], savedir, job.id)
                 job.capture = cap
                 job.save()
 
-        if "resources" in data:
-            total = len(data["resources"])
+        if "resources" in res:
+            total = len(res["resources"])
             count = 0
-            for r in data["resources"]:
+            for r in res["resources"]:
                 count += 1
                 job.status = "Creating Resource: " + str(count) + "/" + str(total)
                 job.save()
                 
                 #set_resource.delay(job.id, r, is_page=False)
-                set_resource(job.id, r, is_page=False)
+                job = set_resource(job.id, r, is_page=False)
 
-        job.status = "Completed"
-        job.save()
+
+    job.status = "Completed"
+    job.save()
 
 @app.task
 def set_resource(jid, data, is_page=False):
@@ -133,7 +139,8 @@ def set_resource(jid, data, is_page=False):
     url = None
     content = None
     http_status = None
-    try:
+    #try:
+    if True:
         url = parse_url(data["url"])
         http_status = data["http_status"]
         if not http_status:
@@ -141,23 +148,22 @@ def set_resource(jid, data, is_page=False):
         #if http_status:
         savedir = get_savedir(data["url"], is_page=is_page)
         content = save_content(data, savedir, is_page=is_page)
-    except Exception as e:
-        logger.error(str(e))
-        #return None
+    #except Exception as e:
+    #    logger.error(str(e))
 
     resource = None
     created = None
     try:
-        with transaction.atomic():
-            resource, created = Resource.objects.get_or_create(
-            #resource = Resource.objects.create(
-                url = url,
-                http_status = http_status,
-                content = content,
-                headers = data["headers"],
-                is_page = is_page,
-                seq = data["seq"],
-            )
+        #with transaction.atomic():
+        resource, created = Resource.objects.get_or_create(
+        #resource = Resource.objects.create(
+            url = url,
+            http_status = http_status,
+            content = content,
+            headers = data["headers"],
+            is_page = is_page,
+            seq = data["seq"],
+        )
 
     except Exception as e:
         logger.error(str(e))
@@ -172,7 +178,7 @@ def set_resource(jid, data, is_page=False):
             )
         except Exception as e:
             logger.error(str(e))
-            return None
+            #return None
 
     if resource.is_page == True:
         job.page = resource
@@ -182,6 +188,7 @@ def set_resource(jid, data, is_page=False):
         job.resources.add(resource)
         job.save()
 
+    """
     if resource.url.hostname:
         r = job.resources.all().filter(
             host_info__hostname=resource.url.hostname
@@ -195,6 +202,7 @@ def set_resource(jid, data, is_page=False):
             #set_hostinfo.delay(resource.id)
 
     #wappalyze.delay(resource.id)
+    """
     resource = wappalyze(resource.id)
 
     return job
@@ -211,7 +219,14 @@ def set_hostinfo(rid):
 
 def get_savedir(url, is_page=False):
     u = parse_url(url)
-    hostname = u.hostname.name.encode("utf-8")
+    hostname = None
+    domain = None
+    if u:
+        if u.hostname:
+        #hostname = u.hostname.name.encode("utf-8")
+            hostname = u.hostname.name
+            if u.hostname.domain:
+                domain = u.hostname.domain.name
 
     repodir = None
     if is_page:
@@ -220,16 +235,18 @@ def get_savedir(url, is_page=False):
         repodir = "static/repository/resource"
     repopath = appdir + "/" + repodir
     repository = get_repo(repopath)
-
     comdir = None
-    if u.type and u.data:
-        bcomdir = "data/" + str(u.type)
-    elif re.match("^[0-9a-f]*:[0-9a-f]*:[0-9a-f]+$", hostname):
+    if u.protocol == "data" and u.type:
+        comdir = "data/" + u.type + "/" + str(u.md5)
+    elif re.match("^[0-9a-f]*:[0-9a-f]*:[0-9a-f]+$", str(hostname)):
         comdir = "ipv6/" + str(hostname)
-    elif re.match("^([0-9]{1,3}\.){3}[0-9]{1,3}$", hostname):
+    elif re.match("^([0-9]{1,3}\.){3}[0-9]{1,3}$", str(hostname)):
         comdir = "ipv4/" + str(hostname)
     else:
-        comdir = "domain/" + str(hostname)
+        if domain:
+            comdir = "domain/" + str(domain) + "/" + str(hostname)
+        else:
+            comdir = "domain/" + str(hostname)
     contentdir = repodir + "/" + comdir
     fullpath = appdir + "/" + contentdir
     if not os.path.exists(fullpath):
@@ -253,7 +270,8 @@ def save_content(data, savedir, is_page=False):
     result = {}
     url = parse_url(data["url"])
 
-    s = StringIO()
+    #s = StringIO()
+    s = BytesIO()
     s.write(data["content"])
     content = s.getvalue()
     type = magic.from_buffer(content, mime=True)
@@ -266,11 +284,14 @@ def save_content(data, savedir, is_page=False):
     md5 = None
     if "encoding" in cd:
         if cd["encoding"]:
-            decoded = content.decode(cd["encoding"], errors="ignore")
+            #decoded = content.decode(cd["encoding"], errors="ignore")
+            decoded = content
         else:
-            decoded = content.decode("utf-8", errors="ignore")
+            #decoded = content.decode("utf-8", errors="ignore")
+            decoded = content
         if decoded:
-            md5 = str(hashlib.md5(decoded.encode("utf-8")).hexdigest())
+            #md5 = str(hashlib.md5(decoded.encode("utf-8")).hexdigest())
+            md5 = str(hashlib.md5(decoded).hexdigest())
     s.close()
 
     d = savedir
@@ -283,23 +304,23 @@ def save_content(data, savedir, is_page=False):
         d["compath"] = d["comdir"] + "/" + str(url.md5)
         commit = git_commit(d["compath"], d["repopath"])
         d["contentpath"] = d["contentdir"] + "/" + str(url.md5)
-        path = d["contentpath"].decode("utf-8")
-
+        #path = d["contentpath"].decode("utf-8")
+        path = d["contentpath"]
     c = None
     try:
-        with transaction.atomic():
-            c, created = Content.objects.get_or_create(
-                content = decoded,
-                md5 = md5,
-                commit = commit,
-                path = path,
-                type = type,
-                length = length,
-                url = url,
-            )
-            if c:
-                #set_hash.delay(c.id)
-                c = set_hash(c.id)
+        #with transaction.atomic():
+        c, created = Content.objects.get_or_create(
+            content = decoded,
+            md5 = md5,
+            commit = commit,
+            path = path,
+            type = type,
+            length = length,
+            url = url,
+        )
+        if c:
+            #set_hash.delay(c.id)
+            c = set_hash(c.id)
     except Exception as e:
         logger.error(str(e))
         try:
@@ -324,6 +345,9 @@ def set_hash(cid):
     c.sha1 = str(hashlib.sha1(decoded.encode("utf-8")).hexdigest())
     c.sha256 = str(hashlib.sha256(decoded.encode("utf-8")).hexdigest())
     c.sha512 = str(hashlib.sha512(decoded.encode("utf-8")).hexdigest())
+    #c.sha1 = str(hashlib.sha1(c.content).hexdigest())
+    #c.sha256 = str(hashlib.sha256(c.content).hexdigest())
+    #c.sha512 = str(hashlib.sha512(c.content).hexdigest())
     c.save()
     return c
 
@@ -348,10 +372,12 @@ def save_capture(capture, d, jid):
         compath = d["comdir"] + "/capture/" + job.page.url.md5 + "/" + filename 
         #commit = git_commit(compath, d["repopath"])
         cappath = d["contentdir"] + "/capture/" + job.page.url.md5 + "/" + filename
-        path = cappath.decode("utf-8")
+        #path = cappath.decode("utf-8")
+        path = cappath
         im = Image.open(file)
         im.thumbnail((150,150))
-        s = StringIO()
+        #s = StringIO()
+        s = BytesIO()
         im.save(s, format="PNG")
         thumb = s.getvalue()
         s.close()

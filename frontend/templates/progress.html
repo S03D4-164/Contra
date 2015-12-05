@@ -91,7 +91,7 @@ Page
 <a class="btn btn-default" href="/job/{{j.id}}">{{j.id}}</a>
 <a class="btn btn-primary" href="/page/{{j.page.id}}">{{j.page.id}}</a>
 </td></tr>
-<tr><th>url</th><td>{{j.page.url}}</td></tr>
+<tr><th>url</th><td>{{j.page.url.url}}</td></tr>
 <tr><th >status</th><td>{{j.page.http_status}}</td></tr>
 <tr><th>ip</th><td>
 {% for i in j.page.host_info.ip_whois.all %}

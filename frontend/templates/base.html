@@ -103,11 +103,7 @@ $(document).ready(
 
 <div class="modal-body">
 <form method="post" action="/">{% csrf_token %}
-<table class="table">
-<thead><tr>
-<td class="col-md-2"></td>
-<td></td>
-</tr></thead>
+<table class="table" width="300px" style="width:300px;">
 {{form.as_table}}
 </table>
 <input type="submit" class="btn" name="register" value="submit">

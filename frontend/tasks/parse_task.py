@@ -84,7 +84,7 @@ def parse_ipv4url(p):
 
 def parse_hostname(hostname):
     no_fetch_extract = tldextract.TLDExtract(suffix_list_url=False)
-    ext = no_fetch_extract(str(hostname).encode("utf-8"))
+    ext = no_fetch_extract(str(hostname))
     logger.debug(ext)
     suffix = ext.suffix
     domain = None
@@ -152,13 +152,13 @@ def parse_datauri(p):
             url, created = URL.objects.get_or_create(
                 url = p["url"],
                 protocol = p["protocol"],
-                #type = type,
-                data = data,
+                type = type,
+                #data = data,
                 md5 = hashlib.md5(p["url"]).hexdigest()
             )
-            if url:
-                url.type = type
-                url.save()
+            #if url:
+            #    url.type = type
+            #    url.save()
     except Exception as e:
         logger.error(e)
     return url

@@ -38,7 +38,7 @@ $(document).ready(
 <div class="col-md-6">
 <table id="req_table" class="table table-condensed">
 <tr><th>Request</th></tr>
-<tr><th>user_agent</th><td>{{j.user_agent}}</td></tr>
+<tr><th>user_agent</th><td>{{j.user_agent.name}}</td></tr>
 <tr><th>referer</th><td>{{j.referer}}</td></tr>
 <tr><th>proxy</th><td>{{j.proxy}}</td></tr>
 <tr><th>additional_headers</th><td>{{j.additional_headers}}</td></tr>
@@ -69,7 +69,7 @@ $(document).ready(
 <table id="page_table" class="table table-condensed ">
 <tr><th >id</th><td><a class="btn btn-sm btn-info" href="/page/{{p.id}}">{{p.id}}</a></td></tr>
 <tr><th >created_at</th><td>{{p.created_at|date:"c"}}</td>
-<tr><th>url</th><td>{{j.page.url}}</td></tr>
+<tr><th>url</th><td>{{j.page.url.url}}</td></tr>
 <tr><th>ip</th>
 <td>
 {% for i in p.host_info.ip_whois.all %}

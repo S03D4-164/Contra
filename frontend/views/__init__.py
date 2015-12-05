@@ -1,3 +1,5 @@
+from . import *
+"""
 import index
 import query
 import job
@@ -9,3 +11,4 @@ import whois_domain
 import whois_ip
 import dns
 import search
+"""
