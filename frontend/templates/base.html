@@ -23,6 +23,14 @@
 
 <link rel="stylesheet" href="/static/colorbox/colorbox.css">
 <script src="/static/colorbox/jquery.colorbox-min.js"></script>
+
+
+<link href="/static/flag-icon-css/assets/docs.css" rel="stylesheet">
+<link href="/static/flag-icon-css/css/flag-icon.css" rel="stylesheet">
+<script src="/static/flag-icon-css/assets/docs.js"></script>
+
+<link rel="stylesheet" href="/static/font-awesome/css/font-awesome.min.css">
+
 {% block script %}
 <script>
 $(document).ready(
@@ -44,21 +52,21 @@ $(document).ready(
 
 <nav class="navbar navbar-inverse">
 <div class="navbar-header col-md-1">
-<a class="navbar-brand" href="/"><span class="glyphicon glyphicon-home"></span></a>
+<a class="navbar-brand" href="/"><i class="fa fa-home fa-lg"></i></a>
 </div>
 <div class="col-md-11">
 <ul class="nav navbar-nav">
 {% if user.is_authenticated %}
 <li><a data-toggle="modal" data-target="#register_form">Register URL</a></li>
 {% endif %}
-<li><a href="/search/">Search</a></li>
+<li><a href="/search/"><i class="fa fa-search"></i>Search</a></li>
 </ul>
 <ul class="nav navbar-nav navbar-right">
 {% if user.is_authenticated %}
-<li><a href="/accounts/user/"><span class="glyphicon glyphicon-user"></span>{{user.username}}</a></li>
-<li><a href="/accounts/logout/?next={{redirect}}"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+<li><a href="/accounts/user/"><i class="fa fa-user"></i>{{user.username}}</a></li>
+<li><a href="/accounts/logout/?next={{redirect}}"><i class="fa fa-sign-out"></i> Logout</a></li>
 {% else %}
-<li><a data-toggle="modal" data-target="#auth_form"><span class="glyphicon glyphicon-log-in"></span>Login</a></li>
+<li><a data-toggle="modal" data-target="#auth_form"><i class="fa fa-sign-in"></i>Login</a></li>
 {% endif %}
 </ul>
 </div>

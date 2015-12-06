@@ -69,15 +69,15 @@ $(document).ready(
 {% else %}
 <tr>
 {% endif %}
-<td><a class="btn btn-md btn-primary" href="/resource/{{r.id}}">{{r.id}}</td>
+<td><a class="btn btn-sm btn-primary" href="/resource/{{r.id}}">{{r.id}}</td>
 <td>{{r.created_at|date:"c"}}</td>
-<td>{{r.url}}</td>
+<td>{{r.url.url}}</td>
 <td>
 <table>
 {% for i in r.host_info.ip_whois.all %}
 <tr>
-<td><a href="/whois_ip/{{i.id}}">{{i.ip}}</a></td>
-<td><img src="/static/images/flags/{{i.country|lower}}.png"></td>
+<td><a href="/whois_ip/{{i.id}}">{{i.ip.ip}}</a></td>
+<td><span class="flag-icon flag-icon-{{i.country|lower}}" title="{{i.country}}"></td>
 <td>{{i.description}}</td>
 </tr>
 {% endfor %}

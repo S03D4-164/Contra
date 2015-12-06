@@ -2,7 +2,7 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm
+from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm, UserChangeForm
 from django.contrib.auth.models import User
 
 from ..forms import *

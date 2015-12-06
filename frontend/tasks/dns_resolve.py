@@ -30,15 +30,15 @@ def dns_resolve(query):
         logger.debug(serialized)
         md5 = hashlib.md5(serialized).hexdigest()
         try:
-            with transaction.atomic():
-                d, created = DNSRecord.objects.get_or_create(
-                    query = query,
-                    md5 = md5,
-                    serialized = serialized,
-                    mx = "\n".join(result["MX"]),
-                    #soa = "\n".join(result["SOA"]),
-                    txt = "\n".join(result["TXT"]),
-                )
+            #with transaction.atomic():
+            d, created = DNSRecord.objects.get_or_create(
+                query = query,
+                md5 = md5,
+                serialized = serialized,
+                mx = "\n".join(result["MX"]),
+                #soa = "\n".join(result["SOA"]),
+                txt = "\n".join(result["TXT"]),
+            )
             if not created:
                 logger.debug("DNS result already exists.")
                 return d

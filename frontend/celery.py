@@ -10,12 +10,9 @@ from datetime import timedelta
 app = Celery(
     'Contra.frontend',
     broker='redis://',
-        backend='redis://',
-        include=[
-        #'frontend.tasks.ghost_task',
+    backend='redis://',
+    include=[
         'Contra.frontend.tasks.crawl_task',
-        #'frontend.tasks.whois_domain',
-        #'frontend.tasks.whois_ip',
     ])
 
 app.conf.update(
@@ -34,6 +31,9 @@ app.conf.update(
             'args': [3600]
         },
     },
+    CELERY_ACCEPT_CONTENT = ['json', 'pickle'],
+    CELERY_TASK_SERIALIZER = 'pickle',
+    CELERY_RESULT_SERIALIZER = 'pickle',
 )
 
 if __name__ == '__main__':

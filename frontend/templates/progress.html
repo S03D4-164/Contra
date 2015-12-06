@@ -38,7 +38,7 @@ $(document).ready(function(){
 <div id="status" class="col-md-4">{{status}}</div>
 <div id="loader" class="col-md-4">
 {% if status != "Finished" %}
-<img src="/static/images/ajax-loader.gif">
+<i class="fa fa-spinner fa-pulse"></i>
 {% endif %}
 </div>
 </div>
@@ -84,23 +84,23 @@ Page
 {% for j in job %}
 {% if j.page %}
 <tr>
-<td>
+<td class="col-sm-8">
 <table class="table table-condensed">
 <tr><th class="col-md-3">job/page</th>
-<td>
-<a class="btn btn-default" href="/job/{{j.id}}">{{j.id}}</a>
-<a class="btn btn-primary" href="/page/{{j.page.id}}">{{j.page.id}}</a>
+<td class="col-md-9">
+<a class="btn btn-sm btn-default" href="/job/{{j.id}}">{{j.id}}</a>
+<a class="btn btn-sm btn-primary" href="/page/{{j.page.id}}">{{j.page.id}}</a>
 </td></tr>
 <tr><th>url</th><td>{{j.page.url.url}}</td></tr>
 <tr><th >status</th><td>{{j.page.http_status}}</td></tr>
-<tr><th>ip</th><td>
+<tr><th >ip</th><td><table>
 {% for i in j.page.host_info.ip_whois.all %}
-{{i.ip}}<img title="{{i.country}}" src="/static/images/flags/{{i.country|lower}}.png"><br>
-{% endfor %}
+<tr><td>{{i.ip.ip}}<span class="flag-icon flag-icon-{{i.country|lower}}" title="{{i.country}}"></td></tr>
+{% endfor %}</table>
 </td></tr>
 </table>
 </td>
-<td>
+<td class="col-sm-4">
 <a class="colorbox" href="/{{j.capture.path}}">
 <img src="data:image/png;base64,{{j.capture.b64thumb}}"></a></td>
 </tr>

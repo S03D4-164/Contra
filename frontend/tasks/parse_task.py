@@ -51,7 +51,7 @@ def parse_ipv6url(p):
                     port = p["port"],
                     protocol = p["protocol"],
                     path = p["path"],
-                    md5 = hashlib.md5(p["url"]).hexdigest()
+                    md5 = hashlib.md5(p["url"].encode("utf-8")).hexdigest()
                 )
         except Exception as e:
             logger.error(e)
@@ -75,7 +75,7 @@ def parse_ipv4url(p):
                 port = p["port"],
                 protocol = p["protocol"],
                 path = p["path"],
-                md5 = hashlib.md5(p["url"]).hexdigest()
+                md5 = hashlib.md5(p["url"].encode("utf-8")).hexdigest()
             )
     except Exception as e:
         logger.error(e)
@@ -85,7 +85,7 @@ def parse_ipv4url(p):
 def parse_hostname(hostname):
     no_fetch_extract = tldextract.TLDExtract(suffix_list_url=False)
     ext = no_fetch_extract(str(hostname))
-    logger.debug(ext)
+    #logger.debug(ext)
     suffix = ext.suffix
     domain = None
     if suffix:
@@ -154,7 +154,7 @@ def parse_datauri(p):
                 protocol = p["protocol"],
                 type = type,
                 #data = data,
-                md5 = hashlib.md5(p["url"]).hexdigest()
+                md5 = hashlib.md5(p["url"].encode("utf-8")).hexdigest()
             )
             #if url:
             #    url.type = type

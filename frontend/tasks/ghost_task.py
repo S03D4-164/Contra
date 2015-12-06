@@ -1,10 +1,6 @@
 from ..api import ContraAPI
 
-<<<<<<< HEAD
-import requests, os, json, pickle, umsgpack
-=======
-import requests, pickle, os, json, umsgpack
->>>>>>> 193225a34ee98a06ac32f037ccce017b6b1bfb44
+import requests, os, json, umsgpack
 
 try:
     from StringIO import StringIO as BytesIO
@@ -37,12 +33,7 @@ def ghost_api(payload, timeout=60):
         result["error"] = str(e)
         return result
 
-<<<<<<< HEAD
-    #s = None
-    #if r.status_code == 200:
-=======
     s = None
->>>>>>> 193225a34ee98a06ac32f037ccce017b6b1bfb44
     try:
         block_size = 1024*1024
         progress = 0
@@ -53,7 +44,6 @@ def ghost_api(payload, timeout=60):
             logger.debug(progress)
             s.write(chunk)
         s.seek(0)
-<<<<<<< HEAD
 
         data = {}
         if not r.status_code == 200:
@@ -61,7 +51,8 @@ def ghost_api(payload, timeout=60):
             #return result
         else:
             data = umsgpack.load(s)
-            #data = pickle.load(s, encoding="bytes")
+            if not data:
+                result["error"] = "ghost failed."
         s.close()
         if b"error" in data:
             result["error"] = data[b"error"]
@@ -69,20 +60,13 @@ def ghost_api(payload, timeout=60):
             result["capture"] = data[b"capture"]
         if b"page" in data:
             result["page"] = dict([(k.decode(), v) for k,v in data[b"page"].items()])
-        """
         if b"resources" in data:
             resources = []
             for r in data[b"resources"]:
                 resources.append(dict([(k.decode(), v) for k,v in r.items()]))
             result["resources"] = resources
-        """
-=======
-        #result["data"] = pickle.load(s)
-        if not r.status_code == 200:
-            result["error"] = str(e)
-            return result
-        result["data"] = umsgpack.load(s)
->>>>>>> 193225a34ee98a06ac32f037ccce017b6b1bfb44
+            if result["resources"] == []:
+                result["error"] = "ghost failed."
         return result
     except Exception as e:
         logger.error(str(e))

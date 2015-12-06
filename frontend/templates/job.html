@@ -73,7 +73,7 @@ $(document).ready(
 <tr><th>ip</th>
 <td>
 {% for i in p.host_info.ip_whois.all %}
-<img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}"><a href="/whois_ip/{{i.id}}">{{i.ip}}</a><br>
+<span class="flag-icon flag-icon-{{i.country|lower}}" title="{{i.country}}"></span><a href="/whois_ip/{{i.id}}">{{i.ip.ip}}</a><br>
 {% endfor %}
 </td>
 </tr>
@@ -133,10 +133,10 @@ $(document).ready(
 <td><a class="btn btn-sm btn-default">{{r.seq}}</a></td>
 <td><a class="btn btn-sm btn-primary" href="/resource/{{r.id}}">{{r.id}}</a></td>
 <td>{{r.created_at|date:"c"}}</td>
-<td>{{r.url}}</td>
+<td>{{r.url.url}}</td>
 <td>
 {% for i in r.host_info.ip_whois.all %}
-<img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}"><a href="/whois_ip/{{i.id}}">{{i.ip}}</a><br>
+<span class="flag-icon flag-icon-{{i.country|lower}}" title="{{i.country}}"></span><a href="/whois_ip/{{i.id}}">{{i.ip.ip}}</a><br>
 {% endfor %}
 </td>
 <td>{{r.http_status}}</td>
@@ -177,10 +177,10 @@ $(document).ready(
 <td><a class="btn btn-sm btn-default">{{r.seq}}</a></td>
 <td><a class="btn btn-sm btn-primary" href="/resource/{{r.id}}">{{r.id}}</a></td>
 <td>{{r.created_at|date:"c"}}</td>
-<td>{{r.url}}</td>
+<td>{{r.url.url}}</td>
 <td>
 {% for i in r.host_info.ip_whois.all %}
-<img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}"><a href="/whois_ip/{{i.id}}">{{i.ip}}</a><br>
+<span class="flag-icon flag-icon-{{i.country|lower}}" title="{{i.country}}"></span><a href="/whois_ip/{{i.id}}">{{i.ip.ip}}</a><br>
 {% endfor %}
 </td>
 <td>{{r.http_status}}</td>

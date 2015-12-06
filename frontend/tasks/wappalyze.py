@@ -27,11 +27,9 @@ def wappalyze(rid):
         h = ast.literal_eval(r.headers)
         for k,v in h.items():
             headers[k] = v
-        headers = json.dumps(headers)
+        #headers = json.dumps(headers)
     if url and content and headers:
-        print("foo")
         wappalyzer = Wappalyzer.latest()
-        print("bar")
         webpage = WebPage(
             url=url,
             html=content,

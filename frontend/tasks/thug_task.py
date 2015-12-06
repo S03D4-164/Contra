@@ -2,7 +2,6 @@ from ..celery import app
 from ..forms import *
 from ..models import *
 
-
 from ..api import ContraAPI
 
 import requests, json, ast

@@ -36,8 +36,10 @@ def _query_job(request, form, jobs):
     line = input.splitlines()
     for i in line:
         i.strip()
-        if re.match("^(ht|f)tps?://[^/]+", i):
-            try:
+        if re.match("^(ht|f)tps?://[^/]+", i) \
+        or re.match("^data:.+\;base64,.+==", i):
+            #try:
+            if True:
                 job = None
                 with transaction.atomic():
                     q, created = Query.objects.get_or_create(
@@ -58,11 +60,11 @@ def _query_job(request, form, jobs):
                         job.proxy = proxy
                         job.save()
                 if job:
-                    #execute_job.delay(job.id)
-                    execute_job(job.id)
+                    execute_job.delay(job.id)
+                    #execute_job(job.id)
                     jobs.append(job.id)
-            except Exception as e:
-                messages.error(request, 'Error: ' + str(e))
+            #except Exception as e:
+            #    messages.error(request, 'Error: ' + str(e))
         else:
             if i:
                 messages.error(request, 'Invalid Input: ' + str(i))
@@ -112,6 +114,8 @@ def view(request):
                 d = dns_resolve(input.strip())
                 if d:
                     return redirect("/dns/" + str(d.id))
+                else:
+                    messages.warning(request, 'No Result.')
         elif "whois_domain" in request.POST:
             iform = InputForm(request.POST)
             if iform.is_valid():
@@ -132,6 +136,8 @@ def view(request):
                 wi = whois_ip(input.strip())
                 if wi:
                     return redirect("/whois_ip/" + str(wi.id))
+                else:
+                    messages.warning(request, 'No Result.')
         elif "host_inspect" in request.POST:
             iform = InputForm(request.POST)
             if iform.is_valid():

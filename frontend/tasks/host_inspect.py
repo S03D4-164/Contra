@@ -40,7 +40,7 @@ def host_inspect(host):
         ipv4 = host_dr.a.all()
         for ip in ipv4:
             if not ip in ips:
-                       ips.append(ip)
+                ips.append(ip)
         ipv6 = host_dr.aaaa.all()
         for ip in ipv6:
             if not ip in ips:
@@ -57,13 +57,13 @@ def host_inspect(host):
     host_info = None
     created = None
     try:
-        with transaction.atomic():
-            host_info, created = Host_Info.objects.get_or_create(
-                hostname = hostname,
-                host_dns = host_dr,
-                domain_dns = domain_dr,
-                domain_whois = domain_whois,
-            )
+        #with transaction.atomic():
+        host_info, created = Host_Info.objects.get_or_create(
+            hostname = hostname,
+            host_dns = host_dr,
+            domain_dns = domain_dr,
+            domain_whois = domain_whois,
+        )
     except Exception as e:
         logger.error(str(e))
         try:

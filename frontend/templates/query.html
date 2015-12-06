@@ -145,7 +145,7 @@ Are you sure?
 <td>{{j.page.url.url}}</td>
 <td>
 {% for i in j.page.host_info.ip_whois.all %}
-<img src="/static/images/flags/{{i.country|lower}}.png"><a href="/whois_ip/{{i.id}}">{{i.ip}}<br>
+<span class="flag-icon flag-icon-{{i.country|lower}}" title="{{i.country}}"></span><a href="/whois_ip/{{i.id}}">{{i.ip.ip}}<br>
 {% endfor %}
 </td>
 <td>{{j.page.http_status}}</td>

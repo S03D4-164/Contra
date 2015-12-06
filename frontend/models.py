@@ -28,7 +28,7 @@ class Hostname(models.Model):
 class URL(models.Model):
     md5 = models.CharField(max_length=200, unique=True)
     #url = models.URLField(max_length=20000, unique=True)
-    url = models.TextField(blank=True, null=True)
+    url = models.TextField()
     hostname = models.ForeignKey(Hostname, blank=True, null=True)
     port = models.PositiveIntegerField(blank=True, null=True)
     protocol = models.CharField(max_length=200, blank=True, null=True)
@@ -36,8 +36,8 @@ class URL(models.Model):
     data = models.TextField(blank=True, null=True)
     path = models.CharField(max_length=20000, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    def __unicode__(self):
-       return self.url
+    #def __unicode__(self):
+    #   return self.url
 
 
 class IP_Whois(models.Model):
@@ -158,7 +158,7 @@ class Capture(models.Model):
 
 class Webapp(models.Model):
     name = models.CharField(max_length=2000, unique=True)
-    def __unicode__(self):
+    def __str__(self):
        return self.name
 
 class Resource(models.Model):
@@ -197,7 +197,7 @@ class UserAgent(models.Model):
     name = models.CharField(max_length=200)
     strings = models.CharField(max_length=2000)
     created_at = models.DateTimeField(auto_now_add=True)
-    def __unicode__(self):
+    def __str__(self):
        return self.name
     class Meta:
         unique_together = (('name', 'strings'))

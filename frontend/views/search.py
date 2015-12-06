@@ -14,6 +14,7 @@ def search(sform):
     webapp = sform.cleaned_data["webapp"]
 
     res = Resource.objects.all()
+    print(res)
     if url:
         res = res.filter(url__url__iregex=url)
     if ip:

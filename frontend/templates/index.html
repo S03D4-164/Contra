@@ -131,7 +131,7 @@ $(document).ready(
 <td>{{p.resource.url}}</td>
 <td>
 {% for i in p.host_info.ip_whois.all %}
-<img src="/static/images/flags/{{i.whois.country|lower}}.png" title="{{i.whois.country}}"><a href="/whois_ip/{{i.whois.id}}">{{i.ip}}</a><br>
+<span class="flag-icon flag-icon-{{i.whois.country|lower}}" title="{{i.whois.country}}"></span><a href="/whois_ip/{{i.whois.id}}">{{i.ip.ip}}</a><br>
 {% endfor %}
 </td>
 <td>{{p.resource.content.length}}</td>
@@ -165,7 +165,7 @@ $(document).ready(
 <td>{{r.resource.url}}</td>
 <td>
 {% for i in r.host_info.ip_whois.all %}
-<img src="/static/images/flags/{{i.whois.country|lower}}.png" title="{{i.whois.country}}"><a href="/whois_ip/{{i.whois.id}}">{{i.ip}}</a><br>
+<span class="flag-icon flag-icon-{{i.whois.country|lower}}" title="{{i.whois.country}}"></span><a href="/whois_ip/{{i.whois.id}}">{{i.ip.ip}}</a><br>
 {% endfor %}
 </td>
 <td>{{r.resource.content.type}}</td>
@@ -269,13 +269,13 @@ $(document).ready(
 <td>{{d.updated_date|date:"c"}}</td>
 <td><a href="/domain/{{d.domain.id}}">{{d.domain.name}}</a></td>
 <td>
-<table>
+<table class="table">
 {% for c in d.contact.all %}
 <tr>
-<td>{{c.type}}</td>
-<td>{{c.person.organization}}</td>
-<td><img src="/static/images/flags/{{c.person.country|lower}}.png" title="{{c.person.country}}"></td>
-<td>{{c.person.name}}</td>
+<td class="col-sm-3">{{c.type}}</td>
+<td class="col-sm-4">{{c.person.organization}}</td>
+<td class="col-sm-1"><span class="flag-icon flag-icon-{{c.person.country|lower}}" title="{{c.person.country}}"></span></td>
+<td class="col-sm-4">{{c.person.name}}</td>
 </tr>
 {% endfor %}
 </table>
@@ -409,7 +409,7 @@ $(document).ready(
 <td>{{i.updated_date|date:"c"}}</td>
 <td>{{i.ip.ip}}</td>
 <td>
-<img src="/static/images/flags/{{i.country|lower}}.png" title="{{i.country}}">
+<span class="flag-icon flag-icon-{{i.country|lower}}" title="{{i.country}}"></span>
 {{i.country}}
 </td>
 <td>{{i.description}}</td>

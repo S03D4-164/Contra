@@ -58,11 +58,11 @@ $(document).ready(
 <table class="table table-condensed">
 <tbody>
 <tr><th>dns</th><td><a href="/dns/{{resource.host_info.domain_dns.id}}">{{resource.host_info.domain_dns.query}}</a></td></tr>
-<tr><th>whois</th><td><a href="/whois_domain/{{resource.host_info.domain_whois.id}}">{{resource.host_info.domain_whois.domain}}</a></td></tr>
+<tr><th>whois</th><td><a href="/whois_domain/{{resource.host_info.domain_whois.id}}">{{resource.host_info.domain_whois.domain.name}}</a></td></tr>
 <tr><th >ip</th>
 <td>
 {% for i in resource.host_info.ip_whois.all %}
-<img src="/static/images/flags/{{i.country|lower}}.png" title="/static/images/flags/{{i.country|lower}}"><a href="/whois_ip/{{i.id}}">{{i.ip}}</a><br>
+<span class="flag-icon flag-icon-{{i.country|lower}}" title="{{i.countr}}"></span><a href="/whois_ip/{{i.id}}">{{i.ip.ip}}</a><br>
 {% endfor %}
 </td></tr>
 </tbody>

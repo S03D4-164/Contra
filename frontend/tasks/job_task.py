@@ -76,46 +76,49 @@ def execute_job(jid):
 
     job.status = "Creating Request Payload"
     job.save()
-    #try:
-    if True:
+    try:
+    #if True:
         payload = create_payload(jid)
         logger.debug(json.dumps(payload))
-    """
     except Exception as e:
-        logger.error(str(e))
+        #logger.error(str(e))
         job.status = "Error: " + str(e)
         job.save()
         return
-    """
     
     job.status = "Sending Request to API"
     job.save()
-    result = None
-    #try:
-    if True:
+    res = None
+    try:
+    #if True:
         res = ghost_api(payload, timeout=job.timeout)
-    #except Exception as e:
-    #    logger.error(str(e))
-    #    result = {"Error":str(e)}
-    #if "data" in result:
-    #    data = result["data"]
+    except Exception as e:
+        logger.error(str(e))
+        res = {"error":str(e)}
 
+    if not res:
+        res = {"error":"API returns nothing"}
+        job.status = "Error: " + str(res["error"])
+        job.save()
+        return
+    elif res:
         if "error" in res:
-            job.status = "Error: " + str(res["error"])
-            job.save()
-            return
+            if res["error"]:
+                job.status = "Error: " + str(res["error"])
+                job.save()
+                return
 
         if "page" in res:
+            page = res["page"]
             job.status = "Creating Page"
             job.save()
-            #if data["page"]:
-            page = res["page"]
-            job = set_resource(job.id, page, is_page=True)
-            if "capture" in res:
-                savedir = get_savedir(page["url"], is_page=True)
-                cap = save_capture(res["capture"], savedir, job.id)
-                job.capture = cap
-                job.save()
+            if "url" in page:
+                job = set_resource(job.id, page, is_page=True)
+                if "capture" in res:
+                    savedir = get_savedir(page["url"], is_page=True)
+                    cap = save_capture(res["capture"], savedir, job.id)
+                    job.capture = cap
+                    job.save()
 
         if "resources" in res:
             total = len(res["resources"])
@@ -128,9 +131,8 @@ def execute_job(jid):
                 #set_resource.delay(job.id, r, is_page=False)
                 job = set_resource(job.id, r, is_page=False)
 
-
-    job.status = "Completed"
-    job.save()
+        job.status = "Completed"
+        job.save()
 
 @app.task
 def set_resource(jid, data, is_page=False):
@@ -139,8 +141,8 @@ def set_resource(jid, data, is_page=False):
     url = None
     content = None
     http_status = None
-    #try:
-    if True:
+    try:
+    #if True:
         url = parse_url(data["url"])
         http_status = data["http_status"]
         if not http_status:
@@ -148,8 +150,9 @@ def set_resource(jid, data, is_page=False):
         #if http_status:
         savedir = get_savedir(data["url"], is_page=is_page)
         content = save_content(data, savedir, is_page=is_page)
-    #except Exception as e:
-    #    logger.error(str(e))
+    except Exception as e:
+        logger.error(str(e))
+        return job
 
     resource = None
     created = None
@@ -164,7 +167,6 @@ def set_resource(jid, data, is_page=False):
             is_page = is_page,
             seq = data["seq"],
         )
-
     except Exception as e:
         logger.error(str(e))
         try:
@@ -178,17 +180,16 @@ def set_resource(jid, data, is_page=False):
             )
         except Exception as e:
             logger.error(str(e))
-            #return None
+            return job
 
     if resource.is_page == True:
         job.page = resource
-        job.status = "Page Created."
+        job.status = "Page Created"
         job.save()
     elif resource.is_page == False:
         job.resources.add(resource)
         job.save()
 
-    """
     if resource.url.hostname:
         r = job.resources.all().filter(
             host_info__hostname=resource.url.hostname
@@ -198,11 +199,10 @@ def set_resource(jid, data, is_page=False):
             resource.host_info = r[0].host_info
             resource.save()
         else:
-            set_hostinfo(resource.id)
+            host_info = set_hostinfo(resource.id)
             #set_hostinfo.delay(resource.id)
 
     #wappalyze.delay(resource.id)
-    """
     resource = wappalyze(resource.id)
 
     return job
@@ -270,34 +270,41 @@ def save_content(data, savedir, is_page=False):
     result = {}
     url = parse_url(data["url"])
 
-    #s = StringIO()
-    s = BytesIO()
-    s.write(data["content"])
-    content = s.getvalue()
+    #s = BytesIO()
+    content = data["content"]
     type = magic.from_buffer(content, mime=True)
+    logger.debug(type)
     length = len(content)
+    logger.debug(length)
 
-    cd = chardet.detect(content)
+    encoded = content
+    try:
+        encoded = content.encode("utf-8")
+    except:
+        pass
+    cd = chardet.detect(encoded)
     logger.debug(cd)
-
-    decoded = content
+    decoded = None
     md5 = None
     if "encoding" in cd:
         if cd["encoding"]:
-            #decoded = content.decode(cd["encoding"], errors="ignore")
-            decoded = content
+            decoded = encoded.decode(cd["encoding"], errors="ignore")
         else:
-            #decoded = content.decode("utf-8", errors="ignore")
-            decoded = content
-        if decoded:
-            #md5 = str(hashlib.md5(decoded.encode("utf-8")).hexdigest())
-            md5 = str(hashlib.md5(decoded).hexdigest())
-    s.close()
+            decoded = content.decode("utf-8", errors="ignore")
+        md5 = str(hashlib.md5(encoded).hexdigest())
+        logger.debug(md5)
+
+    #s.write(data["content"].encode("utf-8"))
+    #s.write(content)
+    #content = s.getvalue()
+    #s.close()
 
     d = savedir
     file = d["fullpath"] + "/" + str(url.md5)
+    logger.debug(file)
     with open(file , "wb") as f:
-        f.write(data["content"])
+        #f.write(content)
+        f.write(encoded)
     commit = None
     path = None
     if os.path.isfile(file):
@@ -345,9 +352,6 @@ def set_hash(cid):
     c.sha1 = str(hashlib.sha1(decoded.encode("utf-8")).hexdigest())
     c.sha256 = str(hashlib.sha256(decoded.encode("utf-8")).hexdigest())
     c.sha512 = str(hashlib.sha512(decoded.encode("utf-8")).hexdigest())
-    #c.sha1 = str(hashlib.sha1(c.content).hexdigest())
-    #c.sha256 = str(hashlib.sha256(c.content).hexdigest())
-    #c.sha512 = str(hashlib.sha512(c.content).hexdigest())
     c.save()
     return c
 
@@ -384,14 +388,14 @@ def save_capture(capture, d, jid):
 
     c = None
     try:
-        with transaction.atomic():
-            c, created = Capture.objects.get_or_create(
-                path = path,
-                #commit = commit,
-                base64 = base64.b64encode(capture),
-                b64thumb = base64.b64encode(thumb),
-            )
-            #cid = c.id
+        #with transaction.atomic():
+        c, created = Capture.objects.get_or_create(
+            path = path,
+            #commit = commit,
+            base64 = base64.b64encode(capture),
+            b64thumb = base64.b64encode(thumb),
+        )
+        #cid = c.id
     except Exception as e:
         logger.error(str(e))
         try:
@@ -408,7 +412,7 @@ def save_capture(capture, d, jid):
     return c
 
 
-@app.task
+#@app.task
 def job_diff(jid):
     job = Job.objects.get(pk=jid)
     jrs = Job_Resource.objects.filter(job=job)

@@ -4,7 +4,7 @@ from ..celery import app
 from django.utils import timezone
 
 from ipwhois import IPWhois
-import requests, hashlib, datetime
+import requests, hashlib, datetime, re
 
 from ..api import ContraAPI
 from ..models import *
@@ -32,25 +32,36 @@ def whois_ip(input):
         )
     except Exception as e:
         logger.debug(str(e))
-        ip = IPAddress.objects.get(
-            #ip = result["query"]
-            ip = input
-        )
+        try:
+            ip = IPAddress.objects.get(
+                ip = input
+            )
+        except:
+            return None
         
     nets = None
     if "nets" in result:
         if result["nets"]:
             nets = sorted(result["nets"], key=lambda n:n["cidr"], reverse=True)[0]
             logger.debug(nets)
+            if "created" in nets:
+                if nets["created"]:
+                    if re.match("^[0-9]{8}$", nets["created"]):
+                        nets["created"] = datetime.datetime.strptime(nets["created"],'%Y%m%d')
+            if "updated" in nets:
+                if nets["updated"]:
+                    if re.match("^[0-9]{8}$", nets["updated"]):
+                        nets["updated"] = datetime.datetime.strptime(nets["updated"],'%Y%m%d')
+
     elif "error" in result:
         if result["error"]:
             try:
-                with transaction.atomic():
-                    w, created = IP_Whois.objects.get_or_create(
-                        ip = ip,
-                        result = result["error"],
-                    )
-                    return w
+                #with transaction.atomic():
+                w, created = IP_Whois.objects.get_or_create(
+                    ip = ip,
+                    result = result["error"],
+                )
+                return w
             except Exception as e:
                 logger.error(str(e))
                 try:
@@ -62,17 +73,17 @@ def whois_ip(input):
                 except Exception as e:
                     logger.error(str(e))
                     return None
-        
     w = None
+            
     try:
-        with transaction.atomic():
-            w, created = IP_Whois.objects.get_or_create(
-                ip = ip,
-                creation_date = nets["created"],
-                updated_date = nets["updated"],
-            )
-            if not created:
-                logger.debug("ip whois already exists: " + ip.ip)
+        #with transaction.atomic():
+        w, created = IP_Whois.objects.get_or_create(
+            ip = ip,
+            creation_date = nets["created"],
+            updated_date = nets["updated"],
+        )
+        if not created:
+            logger.debug("ip whois already exists: " + ip.ip)
     except Exception as e:
         logger.error(str(e))
         try:
