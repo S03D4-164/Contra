@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-import os, sys, pickle, gzip, json, umsgpack
+import os, sys, pickle, gzip, json, shutil
+import umsgpack
+
 from ghost import Ghost
 
 import logging
@@ -12,12 +14,23 @@ appdir = os.path.abspath(
 )
 
 def main(url, output, option={}):
+    result = {
+        "error":[],
+        "page":{},
+        "resources":[],
+        "capture":None,
+    }
     savedir = appdir + "/artifacts/ghost/" +  output
-    if not os.path.exists(savedir):
-        try:
-            os.makedirs(savedir)
-        except Exception as e:
-            logger.error(str(e))
+    dump = savedir +  "/ghost.pkl"
+    try:
+    	if os.path.exists(savedir):
+            shutil.rmtree(savedir)
+        os.makedirs(savedir)
+        with open(dump, 'wb') as d:
+            umsgpack.dump(result, d)
+    except Exception as e:
+        logger.error(str(e))
+        result["error"].append(str(e))
 
     defaults = {
         "wait_timeout":60,
@@ -44,14 +57,19 @@ def main(url, output, option={}):
         if "body" in option:
             body = str(option["body"])
     logger.info(defaults)
-    ghost = Ghost(
-        #log_level=logging.DEBUG,
-        log_level=logging.INFO,
-        plugin_path=[ appdir + '/plugins', '/usr/lib/mozilla/plugins', ],
-        defaults=defaults,
-    )
 
-    dump = None
+    ghost = None
+    try:
+        ghost = Ghost(
+            #log_level=logging.DEBUG,
+            log_level=logging.INFO,
+            plugin_path=[ appdir + '/plugins', '/usr/lib/mozilla/plugins', ],
+            defaults=defaults,
+        )
+    except Exception as e:
+        logger.error("ghost init failed. " + str(e))
+        result["error"].append(str(e))
+
     with ghost.start() as session:
         if proxy_url:
             try:
@@ -70,11 +88,9 @@ def main(url, output, option={}):
                 headers[str(h)] = str(req_headers[h])
             logger.debug(headers)
 
-        page = None
-        resources = None
-        error = None
         if hasattr(ghost, "xvfb"):
             logger.info(ghost.xvfb)
+
         try:
             page, resources = session.open(
                 url,
@@ -83,23 +99,21 @@ def main(url, output, option={}):
                 body = body
             )
         except Exception as e:
-            error = str(e)
-        result = {
-            #"error":None,
-            "page":{},
-            "resources":[],
-            "capture":None,
-        }
-        if error:
-            result["error"] = error
+            logger.error(str(e))
+            result["error"].append(str(e))
+
+        #if error:
+        #    result["error"] = error.spilt(".")[-1]
         if page:
             result["page"] = {
                 "url":page.url,
                 "http_status":page.http_status,
                 "headers":page.headers,
-                "content":session.content.encode("utf-8"),
+                #"content":session.content.encode("utf-8"),
+                "content":session.content,
                 "seq":0,
-                "error":str(page.error),
+                #"error":page.error.encode("utf-8").split(".")[-1],
+                "error":page.error.split(".")[-1],
             }
             capture = savedir + "/capture.png"
             try:
@@ -109,6 +123,7 @@ def main(url, output, option={}):
                         result["capture"] = c.read()
             except Exception as e:
                 logger.error(str(e))
+                result["error"].append(str(e))
         if resources:
             seq = 0
             for r in resources:
@@ -117,17 +132,18 @@ def main(url, output, option={}):
                     "url":r.url,
                     "http_status":r.http_status,
                     "headers":r.headers,
+                    #"content":r.content.encode("utf-8"),
                     "content":r.content,
                     "seq":seq,
-                    "error":str(r.error),
+                    #"error":r.error.encode("utf-8").split(".")[-1],
+                    "error":r.error.split(".")[-1],
                 }
                 result["resources"].append(dict)
                 #logger.debug(r.url)
-        dump = savedir +  "/ghost.pkl"
-        with open(dump, 'wb') as d:
-            #pickle.dump(result, d)
-            umsgpack.dump(result, d)
-            logger.debug(dump)
+
+    with open(dump, 'wb') as d:
+        umsgpack.dump(result, d)
+        logger.debug(dump)
     ghost.exit()
     return dump
 

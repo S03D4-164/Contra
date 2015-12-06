@@ -1,8 +1,11 @@
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-import docker
-import os, sys
+from ..celery import app
+
+import os, sys, re, docker
+
+from .docker_container import contra_container 
 
 import logging
 from ..logger import getlogger
@@ -14,38 +17,17 @@ appdir = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..")
 )
 
-def _container(cli):
-    cid = None
-    if cli:
-        container = cli.create_container(
-        image="contra:latest",
-        #name="contra",
-        user="contra",
-        working_dir="/home/contra/files",
-        #command="/usr/bin/run.sh",
-        stdin_open=True,
-        tty=True,
-        volumes=['/home/contra/artifacts'],
-        host_config=cli.create_host_config(
-            binds={
-                appdir + '/static/artifacts': {
-                        'bind': '/home/contra/artifacts',
-                        'mode': 'rw',
-                    },
-                }),
-        )
-        cid = container.get('Id')
-
-    return cid
-
 @csrf_exempt
 def thug_api(request):
     if request.method == "POST":
         if "content" in request.POST:
             target = request.POST["content"]
             id = request.POST["id"]
-            output = str(id)
-            result = run_thug(target, output)
+            result = None
+            if re.match("^[0-9]+$", id):
+                output = str(id)
+                res = run_thug.delay(target, output)
+                result = res.get()
             if result:
                 fh = open(result, 'rb')
                 logger.debug(len(fh.read()))
@@ -55,13 +37,11 @@ def thug_api(request):
 
     return HttpResponse("Invalid Request", status=400)
 
+@app.task
 def run_thug(content, output=None):
     cli = docker.Client(base_url='unix://var/run/docker.sock')
-    cid = _container(cli)
-    """
-    if container:
-        cid = container
-    """
+    cid = contra_container(cli)
+    #cid = "contra"
     logger.debug(cid)
 
     response = cli.start(container=cid)
