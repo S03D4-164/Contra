@@ -1,28 +1,34 @@
+from __future__ import unicode_literals
+from django.utils.encoding import python_2_unicode_compatible
+
 from django.db import models
 from django.contrib.auth.models import User
 
 import os
 
+@python_2_unicode_compatible
 class IPAddress(models.Model):
     ip = models.GenericIPAddressField(unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    def __unicode__(self):
+    def __str__(self):
        return self.ip
 
+@python_2_unicode_compatible
 class Domain(models.Model):
     name = models.CharField(max_length=2000, unique=True)
     suffix = models.CharField(max_length=200, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     whitelisted = models.BooleanField(default=False)
-    def __unicode__(self):
+    def __str__(self):
        return self.name
 
+@python_2_unicode_compatible
 class Hostname(models.Model):
     name = models.CharField(max_length=20000, unique=True)
     domain = models.ForeignKey(Domain, blank=True, null=True)
     subdomain = models.CharField(max_length=20000, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    def __unicode__(self):
+    def __str__(self):
        return self.name
 
 class URL(models.Model):
@@ -111,17 +117,19 @@ class Host_Info(models.Model):
     class Meta:
         unique_together = (('hostname', 'host_dns', 'domain_dns', 'domain_whois'))
 
+@python_2_unicode_compatible
 class YaraTag(models.Model):
     name = models.CharField(max_length=200, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    def __unicode__(self):
+    def __str__(self):
        return self.name
 
+@python_2_unicode_compatible
 class YaraRule(models.Model):
     name = models.CharField(max_length=200, unique=True)
     tag = models.ManyToManyField(YaraTag)
     created_at = models.DateTimeField(auto_now_add=True)
-    def __unicode__(self):
+    def __str__(self):
        return self.name
 
 class Content(models.Model):
@@ -155,7 +163,7 @@ class Capture(models.Model):
     base64 = models.TextField(blank=True, null=True)
     b64thumb = models.TextField(blank=True, null=True)
 
-
+@python_2_unicode_compatible
 class Webapp(models.Model):
     name = models.CharField(max_length=2000, unique=True)
     def __str__(self):
@@ -181,6 +189,7 @@ RESTRICTION_CHOICES = (
     (2, 'all_user'),
 )
 
+@python_2_unicode_compatible
 class Query(models.Model):
     input = models.URLField(max_length=20000, unique=True)
     registered_by = models.ForeignKey(User)
@@ -189,10 +198,10 @@ class Query(models.Model):
     counter = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    def __unicode__(self):
+    def __str__(self):
        return self.input
 
-
+@python_2_unicode_compatible
 class UserAgent(models.Model):
     name = models.CharField(max_length=200)
     strings = models.CharField(max_length=2000)
