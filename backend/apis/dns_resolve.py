@@ -2,7 +2,7 @@ from ..celery import app
 from django.http import JsonResponse
 from django.core.cache import cache
 
-import sys, dns.resolver, hashlib
+import sys, dns.resolver, dns.zone, dns.query, hashlib
 
 from ..logger import getlogger
 import logging
@@ -10,10 +10,9 @@ logger = getlogger()
 
 @app.task(soft_time_limit=10)
 def _dns_resolve(query):
-    #result = {}
     result = {"query":query}
-    #rr = ["A", "AAAA", "CNAME", "MX", "NS", "SOA", "TXT"]
-    rr = ["A", "AAAA", "CNAME", "MX", "NS", "TXT"]
+    rr = ["A", "AAAA", "CNAME", "MX", "NS", "SOA", "TXT"]
+    #rr = ["A", "AAAA", "CNAME", "MX", "NS", "TXT"]
     for r in rr:
         rdata = []
         try:
@@ -26,6 +25,16 @@ def _dns_resolve(query):
         if rdata:
             rdata.sort()
         result[r] = rdata
+
+    result["AXFR"] = None
+    try:
+        ns = result["NS"][-1]
+        xfr = dns.query.xfr(ns, query)
+        zone = dns.zone.from_xfr(xfr)
+        result["AXFR"] = zone.to_text()
+    except Exception as e:
+        result["AXFR"] = str(e)
+
     return result
 
 def dns_resolve(request):

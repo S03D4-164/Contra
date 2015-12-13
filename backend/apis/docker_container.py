@@ -29,7 +29,9 @@ def contra_container(cli):
                         'bind': '/home/contra/artifacts',
                         'mode': 'rw',
                     },
-                }),
+            },
+            privileged=True,
+            ),
         )
         cid = container.get('Id')
 

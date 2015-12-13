@@ -1,6 +1,6 @@
 from ..celery import app
 
-from django.db import transaction
+#from django.db import transaction
 from django.utils import timezone
 
 from ..forms import *
@@ -35,8 +35,8 @@ def create_payload(jid):
     u = parse_url(job.query.input)
 
     headers = {
-        "Accept-Language":"ja; q=1.0, en; q=0.5",
-        "Accept":"text/html; q=1.0, text/*; q=0.8, image/gif; q=0.6, image/jpeg; q=0.6, image/*; q=0.5, */*; q=0.1",
+    #    "Accept-Language":"ja; q=1.0, en; q=0.5",
+    #    "Accept":"text/html; q=1.0, text/*; q=0.8, image/gif; q=0.6, image/jpeg; q=0.6, image/*; q=0.5, */*; q=0.1",
     }
     if job.referer:
         headers['Referer'] = job.referer
@@ -60,7 +60,7 @@ def create_payload(jid):
         'query': job.query.id,
         'job': job.id,
         'user_agent':user_agent,
-        'timeout': job.timeout,
+        'wait_timeout': job.timeout,
         'proxy':proxy,
         'headers':headers,
         'method': job.method,
@@ -115,10 +115,11 @@ def execute_job(jid):
             if "url" in page:
                 job = set_resource(job.id, page, is_page=True)
                 if "capture" in res:
-                    savedir = get_savedir(page["url"], is_page=True)
-                    cap = save_capture(res["capture"], savedir, job.id)
-                    job.capture = cap
-                    job.save()
+                    if res["capture"]:
+                        savedir = get_savedir(page["url"], is_page=True)
+                        cap = save_capture(res["capture"], savedir, job.id)
+                        job.capture = cap
+                        job.save()
 
         if "resources" in res:
             total = len(res["resources"])
@@ -191,16 +192,24 @@ def set_resource(jid, data, is_page=False):
         job.save()
 
     if resource.url.hostname:
+        hostname = resource.url.hostname
         r = job.resources.all().filter(
-            host_info__hostname=resource.url.hostname
+            host_info__hostname=hostname
         ).order_by("-pk")
         if r:
             logger.debug("host_info already created in same job.")
             resource.host_info = r[0].host_info
             resource.save()
         else:
-            host_info = set_hostinfo(resource.id)
-            #set_hostinfo.delay(resource.id)
+            if hostname.domain:
+                if hostname.domain.whitelisted:
+                    logger.debug("host_inspect skipped: whitelisted domain" + str(hostname.domain))
+                else:
+                    host_info = host_inspect(hostname)
+                    resource.host_info = host_info
+                    resource.save()
+                    #host_info = set_hostinfo(resource.id)
+                    #set_hostinfo.delay(resource.id)
 
     #wappalyze.delay(resource.id)
     resource = wappalyze(resource.id)
@@ -212,9 +221,9 @@ def set_hostinfo(rid):
     r = Resource.objects.get(id=rid)
     hostname = r.url.hostname.name
     host_info = host_inspect(hostname)
-    r.host_info = host_info
-    r.host_info.save()
-    r.save()
+    #r.host_info = host_info
+    #r.host_info.save()
+    #r.save()
     return host_info
 
 def get_savedir(url, is_page=False):
@@ -326,8 +335,8 @@ def save_content(data, savedir, is_page=False):
             url = url,
         )
         if c:
-            #set_hash.delay(c.id)
-            c = set_hash(c.id)
+            set_hash.delay(c.id)
+            #c = set_hash(c.id)
     except Exception as e:
         logger.error(str(e))
         try:

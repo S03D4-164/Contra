@@ -8,21 +8,49 @@
 <script>
 $(document).ready(
         function(){
+                $('#query_table').dataTable({
+                    "processing": true,
+                    "serverSide": true,  
+                    "ajax": "{% url 'query_data' %}",
+                    "order":[0, 'desc'],
+                });
+                $('#job_table').dataTable({
+                    "processing": true,
+                    "serverSide": true,  
+                    "ajax": "{% url 'job_data' %}",
+                    "order":[0, 'desc'],
+                });
+                $('#dns_table').dataTable({
+                    "processing": true,
+                    "serverSide": true,  
+                    "ajax": "{% url 'dns_data' %}",
+                    "order":[0, 'desc'],
+                });
+                $('#whois_domain_table').dataTable({
+                    "processing": true,
+                    "serverSide": true,  
+                    "ajax": "{% url 'whois_domain_data' %}",
+                    "order":[0, 'desc'],
+                });
+                $('#whois_ip_table').dataTable({
+                    "processing": true,
+                    "serverSide": true,  
+                    "ajax": "{% url 'whois_ip_data' %}",
+                    "order":[0, 'desc'],
+                });
+                $('#host_info_table').dataTable({
+                    "processing": true,
+                    "serverSide": true,  
+                    "ajax": "{% url 'host_info_data' %}",
+                    "order":[0, 'desc'],
+                });
+                $('#ua_table').dataTable({
+                    "processing": true,
+                    "serverSide": true,  
+                    "ajax": "{% url 'ua_data' %}",
+                    "order":[0, 'desc'],
+                });
 		$('a.colorbox').colorbox({'photo':true});
-                $('#query_table').DataTable({"order":[4, 'desc']});
-                $('#job_table').DataTable({"order":[0, 'desc']});
-                $('#page_table').DataTable({"order":[0, 'desc']});
-                $('#resource_table').DataTable({"order":[0, 'desc']});
-                $('#url_table').DataTable({"order":[0, 'desc']});
-                $('#capture_table').DataTable({"order":[0, 'desc']});
-                $('#domain_table').DataTable({"order":[0, 'desc']});
-                $('#whois_domain_table').DataTable({"order":[0, 'desc']});
-                $('#hostname_table').DataTable({"order":[0, 'desc']});
-                $('#host_info_table').DataTable({"order":[0, 'desc']});
-                $('#whois_ip_table').DataTable({"order":[0, 'desc']});
-                $('#dns_table').DataTable({"order":[0, 'desc']});
-                $('#ua_table').DataTable({"order":[0, 'desc']});
-                $('#analysis_table').DataTable({"order":[0, 'desc']});
         }
 );
 </script>
@@ -36,20 +64,13 @@ $(document).ready(
 <div id="list" class="col-md-12">
 
 <ul class="nav nav-pills">
-<li class="active"><a data-toggle="pill" href="#query">Query({{query|length}})</a></li>
-{% if job %}<li><a data-toggle="pill" href="#job">Job({{job|length}})</a></li>{% endif %}
-{% if page %}<li><a data-toggle="pill" href="#page">Page({{page|length}})</a></li>{% endif %}
-{% if resource %}<li><a data-toggle="pill" href="#resource">Resource({{resource|length}})</a></li>{% endif %}
-{% if capture %}<li><a data-toggle="pill" href="#capture">Capture({{capture|length}})</a></li>{% endif %}
-{% if url %}<li><a data-toggle="pill" href="#url">URL({{url|length}})</a></li>{% endif %}
-{% if domain %}<li><a data-toggle="pill" href="#domain">Domain({{domain|length}})</a></li>{% endif %}
-<li><a data-toggle="pill" href="#dns">DNS({{dns|length}})</a></li>
-<li><a data-toggle="pill" href="#whois_domain">Whois(Domain)({{whois_domain|length}})</a></li>
-<li><a data-toggle="pill" href="#whois_ip">Whois(IP)({{whois_ip|length}})</a></li>
-{% if hostname %}<li><a data-toggle="pill" href="#hostname">Hostname({{hostname|length}})</a></li>{% endif %}
-<li><a data-toggle="pill" href="#host_info">Host_Info({{host_info|length}})</a></li>
-{% if analysis %}<li><a data-toggle="pill" href="#analysis">Analysis({{analysis|length}})</a></li>{% endif %}
-<li><a data-toggle="pill" href="#ua">User Agent({{ua|length}})</a></li>
+<li class="active"><a data-toggle="pill" href="#query">Query</a></li>
+<li><a data-toggle="pill" href="#job">Job</a></li>
+<li><a data-toggle="pill" href="#dns">DNS</a></li>
+<li><a data-toggle="pill" href="#whois_domain">Whois(Domain)</a></li>
+<li><a data-toggle="pill" href="#whois_ip">Whois(IP)</a></li>
+<li><a data-toggle="pill" href="#host_info">Host_Info</a></li>
+<li><a data-toggle="pill" href="#ua">User Agent</a></li>
 </ul>
 
 <div class="tab-content">
@@ -57,7 +78,7 @@ $(document).ready(
 <div id="query" class="panel panel-primary tab-pane in active">
 <div class="panel-heading"></div>
 <div class="panel-body">
-<table id="query_table" class="table table-striped table-hover ">
+<table id="query_table" class="table table-striped table-hover display" cellspacing="0" width="100%">
 <thead><tr>
 <th class="col-md-1">id</th>
 <th class="col-md-3">input</th>
@@ -67,17 +88,6 @@ $(document).ready(
 <th class="col-md-1">interval</th>
 <th class="col-md-1">counter</th>
 </tr></thead>
-<tbody>{% for q in query %}
-<tr>
-<td><a class="btn btn-primary" href="/query/{{q.id}}">{{q.id}}</td>
-<td>{{q.input}}</td>
-<td>{{q.updated_at|date:"c"}}</td>
-<td>{{q.registered_by}}</td>
-<td>{{q.restriction}}</td>
-<td>{{q.interval}}</td>
-<td>{{q.counter}}</td>
-</tr>
-{% endfor %}</tbody>
 </table>
 </div>
 </div><!--.panel-->
@@ -85,164 +95,17 @@ $(document).ready(
 <div id="job" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>
 <div class="panel-body">
-<table id="job_table" class="table table-striped table-hover ">
+<table id="job_table" class="table table-striped table-hover display" cellspacing="0" width="100%">
 <thead><tr>
-<th class="col-md-1">id</th>
+<th class="col-md-1" style="width:100px">id</th>
 <th class="col-md-3">created_at</th>
 <th class="col-md-4">query</th>
 <th class="col-md-2">result</th>
 <th class="col-md-2">capture</th>
 </tr></thead>
-<tbody>{% for j in job %}
-<tr>
-<td><a class="btn btn-primary" href="/job/{{j.id}}">{{j.id}}</td>
-<td>{{j.created_at|date:"c"}}</td>
-<td>{{j.query.input}}</td>
-<td>{{j.status}}</td>
-<td>
-<a class="colorbox" href="/{{j.capture.path}}">
-<img src="data:image/png;base64,{{j.capture.b64thumb}}">
-</a>
-</td>
-</tr>
-{% endfor %}</tbody>
 </table>
 </div>
 </div><!--.panel-->
-
-<div id="page" class="panel panel-primary tab-pane">
-<div class="panel-heading"></div>
-<div class="panel-body ">
-<table id="page_table" class="table table-striped table-hover " >
-<thead><tr >
-<th class="col-md-1">id</th>
-<th class="col-md-2">created_at</th>
-<th class="col-md-1">http_status</th>
-<th class="col-md-3">url</th>
-<th class="col-md-2">ip</th>
-<th class="col-md-1">content_length</th>
-<th class="col-md-2">capture</th>
-</tr></thead>
-<tbody>{% for p in page %}
-<tr>
-<td><a class="btn btn-primary" href="/page/{{p.resource.id}}">{{p.resource.id}}</td>
-<td>{{p.resource.created_at|date:"c"}}</td>
-<td>{{p.resource.http_status}}</td>
-<td>{{p.resource.url}}</td>
-<td>
-{% for i in p.host_info.ip_whois.all %}
-<span class="flag-icon flag-icon-{{i.whois.country|lower}}" title="{{i.whois.country}}"></span><a href="/whois_ip/{{i.whois.id}}">{{i.ip.ip}}</a><br>
-{% endfor %}
-</td>
-<td>{{p.resource.content.length}}</td>
-<td>
-<a class="colorbox" href="/{{p.resource.capture.path}}" >
-<img src="data:image/png;base64,{{p.resource.capture.b64thumb}}" ></a></td>
-</tr>
-{% endfor %}</tbody>
-</table>
-</div>
-</div><!--.panel-->
-
-<div id="resource" class="panel panel-primary tab-pane">
-<div class="panel-heading"></div>
-<div class="panel-body">
-<table id="resource_table" class="table table-striped table-hover " >
-<thead><tr>
-<th class="col-md-1">id</th>
-<th class="col-md-2">timestamp</th>
-<th class="col-md-1">status</th>
-<th class="col-md-4">url</th>
-<th class="col-md-2">ip</th>
-<th class="col-md-1">type</th>
-<th class="col-md-1">length</th>
-</tr></thead>
-<tbody>{% for r in resource %}
-<tr>
-<td><a class="btn btn-primary" href="/resource/{{r.resource.id}}">{{r.resource.id}}</td>
-<td>{{r.resource.created_at|date:"c"}}</td>
-<td>{{r.resource.http_status}}</td>
-<td>{{r.resource.url}}</td>
-<td>
-{% for i in r.host_info.ip_whois.all %}
-<span class="flag-icon flag-icon-{{i.whois.country|lower}}" title="{{i.whois.country}}"></span><a href="/whois_ip/{{i.whois.id}}">{{i.ip.ip}}</a><br>
-{% endfor %}
-</td>
-<td>{{r.resource.content.type}}</td>
-<td>{{r.resource.content.length}}</td>
-</tr>
-{% endfor %}</tbody>
-</table>
-</div>
-</div><!--.panel-->
-
-{% if capture %}
-<div id="capture" class="panel panel-primary tab-pane">
-<div class="panel-heading"></div>
-<div class="panel-body">
-<table id="capture_table" class="table table-striped table-hover ">
-<thead><tr>
-<th>id</th>
-<th>created_at</th>
-<th>capture</th>
-</tr></thead>
-<tbody>{% for c in capture %}
-<tr>
-<td><a class="btn btn-primary" href="/page/{{c.id}}">{{c.id}}</td>
-<td>{{c.created_at}}</td>
-<td><a href="data:image/png;base64,{{c.base64}}"><img src="data:image/png;base64,{{c.b64thumb}}"></a></td>
-</tr>
-{% endfor %}</tbody>
-</table>
-</div>
-</div><!--.panel-->
-{% endif %}
-
-{% if url %}
-<div id="url" class="panel panel-primary tab-pane">
-<div class="panel-heading"></div>
-<div class="panel-body">
-<table id="url_table" class="table table-striped table-hover " style="table-layout: fixed;">
-<thead><tr>
-<th class="col-md-1">id</th>
-<th class="col-md-2">created_at</th>
-<th class="col-md-9">url</th>
-</tr></thead>
-<tbody>{% for u in url %}
-<tr>
-<td><a class="btn btn-primary" href="/url/{{u.id}}">{{u.id}}</td>
-<td>{{u.created_at}}</td>
-<td>{{u.url}}</td>
-</tr>
-{% endfor %}</tbody>
-</table>
-</div>
-</div><!--.panel-->
-{% endif %}
-
-{% if domain %}
-<div id="domain" class="panel panel-primary tab-pane">
-<div class="panel-heading"></div>
-<div class="panel-body">
-<table id="domain_table" class="table table-striped table-hover ">
-<thead><tr>
-<th class="col-md-1">id</th>
-<th class="col-md-2">created_at</th>
-<th class="col-md-8">domain</th>
-<th class="col-md-1">suffix</th>
-</tr></thead>
-<tbody>{% for d in domain %}
-<tr>
-<td><a class="btn btn-primary" href="/domain/{{d.id}}">{{d.id}}</td>
-<td>{{d.created_at}}</td>
-<td>{{d.name}}</td>
-<td>{{d.suffix}}</td>
-</tr>
-{% endfor %}</tbody>
-</table>
-</div>
-</div><!--.panel-->
-{% endif %}
 
 <div id="whois_domain" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>
@@ -254,63 +117,17 @@ $(document).ready(
 </form>
 <hr>
 </div>
-<table id="whois_domain_table" class="table table-striped table-hover ">
-<thead><tr>
-<th class="col-md-1">id</th>
+<table id="whois_domain_table" class="table table-striped table-hover display" cellspacing="0" width="100%">
+<thead><tr >
+<th class="col-md-1" >id</th>
 <th class="col-md-2">creation_date</th>
 <th class="col-md-2">updated_date</th>
 <th class="col-md-1">domain</th>
 <th class="col-md-6">contact</th>
 </tr></thead>
-<tbody>{% for d in whois_domain %}
-<tr>
-<td><a class="btn btn-primary" href="/whois_domain/{{d.id}}">{{d.id}}</td>
-<td>{{d.creation_date|date:"c"}}</td>
-<td>{{d.updated_date|date:"c"}}</td>
-<td><a href="/domain/{{d.domain.id}}">{{d.domain.name}}</a></td>
-<td>
-<table class="table">
-{% for c in d.contact.all %}
-<tr>
-<td class="col-sm-3">{{c.type}}</td>
-<td class="col-sm-4">{{c.person.organization}}</td>
-<td class="col-sm-1"><span class="flag-icon flag-icon-{{c.person.country|lower}}" title="{{c.person.country}}"></span></td>
-<td class="col-sm-4">{{c.person.name}}</td>
-</tr>
-{% endfor %}
-</table>
-</td>
-</tr>
-{% endfor %}</tbody>
 </table>
 </div>
 </div><!--.panel-->
-
-{% if hostname %}
-<div id="hostname" class="panel panel-primary tab-pane">
-<div class="panel-heading"></div>
-<div class="panel-body">
-<table id="hostname_table" class="table table-striped table-hover ">
-<thead><tr>
-<th class="col-md-1">id</th>
-<th class="col-md-2">created_at</th>
-<th class="col-md-5">name</th>
-<th class="col-md-2">domain</th>
-<th class="col-md-2">subdomain</th>
-</tr></thead>
-<tbody>{% for h in hostname %}
-<tr>
-<td><a class="btn btn-primary" href="/hostname/{{h.id}}">{{h.id}}</td>
-<td>{{h.created_at}}</td>
-<td>{{h.name}}</td>
-<td>{{h.domain}}</td>
-<td>{{h.subdomain}}</td>
-</tr>
-{% endfor %}</tbody>
-</table>
-</div>
-</div><!--.panel-->
-{% endif %}
 
 <div id="dns" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>
@@ -322,27 +139,14 @@ $(document).ready(
 </form>
 <hr>
 </div>
-<table id="dns_table" class="table table-striped table-hover ">
+<table id="dns_table" class="table table-striped table-hover display" cellspacing="0" width="100%">
 <thead><tr>
 <th class="col-md-1">id</th>
 <th class="col-md-2">first_seen</th>
 <th class="col-md-2">query</th>
 <th class="col-md-2">A</th>
-<th class="col-md-7">TXT</th>
+<th class="col-md-5">TXT</th>
 </tr></thead>
-<tbody>{% for d in dns %}
-<tr>
-<td><a class="btn btn-primary" href="/dns/{{d.id}}">{{d.id}}</a></td>
-<td>{{d.first_seen|date:"c"}}</td>
-<td>{{d.query}}</td>
-<td>
-{% for a in d.a.all %}
-{{a.ip}}<br>
-{% endfor %}
-</td>
-<td>{{d.txt}}</td>
-</tr>
-{% endfor %}</tbody>
 </table>
 </div>
 </div><!--.panel-->
@@ -358,7 +162,7 @@ $(document).ready(
 </form>
 <hr>
 </div>
-<table id="host_info_table" class="table table-striped table-hover ">
+<table id="host_info_table" class="table table-striped table-hover display" cellspacing="0" width="100%">
 <thead><tr>
 <th class="col-md-1">id</th>
 <th class="col-md-2">first_seen</th>
@@ -368,17 +172,6 @@ $(document).ready(
 <th class="col-md-2">domain_dns</th>
 <th class="col-md-2">domain_whois</th>
 </tr></thead>
-<tbody>{% for h in host_info %}
-<tr>
-<td><a class="btn btn-primary" >{{h.id}}</td>
-<td>{{h.first_seen|date:"c"}}</td>
-<td>{{h.last_seen|date:"c"}}</td>
-<td>{{h.hostname.name}}</td>
-<td>{% for i in h.ip_whois.all %}<a href="/whois_ip/{{i.id}}">{{i.ip.ip}}</a><br>{% endfor %}</td>
-<td>{{h.domain_dns.serialized}}</td>
-<td><a href="/whois_domain/{{h.domain_whois.id}}">{{h.domain_whois.domain.name}}</a></pre></td>
-</tr>
-{% endfor %}</tbody>
 </table>
 </div>
 </div><!--.panel-->
@@ -393,7 +186,7 @@ $(document).ready(
 </form>
 <hr>
 </div>
-<table id="whois_ip_table" class="table table-striped table-hover ">
+<table id="whois_ip_table" class="table table-striped table-hover display" cellspacing="0" width="100%">
 <thead><tr>
 <th class="col-md-1">id</th>
 <th class="col-md-2">creation_date</th>
@@ -402,19 +195,6 @@ $(document).ready(
 <th class="col-md-1">country</th>
 <th class="col-md-4">description</th>
 </tr></thead>
-<tbody>{% for i in whois_ip %}
-<tr>
-<td><a class="btn btn-primary" href="/whois_ip/{{i.id}}">{{i.id}}</td>
-<td>{{i.creation_date|date:"c"}}</td>
-<td>{{i.updated_date|date:"c"}}</td>
-<td>{{i.ip.ip}}</td>
-<td>
-<span class="flag-icon flag-icon-{{i.country|lower}}" title="{{i.country}}"></span>
-{{i.country}}
-</td>
-<td>{{i.description}}</td>
-</tr>
-{% endfor %}</tbody>
 </table>
 </div>
 </div><!--.panel-->
@@ -431,48 +211,16 @@ $(document).ready(
 <hr>
 </div>
 {% endif %}
-<table id="ua_table" class="table table-striped table-hover ">
+<table id="ua_table" class="table table-striped table-hover display" cellspacing="0" width="100%">
 <thead><tr>
 <th class="col-md-1">id</th>
 <th class="col-md-2">created_at</th>
 <th class="col-md-3">name</th>
 <th class="col-md-6">strings</th>
 </tr></thead>
-<tbody>{% for u in ua %}
-<tr>
-<td><a class="btn btn-primary">{{u.id}} </td>
-<td>{{u.created_at|date:"c"}}</td>
-<td>{{u.name}}</td>
-<td>{{u.strings}}</td>
-</tr>
-{% endfor %}</tbody>
 </table>
 </div>
 </div><!--.panel-->
-
-
-{% if analysis %}
-<div id="analysis" class="panel panel-primary tab-pane">
-<div class="panel-heading"></div>
-<div class="panel-body">
-<table id="analysis_table" class="table table-striped table-hover ">
-<thead><tr>
-<th class="col-md-1">id</th>
-<th class="col-md-2">created_at</th>
-<th class="col-md-4">content</th>
-</tr></thead>
-<tbody>{% for a in analysis %}
-<tr>
-<td><a class="btn btn-primary" href="/analysis/{{a.id}}">{{a.id}}</td>
-<td>{{a.created_at}}</td>
-<td>{{a.content.id}}</td>
-</tr>
-{% endfor %}</tbody>
-</table>
-</div>
-</div><!--.panel-->
-{% endif %}
-
 
 </div><!--.tab-content-->
 

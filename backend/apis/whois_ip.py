@@ -14,18 +14,25 @@ logger = getlogger()
 @app.task(soft_time_limit=10)
 def _whois_ip(ip):
     result = {}
+    obj = None
     try:
         obj = IPWhois(ip)
         result = obj.lookup(inc_raw=True)
         logger.debug(result["nets"])
-        result["reverse"] =  None
-        rev = obj.get_host()
-        logger.debug(rev)
-        if rev:
-            result["reverse"] = rev
     except Exception as e:
         logger.debug(e)
         result["error"] = str(e)
+
+    if result:
+        result["reverse"] =  None
+        try:
+            rev = obj.net.get_host()
+            logger.debug(rev)
+            if rev:
+                result["reverse"] = rev
+        except Exception as e:
+            logger.debug(e)
+            result["reverse"] = str(e)
 
     return result
 

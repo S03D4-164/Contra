@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+<title></title>
+{% endblock %}
+
+{% block script %}
+<script>
+$(document).ready(function(){
+    $('#example').dataTable({
+        "processing": true,
+        "serverSide": true,
+        "ajax": "{% url 'order_list_json' %}"
+    });
+});
+</script>
+{% endblock %}
+
+
+{% block container %}
+
+<table id="example" class="display" cellspacing="0" width="100%">
+        <thead>
+            <tr>
+                <th>created_at</th>
+                <th>ip</th>
+            </tr>
+        </thead>
+        <tfoot>
+            <tr>
+                <th>created_at</th>
+                <th>ip</th>
+            </tr>
+        </tfoot>
+</table>
+
+
+{% endblock %}

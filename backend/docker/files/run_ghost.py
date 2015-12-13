@@ -46,16 +46,16 @@ def main(url, output, option={}):
     if option:
         if "user_agent" in option:
             defaults["user_agent"] = str(option["user_agent"])
-        if "wait_timeout" in option:
-            defaults["wait_timeout"] = int(option["wait_timeout"])
+        if "timeout" in option:
+            defaults["wait_timeout"] = int(option["timeout"])
         if "proxy" in option:
             proxy_url = option["proxy"]
         if "method" in option:
             http_method = option["method"] 
         if "headers" in option:
             req_headers = option["headers"]
-        if "body" in option:
-            body = str(option["body"])
+        if "post_data" in option:
+            body = str(option["post_data"])
     logger.info(defaults)
 
     ghost = None
@@ -91,6 +91,8 @@ def main(url, output, option={}):
         if hasattr(ghost, "xvfb"):
             logger.info(ghost.xvfb)
 
+        page = None
+        resources =None
         try:
             page, resources = session.open(
                 url,
@@ -156,4 +158,3 @@ if __name__ == '__main__':
         main(target, output, option=option)
     else:
         main(target, output)
-

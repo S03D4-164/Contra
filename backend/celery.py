@@ -15,7 +15,8 @@ app = Celery(
         'Contra.backend.apis.dns_resolve',
         'Contra.backend.apis.whois_domain',
         'Contra.backend.apis.whois_ip',
-    ])
+    ],
+    )
 
 app.conf.update(
     CELERY_DEFAULT_QUEUE = 'backend',

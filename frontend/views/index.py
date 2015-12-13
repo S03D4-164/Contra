@@ -12,6 +12,7 @@ from ..tasks.whois_domain import whois_domain
 from ..tasks.whois_ip import whois_ip
 from ..tasks.dns_resolve import dns_resolve
 from ..tasks.host_inspect import host_inspect
+from ..tasks.parse_task import parse_url
 from .auth import log_in
 from .progress import main as progress
 
@@ -157,17 +158,17 @@ def view(request):
         'form': form,
         'authform': AuthenticationForm(),
         "redirect":request.path,
-        'query': query,
-        'job': Job.objects.filter(query=query),
+        #'query': query,
+        #'job': Job.objects.filter(query=query),
         #'domain': Domain.objects.all(),
         #'hostname': Hostname.objects.all(),
-        'ua': UserAgent.objects.all(),
+        #'ua': UserAgent.objects.all(),
         'uaform': UserAgentForm(),
         'iform': InputForm(),
-        'dns':DNSRecord.objects.all(),
-        'whois_domain':Domain_Whois.objects.all(),
-        'whois_ip':IP_Whois.objects.all(),
-        'host_info':Host_Info.objects.all(),
+        #'dns':DNSRecord.objects.all(),
+        #'whois_domain':Domain_Whois.objects.all(),
+        #'whois_ip':IP_Whois.objects.all(),
+        #'host_info':Host_Info.objects.all(),
         #'analysis': Analysis.objects.all(),
     })
     return render_to_response("index.html", rc) 

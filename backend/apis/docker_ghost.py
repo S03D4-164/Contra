@@ -30,6 +30,7 @@ def ghost_api(request):
             received = json.loads(body)
         except Exception as e:
             logger.debug(str(e))
+            return HttpResponse(str(e), status=400)
 
         if "url" in received:
             url = received["url"]
@@ -38,28 +39,36 @@ def ghost_api(request):
             jid = received["job"]
             if type(qid) is int and type(jid) is int:
                 output = str(qid) + "/" + str(jid)
+        """        
         if "method" in received:
             option["method"] = received["method"]
             if option["method"] == "POST" and "body" in received:
                 option["body"] = received["post_data"]
         if "user_agent" in received:
             option["user_agent"] = received["user_agent"]
-        if "wait_timeout" in received:
+        if "timeout" in received:
             option["wait_timeout"] = received["timeout"]
         if "headers" in received:
             option["headers"] = received["headers"]
         if "proxy" in received:
             option["proxy"] = received["proxy"]
+        """
     elif request.method == "GET":
         if "url" in request.GET:
             url = request.GET["url"]
             output = "get"
+            args = {
+                "url":url,
+                "output":output,
+            }
 
     if url:
+        cli = docker.Client(base_url='unix://var/run/docker.sock')
+        cid = contra_container(cli)
         try:
         #if True:
             #res = run_ghost(url, output, option=option)
-            res = run_ghost.delay(url, output, option=option)
+            res = run_ghost.delay(cid, url, output, option=option)
             result = res.get()
             fh = open(result, 'rb')
             logger.debug(len(fh.read()))
@@ -84,17 +93,22 @@ def ghost_api(request):
                     response = JsonResponse({
                         "error":data[b"resources"][0][b"error"],
                     })
-            return response
+            #return response
         except Exception as e:
             logger.error(str(e))
-            return HttpResponse(str(e), status=400)
-            
+            #return HttpResponse(str(e), status=400)
+            response = HttpResponse(str(e), status=400)
+        #cli.remove_container(cid, force=True)
+
+    if response:
+        return response
+
     return HttpResponse("Invalid Request", status=400)
 
 @app.task
-def run_ghost(url, output=None, option={}):
+def run_ghost(cid, url, output, option={}):
     cli = docker.Client(base_url='unix://var/run/docker.sock')
-    cid = contra_container(cli)
+    #cid = contra_container(cli)
     #cid = "contra"
     logger.debug(cid)
 
@@ -108,17 +122,19 @@ def run_ghost(url, output=None, option={}):
         opt = json.dumps(option)
         command.append(opt)
         #command.append(json.dumps(option))
+
     logger.debug(command)
     e = cli.exec_create(
         cid,
         command,
-        #user="contra",
+        user="contra",
     )
     logger.debug(e)
     result = cli.exec_start(e["Id"], stream=False)
-    logger.debug(result.decode())
+    #logger.debug(result.decode())
+    logger.debug(result)
     cli.stop(cid, timeout=300)
-    cli.remove_container(cid)
+    #cli.remove_container(cid)
 
     pkl = appdir + "/static/artifacts/ghost/" + output + "/ghost.pkl"
     if os.path.isfile(pkl):

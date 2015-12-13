@@ -36,8 +36,9 @@ def dns_resolve(query):
                 md5 = md5,
                 serialized = serialized,
                 mx = "\n".join(result["MX"]),
-                #soa = "\n".join(result["SOA"]),
                 txt = "\n".join(result["TXT"]),
+                soa = "\n".join(result["SOA"]),
+                axfr = result["AXFR"],
             )
             if not created:
                 logger.debug("DNS result already exists.")
@@ -50,8 +51,9 @@ def dns_resolve(query):
                     md5 = md5,
                     serialized = str(serialized),
                     mx = "\n".join(result["MX"]),
-                    #soa = "\n".join(result["SOA"]),
                     txt = "\n".join(result["TXT"]),
+                    soa = "\n".join(result["SOA"]),
+                    axfr = result["AXFR"],
                 )
                 return d
             except Exception as e:

@@ -17,7 +17,6 @@
 <div class="col-md-6">
 <table class="table">
 <tr><th class="col-md-3">id</th><td><a class="btn btn-sm btn-primary" href="/whois_ip/{{wi.id}}">{{wi.id}}</a></td></tr>
-<tr><th >ip</th><td>{{wi.ip.ip}}</td></tr>
 <tr><th>creation_date</th><td>{{wi.creation_date|date:"c"}}</td></tr>
 <tr><th>updated_date</th><td>{{wi.updated_date|date:"c"}}</td></tr>
 <tr><th>first_seen</th><td>{{wi.first_seen|date:"c"}}</td></tr>
@@ -27,7 +26,9 @@
 </div>
 <div class="col-md-6">
 <table class="table table-condensed">
-<tr ><th class="col-md-3">description</th><td>{{wi.description}}</td></tr>
+<tr><th class="col-md-3">ip</th><td>{{wi.ip.ip}}</td></tr>
+<tr><th >reverse</th><td>{{wi.reverse}}</td></tr>
+<tr ><th >description</th><td>{{wi.description}}</td></tr>
 <tr><th>country</th><td>{{wi.country}}</td></tr>
 <tr><th>md5</th><td>{{wi.md5}}</td></tr>
 </table>

@@ -19,8 +19,12 @@ logger = getlogger()
 def host_inspect(host):
     logger.debug(host)
     hostname = parse_hostname(host)
+    if not hostname:
+        return None
 
     host_dr = dns_resolve(hostname.name)
+    print(host_dr)
+    print(host_dr.a.all())
     ips = []
     if re.search("\[?([0-9a-f]*:[0-9a-f]*:[0-9a-f]+)\]?:?([0-9]{,5})?", hostname.name):
         try:
@@ -76,11 +80,14 @@ def host_inspect(host):
         except Exception as e:
             logger.error(str(e))
 
-    if created:
-        for i in ips:
-            ip_whois = whois_ip(i.ip)
-            if ip_whois:
-                host_info.ip_whois.add(ip_whois)
-                host_info.save()
+    if host_info:
+        if created or not host_info.ip_whois.all():
+            for i in ips:
+                print(i)
+                w = whois_ip(i.ip)
+                if w:
+                    host_info.ip_whois.add(w)
+                    host_info.save()
+    print(host_info.ip_whois.all())
 
     return host_info
