@@ -20,3 +20,6 @@ a.colorbox img{
 	background-color: #FFFF88;
 }
 
+span.flag-icon {
+	border:solid thin lightgrey;
+}

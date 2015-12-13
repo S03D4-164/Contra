@@ -97,6 +97,7 @@ class DNSRecord(models.Model):
     ns = models.ManyToManyField(Hostname, related_name="NS")
     mx = models.TextField(blank=True, null=True)
     soa = models.TextField(blank=True, null=True)
+    axfr = models.TextField(blank=True, null=True)
     txt = models.TextField(blank=True, null=True)
     #timestamp = models.DateTimeField(auto_now_add=True)
     first_seen = models.DateTimeField(auto_now_add=True)
@@ -104,6 +105,13 @@ class DNSRecord(models.Model):
     class Meta:
         unique_together = (('query', 'md5'))
 
+"""
+class DNSRecordExt(models.Model):
+    dns = models.ForeignKey(DNSRecord)
+    soa = models.TextField(blank=True, null=True)
+    axfr = models.TextField(blank=True, null=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+"""
 
 class Host_Info(models.Model):
     hostname = models.ForeignKey(Hostname)

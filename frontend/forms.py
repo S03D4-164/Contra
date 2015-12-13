@@ -17,12 +17,16 @@ METHOD_CHOICES = (
 class InputForm(forms.Form):
     input = forms.CharField()
 
+header = """Accept-Language: ja; q=1.0, en; q=0.5
+Accept: text/html; q=1.0, text/*; q=0.8, image/gif; q=0.6, image/jpeg; q=0.6, image/*; q=0.5, */*; q=0.1
+"""
+
 class QueryForm(forms.Form):
     input = forms.CharField(widget=forms.Textarea(attrs={'rows':3}), initial="http://")
     user_agent = forms.ModelChoiceField(queryset=UserAgent.objects.all().order_by("name"), required=False, initial=1)
     referer = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
     proxy = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40, 'placeholder':"http://ipaddress:port"}), required=False)
-    additional_headers = forms.CharField(widget=forms.Textarea(attrs={'rows':3}), required=False)
+    additional_headers = forms.CharField(widget=forms.Textarea(attrs={'rows':3}), required=False, initial=header)
     method = forms.ChoiceField(choices=METHOD_CHOICES)
     post_data = forms.CharField(widget=forms.Textarea(attrs={'rows':3}), required=False)
     timeout = forms.ChoiceField(choices=TIMEOUT_CHOICES)
