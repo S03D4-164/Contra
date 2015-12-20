@@ -43,17 +43,30 @@ def user(request):
         messages.error(request, "Authentication required to access account information.")
         return redirect("/")
 
+    u = User.objects.get(username=request.user)
     if request.method == "POST":
-        pform = SetPasswordForm(user=request.user, data=request.POST)
+        pform = SetPasswordForm(user=u, data=request.POST)
         if pform.is_valid():
             pform.save()
-            messages.success(request, "Updated.")
+            messages.success(request, "Password Updated.")
         else:
-            messages.warning(request, "Invalid Input.")
+            messages.warning(request, "Invalid Password.")
+
+        mform = UserEmailForm(request.POST)
+        if mform.is_valid():
+            m = mform.cleaned_data["email"]
+            if m != u.email:
+                u.email = m
+                u.save()
+                messages.success(request, "Email Address Updated.")
+        else:
+            messages.warning(request, "Invalid Email Address.")
+
     rc = RequestContext(request, {
         'form': QueryForm(),
         'authform': AuthenticationForm(),
         'passform': SetPasswordForm(request.user),
+        'emailform': UserEmailForm(instance=u),
         'redirect': request.path,
     })
     return render_to_response("account.html", rc)
@@ -61,9 +74,10 @@ def user(request):
 def log_in(request, next="/"):
     try:
         next = request.GET.get("next")
+        if not next:
+            next = "/"
     except Exception as e:
         logger.error(e)
-    #authform = AuthenticationForm() 
     if request.method == "POST":
         authform = AuthenticationForm(request.POST)
         username = request.POST["username"]
@@ -78,7 +92,12 @@ def log_in(request, next="/"):
         else:
             messages.error(request, "Login Failed.")
 
-    return redirect("%s" % next)
+        return redirect("%s" % next)
+    else:
+        rc = RequestContext(request, {
+            'authform': AuthenticationForm(),
+        })
+        return render_to_response("login.html", rc)
 
 def log_out(request):
     logout(request)

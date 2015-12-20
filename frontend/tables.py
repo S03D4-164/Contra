@@ -1,5 +1,6 @@
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+from django.contrib.auth.models import User 
 
 from django_datatables_view.base_datatable_view import BaseDatatableView
 from .models import *
@@ -11,11 +12,27 @@ class QueryData(BaseDatatableView):
     order_columns = ['id', 'input', 'updated_at', 'registered_by', 'restriction', 'interval', 'counter']
     max_display_length = 100
 
+    def get_initial_queryset(self):
+        user = self.request.user
+        groups = self.request.user.groups.all()
+        group_member = User.objects.filter(groups__in=groups).distinct()
+        qs = None
+        if user.is_authenticated():
+            qs = Query.objects.filter(restriction=2) \
+                |Query.objects.filter(restriction=1, registered_by__in=group_member) \
+                |Query.objects.filter(restriction=0)
+        else:
+            qs = Query.objects.filter(restriction=2)
+        return qs
+
     def render_column(self, row, column):
         if column == 'id':
             return '<a class="btn btn-primary" href="/query/{0}">{0}</a>'.format(row.id)
         elif column == 'registered_by':
-            return '{0}'.format(row.registered_by.username)
+            r = None
+            if row.registered_by:
+                r = row.registered_by.username
+            return '{0}'.format(r)
         else:
             return super(QueryData, self).render_column(row, column)
 
@@ -38,11 +55,27 @@ class JobData(BaseDatatableView):
     order_columns = ['id', 'created_at', 'query', 'status', 'capture']
     max_display_length = 100
 
+    def get_initial_queryset(self):
+        user = self.request.user
+        groups = self.request.user.groups.all()
+        group_member = User.objects.filter(groups__in=groups).distinct()
+        qs = None
+        if user.is_authenticated():
+            qs = Job.objects.filter(query__restriction=2) \
+                |Job.objects.filter(query__restriction=1, query__registered_by__in=group_member) \
+                |Job.objects.filter(query__restriction=0)
+        else:
+            qs = Job.objects.filter(query__restriction=2)
+        return qs
+
     def render_column(self, row, column):
         if column == 'id':
             return '<a class="btn btn-primary" href="/job/{0}">{0}</a>'.format(row.id)
         elif column == 'query':
-            return '{0}'.format(row.query.input)
+            i = None
+            if row.query:
+                i = row.query.input
+            return '{0}'.format(i)
         elif column == 'capture':
             c = None
             if row.capture:
@@ -97,7 +130,12 @@ class DomainWhoisData(BaseDatatableView):
         if column == 'id':
             return '<a class="btn btn-primary" href="/whois_domain/{0}">{0}</a>'.format(row.id)
         elif column == 'domain':
-            return '<a href="/domain/{0}">{1}</a>'.format(row.domain.id,row.domain.name)
+            i = None
+            n = None
+            if row.domain:
+                i = row.domain.id
+                n = row.domain.name
+            return '<a href="/domain/{0}">{1}</a>'.format(i, n)
         elif column == 'contact':
             t = '<table class="table display" cellspacing="0" width="100%">'
             for c in row.contact.all():
@@ -130,11 +168,21 @@ class IPWhoisData(BaseDatatableView):
         if column == 'id':
             return '<a class="btn btn-primary" href="/whois_ip/{0}">{0}</a>'.format(row.id)
         elif column == 'ip':
-            return '{0}'.format(row.ip.ip)
+            i = None
+            if row.ip:
+                i = row.ip.ip
+            return '{0}'.format(i)
         elif column == 'domain':
-            return '<a href="/domain/{0}">{1}</a>'.format(row.domain.id,row.domain.name)
+            i = None
+            n = None
+            if row.domain:
+                i = row.domain.id
+                n = row.domain.name
+            return '<a href="/domain/{0}">{1}</a>'.format(i, n)
         elif column == 'country':
-            td = '<span class="flag-icon flag-icon-{0}" title="{0}" style="border:solid thin lightgrey"></span>'.format(row.country.lower())
+            td = None
+            if row.country:
+                td = '<span class="flag-icon flag-icon-{0}" title="{0}" style="border:solid thin lightgrey"></span>'.format(row.country.lower())
             return '{0}'.format(td)
         else:
             return super(IPWhoisData, self).render_column(row, column)
@@ -160,16 +208,32 @@ class HostInfoData(BaseDatatableView):
         if column == 'id':
             return '<a class="btn btn-primary" >{0}</a>'.format(row.id)
         elif column == 'hostname':
-            return '{0}'.format(row.hostname.name)
+            n = None
+            if row.hostname:
+                n = row.hostname.name
+            return '{0}'.format(n)
         elif column == 'ip_whois':
             td = ""
             for i in row.ip_whois.all():
                 td += '<a href="/whois_ip/{0}">{1}</a><br>'.format(i.id, i.ip)
             return '{0}'.format(td)
         elif column == 'domain_dns':
-            return '{0}'.format(row.domain_dns.serialized)
+            #d = None
+            i = None
+            n = None
+            if row.domain_dns:
+                #d = row.domain_dns.serialized
+                i = row.domain_dns.id
+                n = row.domain_dns.query
+            #return '{0}'.format(d)
+            return '<a href="/dns/{0}">{1}</a>'.format(i, n)
         elif column == 'domain_whois':
-            return '<a href="/whois_domain/{0}">{1}</a>'.format(row.domain_whois.id, row.domain_whois.domain.name)
+            i = None
+            n = None
+            if row.domain_whois:
+                i = row.domain_whois.id
+                n = row.domain_whois.domain.name
+            return '<a href="/whois_domain/{0}">{1}</a>'.format(i, n)
         else:
             return super(HostInfoData, self).render_column(row, column)
 

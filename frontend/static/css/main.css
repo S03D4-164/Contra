@@ -3,23 +3,29 @@ html {
 }
 
 table{
-	table-layout:fixed;
+    table-layout:fixed;
 }
 
 td {
-	word-wrap:break-word;
+    word-wrap:break-word;
 }
 
 a.colorbox img{
-	border:solid thin lightgrey;
-	display: block;
-	margin: 0 auto;
+    border:solid thin lightgrey;
+    display: block;
+    margin: 0 auto;
 }
 
 .highlight {
-	background-color: #FFFF88;
+    background-color: #FFFF88;
 }
 
 span.flag-icon {
-	border:solid thin lightgrey;
+    border:solid thin lightgrey;
+}
+
+.nav-pills li a {
+  -webkit-border-radius: 0 !important;
+     -moz-border-radius: 0 !important;
+          border-radius: 0 !important;
 }

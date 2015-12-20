@@ -34,10 +34,7 @@ def create_payload(jid):
     job = Job.objects.get(pk=jid)
     u = parse_url(job.query.input)
 
-    headers = {
-    #    "Accept-Language":"ja; q=1.0, en; q=0.5",
-    #    "Accept":"text/html; q=1.0, text/*; q=0.8, image/gif; q=0.6, image/jpeg; q=0.6, image/*; q=0.5, */*; q=0.1",
-    }
+    headers = {}
     if job.referer:
         headers['Referer'] = job.referer
     if job.additional_headers:
@@ -158,7 +155,6 @@ def set_resource(jid, data, is_page=False):
     resource = None
     created = None
     try:
-        #with transaction.atomic():
         resource, created = Resource.objects.get_or_create(
         #resource = Resource.objects.create(
             url = url,
@@ -201,16 +197,18 @@ def set_resource(jid, data, is_page=False):
             resource.host_info = r[0].host_info
             resource.save()
         else:
+            host_info = None
             if hostname.domain:
                 if hostname.domain.whitelisted:
                     logger.debug("host_inspect skipped: whitelisted domain" + str(hostname.domain))
                 else:
-                    host_info = host_inspect(hostname)
-                    resource.host_info = host_info
-                    resource.save()
-                    #host_info = set_hostinfo(resource.id)
+                    host_info = host_inspect(hostname.name)
                     #set_hostinfo.delay(resource.id)
-
+            else:
+                    host_info = host_inspect(hostname.name)
+            if host_info:
+                resource.host_info = host_info
+                resource.save()
     #wappalyze.delay(resource.id)
     resource = wappalyze(resource.id)
 
@@ -229,33 +227,44 @@ def set_hostinfo(rid):
 def get_savedir(url, is_page=False):
     u = parse_url(url)
     hostname = None
+    subdomain = None
     domain = None
+    suffix = None
     if u:
         if u.hostname:
-        #hostname = u.hostname.name.encode("utf-8")
             hostname = u.hostname.name
+            subdomain = u.hostname.subdomain
             if u.hostname.domain:
                 domain = u.hostname.domain.name
+                suffix = u.hostname.domain.suffix
 
-    repodir = None
-    if is_page:
-        repodir = "static/repository/page"
-    else:
-        repodir = "static/repository/resource"
+    repodir = "static/repository"
     repopath = appdir + "/" + repodir
     repository = get_repo(repopath)
+
     comdir = None
+    if is_page:
+        comdir = "page/"
+    else:
+        comdir = "resource/"
     if u.protocol == "data" and u.type:
-        comdir = "data/" + u.type + "/" + str(u.md5)
+        #comdir += "data/" + u.type + "/" + str(u.md5)
+        comdir += "data/" + u.type
     elif re.match("^[0-9a-f]*:[0-9a-f]*:[0-9a-f]+$", str(hostname)):
-        comdir = "ipv6/" + str(hostname)
+        comdir += "ipv6/" + str(hostname)
     elif re.match("^([0-9]{1,3}\.){3}[0-9]{1,3}$", str(hostname)):
-        comdir = "ipv4/" + str(hostname)
+        comdir += "ipv4/" + str(hostname)
     else:
         if domain:
-            comdir = "domain/" + str(domain) + "/" + str(hostname)
+            comdir += "domain"
+            #if suffix:
+            #    comdir += "/" + str(suffix)
+            if domain:
+                comdir += "/" + str(domain)
+            if subdomain:
+                comdir += "/" + str(subdomain)
         else:
-            comdir = "domain/" + str(hostname)
+            comdir += "hostname/" + str(hostname)
     contentdir = repodir + "/" + comdir
     fullpath = appdir + "/" + contentdir
     if not os.path.exists(fullpath):
@@ -279,10 +288,7 @@ def save_content(data, savedir, is_page=False):
     result = {}
     url = parse_url(data["url"])
 
-    #s = BytesIO()
     content = data["content"]
-    type = magic.from_buffer(content, mime=True)
-    logger.debug(type)
     length = len(content)
     logger.debug(length)
 
@@ -303,20 +309,17 @@ def save_content(data, savedir, is_page=False):
         md5 = str(hashlib.md5(encoded).hexdigest())
         logger.debug(md5)
 
-    #s.write(data["content"].encode("utf-8"))
-    #s.write(content)
-    #content = s.getvalue()
-    #s.close()
-
     d = savedir
     file = d["fullpath"] + "/" + str(url.md5)
     logger.debug(file)
     with open(file , "wb") as f:
-        #f.write(content)
         f.write(encoded)
     commit = None
     path = None
+    type = None
     if os.path.isfile(file):
+        type = magic.from_file(file, mime=True)
+        logger.debug(type)
         d["compath"] = d["comdir"] + "/" + str(url.md5)
         commit = git_commit(d["compath"], d["repopath"])
         d["contentpath"] = d["contentdir"] + "/" + str(url.md5)
@@ -324,7 +327,6 @@ def save_content(data, savedir, is_page=False):
         path = d["contentpath"]
     c = None
     try:
-        #with transaction.atomic():
         c, created = Content.objects.get_or_create(
             content = decoded,
             md5 = md5,
@@ -335,19 +337,19 @@ def save_content(data, savedir, is_page=False):
             url = url,
         )
         if c:
-            set_hash.delay(c.id)
-            #c = set_hash(c.id)
+            #set_hash.delay(c.id)
+            c = set_hash(c.id)
     except Exception as e:
         logger.error(str(e))
         try:
             c = Content.objects.get(
-                content = decoded,
-                md5 = md5,
-                commit = commit,
-                path = path,
-                type = type,
-                length = length,
                 url = url,
+                md5 = md5,
+                path = path,
+                commit = commit,
+                #content = decoded,
+                #type = type,
+                #length = length,
             )
         except Exception as e:
             logger.error(str(e))
@@ -397,10 +399,8 @@ def save_capture(capture, d, jid):
 
     c = None
     try:
-        #with transaction.atomic():
         c, created = Capture.objects.get_or_create(
             path = path,
-            #commit = commit,
             base64 = base64.b64encode(capture),
             b64thumb = base64.b64encode(thumb),
         )

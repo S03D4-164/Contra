@@ -27,6 +27,8 @@ def create_b64thumb(image):
     thumb = base64.b64encode(tmp.getvalue())
     return thumb
 
+#def resource_filter(word):
+#    pass
 
 def view(request, id):
     job = Job.objects.get(pk=id)
@@ -35,8 +37,11 @@ def view(request, id):
         messages.warning(request, "Cannot access Job " + str(job.id))
         return redirect("/")
 
+    """
     if request.method == "POST":
-        if "run" in request.POST:
+        if "filter" in request.POST:
+            resource_filter(None)
+        elif "run" in request.POST:
             j = Job.objects.create(
                 query = job.query,
                 status = "Job Created",
@@ -51,12 +56,16 @@ def view(request, id):
             execute_job.delay(j.id)
             rc = progress(request, [j.id])
             return render_to_response("progress.html", rc)
+    """
 
     thumbnail = None
     if job.capture:
-        thumbnail = create_b64thumb(appdir + "/" + job.capture.path)
+        try:
+            thumbnail = create_b64thumb(appdir + "/" + job.capture.path)
+        except:
+            pass
     
-    resource = job.resources.all().order_by("seq")
+    #resource = job.resources.all().order_by("seq")
     notimage = job.resources.exclude(content__type__startswith="image").order_by("seq")
     image = job.resources.filter(content__type__startswith="image").order_by("seq")
 
@@ -65,8 +74,7 @@ def view(request, id):
         'q': job.query,
         'j': job,
         'p': job.page,
-        #'resource': job.resources.all().order_by("seq"),
-        'resource': resource,
+        #'resource': resource,
         'notimage': notimage,
         'image': image,
         'redirect': request.path,

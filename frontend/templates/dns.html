@@ -16,10 +16,11 @@
 <div class="row">
 <div class="col-md-6">
 <table class="table">
-<tr><th class="col-md-3">id</th><td><a class="btn btn-md btn-primary" href="/dns/{{dns.id}}">{{dns.id}}</a></td></tr>
-<tr><th>first_seen</th><td>{{dns.first_seen|date:"c"}}</td></tr>
-<tr><th>last_seen</th><td>{{dns.last_seen|date:"c"}}</td></tr>
+<tr><th class="col-md-3">id</th><td><a class="btn btn-sm btn-primary" href="/dns/{{dns.id}}">{{dns.id}}</a></td></tr>
+<tr><th>first_seen</th><td>{{dns.first_seen}}</td></tr>
+<tr><th>last_seen</th><td>{{dns.last_seen}}</td></tr>
 <tr><th>md5</th><td>{{dns.md5}}</td></tr>
+<tr><th>serialized</th><td>{{dns.serialized}}</td></tr>-
 </table>
 </div>
 <div class="col-md-6">

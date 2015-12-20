@@ -5,13 +5,43 @@ import logging
 from ..logger import getlogger
 logger = getlogger()
 
+appdir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+
 def get_repo(repodir):
     repo = None
     if not os.path.exists(repodir):
         os.makedirs(repodir)
     repo = git.init(repodir)
     return repo
-    
+
+
+def git_diff(filepath, commit):
+    repo = appdir + "/static/repository"
+    d = None
+    try:
+        """
+        d = git(
+            "--git-dir", repo + "/.git",
+            "--work-tree", repo,
+            "--no-pager",
+            "log", "--oneline", commit, "-2",
+            '--pretty=format:%H', '--', appdir + "/" + filepath
+        )
+        c = "..".join(d.split("\n"))
+        """
+        d = git(
+            "--git-dir", repo + "/.git",
+            "--work-tree", repo,
+            "--no-pager",
+            "log", "--no-color",  commit,
+            "-p", "-1", appdir + "/" + filepath
+        )
+    except Exception as e:
+        d = str(e)
+    return d
+
+
 def git_commit(filepath, repo):
     commit = None
     try:

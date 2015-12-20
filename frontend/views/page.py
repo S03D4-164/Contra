@@ -7,6 +7,7 @@ from ..forms import *
 from ..models import *
 from ..tasks.thug_task import content_analysis
 from ..tasks.wappalyze import wappalyze
+from ..tasks.repository import git_diff
 from .auth import check_permission
 
 import ast, base64, json
@@ -74,16 +75,23 @@ def view(request, id):
     if resource.headers:
         headers = ast.literal_eval(resource.headers)
 
+    """
     size = None
     if content:
-        size = os.path.getsize(appdir + "/" + content.path),
-        
+        try:
+            size = os.path.getsize(appdir + "/" + content.path),
+        except:
+            pass
+    """
+    diff = git_diff(content.path, content.commit).encode("utf-8")
+    
     c = RequestContext(request, {
         'resource': resource,
-        'size':size,
+        #'size':size,
         'job': j,
         'analysis':analysis,
         'result': result,
+        'diff': diff,
         'matched':matched,
         'headers': headers,
         'form':QueryForm(),

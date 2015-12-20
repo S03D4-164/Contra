@@ -39,8 +39,8 @@ def _query_job(request, form, jobs):
         i.strip()
         if re.match("^(ht|f)tps?://[^/]+", i) \
         or re.match("^data:.+\;base64,.+==", i):
-            #try:
-            if True:
+            try:
+            #if True:
                 job = None
                 with transaction.atomic():
                     q, created = Query.objects.get_or_create(
@@ -64,8 +64,8 @@ def _query_job(request, form, jobs):
                     execute_job.delay(job.id)
                     #execute_job(job.id)
                     jobs.append(job.id)
-            #except Exception as e:
-            #    messages.error(request, 'Error: ' + str(e))
+            except Exception as e:
+                messages.error(request, 'Error: ' + str(e))
         else:
             if i:
                 messages.error(request, 'Invalid Input: ' + str(i))
@@ -158,18 +158,8 @@ def view(request):
         'form': form,
         'authform': AuthenticationForm(),
         "redirect":request.path,
-        #'query': query,
-        #'job': Job.objects.filter(query=query),
-        #'domain': Domain.objects.all(),
-        #'hostname': Hostname.objects.all(),
-        #'ua': UserAgent.objects.all(),
         'uaform': UserAgentForm(),
         'iform': InputForm(),
-        #'dns':DNSRecord.objects.all(),
-        #'whois_domain':Domain_Whois.objects.all(),
-        #'whois_ip':IP_Whois.objects.all(),
-        #'host_info':Host_Info.objects.all(),
-        #'analysis': Analysis.objects.all(),
     })
     return render_to_response("index.html", rc) 
 

@@ -42,7 +42,7 @@ $(document).ready(
 {% if resource.is_page %}Page{% else %}Resource{% endif %}
 </th>
 <td><a class="btn btn-sm btn-primary" href="/page/{{resource.id}}">{{resource.id}}</a></td></tr>
-<tr><th>Created at</th><td>{{resource.created_at|date:"c"}}</td></tr>
+<tr><th>Created at</th><td>{{resource.created_at}}</td></tr>
 <tr><th>URL</th><td>{{resource.url.url}}</td></tr>
 <tr><th >Status</th><td>{{resource.http_status}}</td></tr>
 <tr><th >Webapp</th>
@@ -74,7 +74,19 @@ $(document).ready(
 
 </div><!--.page-->
 
-<div id="Job" class="col-md-12">
+<div class="col-md-12">
+<ul class="nav nav-pills">
+<li class="active"><a data-toggle="pill" href="#content">Content</a></li>
+<li ><a data-toggle="pill" href="#diff">Diff</a></li>
+<li ><a data-toggle="pill" href="#headers">Headers</a></li>
+<li ><a data-toggle="pill" href="#job">Job</a></li>
+{% if analysis %}<li ><a data-toggle="pill" href="#analysis">analysis</a></li>{% endif %}
+</ul>
+</div>
+
+<div class="tab-content">
+
+<div id="job" class="col-md-12 tab-pane">
 
 <div class="panel panel-primary">
 <div class="panel-heading">
@@ -106,7 +118,7 @@ Job
 </div><!--job-->
 
 {% if headers %}
-<div id="headers" class="col-md-12">
+<div id="headers" class="col-md-12 tab-pane">
 
 <div class="panel panel-primary">
 <div class="panel-heading">
@@ -122,7 +134,7 @@ Header
 {% endif %}
 
 {% if analysis %}
-<div id="analysis" class="col-md-12">
+<div id="analysis" class="col-md-12 tab-pane">
 
 <div class="panel panel-primary">
 <div class="panel-heading">
@@ -162,7 +174,7 @@ Analysis
 {% endif %}
 
 {% if resource.content %}
-<div id="content" class="col-md-12">
+<div id="content" class="col-md-12 tab-pane in active">
 
 <div class="panel panel-primary">
 <div class="panel-heading">
@@ -190,6 +202,23 @@ Content
 
 </div><!--.content-->
 {% endif %}
+
+{% if diff %}
+<div id="diff" class="col-md-12 tab-pane">
+
+<div class="panel panel-primary">
+<div class="panel-heading">
+Diff
+</div>
+<div class="panel-body">
+<pre class="prettyprint linenums" style="white-space: pre-wrap;">{{diff}}</pre>
+</div>
+</div><!--.panel-->
+
+</div><!--.diff-->
+{% endif %}
+
+</div><!--.tab-content-->
 
 </div><!--.row-->
 

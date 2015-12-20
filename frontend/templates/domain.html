@@ -26,7 +26,7 @@ $(document).ready(
 <div class="row">
 <div class="col-md-6">
 <table class="table table-condensed">
-<tr><th>id</th><td><a class="btn btn-md btn-primary" href="/domain/{{domain.id}}">{{domain.id}}</a></td></tr>
+<tr><th class="col-md-3">id</th><td><a class="btn btn-sm btn-primary" href="/domain/{{domain.id}}">{{domain.id}}</a></td></tr>
 <tr><th>created_at</th><td>{{domain.created_at|date:"c"}}</td></tr>
 <tr><th>domain</th><td>{{domain.name}}</td></tr>
 <tr><th>suffix</th><td>{{domain.suffix}}</td></tr>
@@ -54,7 +54,7 @@ $(document).ready(
 <th class="col-md-1">id</th>
 <th class="col-md-3">first_seen</th>
 <th class="col-md-3">last_seen</th>
-<th>contact</th>
+<th class="col-md-5">contact</th>
 </tr></thead>
 <tbody>
 {% for d in dw %}
