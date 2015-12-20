@@ -9,6 +9,8 @@ except ImportError:
     from io import StringIO
     from io import BytesIO
 
+from PySide.QtCore import QByteArray, QIODevice, QBuffer
+
 from ghost import Ghost
 
 import logging
