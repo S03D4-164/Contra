@@ -3,6 +3,12 @@
 import os, sys, pickle, gzip, json, shutil
 import umsgpack
 
+try:
+    from StringIO import StringIO as BytesIO
+except ImportError:
+    from io import StringIO
+    from io import BytesIO
+
 from ghost import Ghost
 
 import logging
@@ -117,12 +123,22 @@ def main(url, output, option={}):
                 #"error":page.error.encode("utf-8").split(".")[-1],
                 "error":page.error.split(".")[-1],
             }
-            capture = savedir + "/capture.png"
             try:
-                session.capture_to(capture)
-                if os.path.isfile(capture):
-                    with open(capture, 'rb') as c:
-                        result["capture"] = c.read()
+                image = session.capture()
+                ba = QByteArray()
+                buffer = QBuffer(ba)
+                buffer.open(QIODevice.WriteOnly)
+                image.save(buffer, "PNG")
+                bio = BytesIO(ba)
+                bio.seek(0)
+                result["capture"] = bio.read()
+                bio.flush()
+                bio.close()
+                ba.clear()
+                buffer.close()
+                #capture = savedir + "/capture.png"
+                #with open(capture, 'wb') as c:
+                #    c.write(result["capture"])
             except Exception as e:
                 logger.error(str(e))
                 result["error"].append(str(e))
