@@ -39,7 +39,6 @@ def ghost_api(request):
             jid = received["job"]
             if type(qid) is int and type(jid) is int:
                 output = str(qid) + "/" + str(jid)
-        """        
         if "method" in received:
             option["method"] = received["method"]
             if option["method"] == "POST" and "body" in received:
@@ -52,7 +51,6 @@ def ghost_api(request):
             option["headers"] = received["headers"]
         if "proxy" in received:
             option["proxy"] = received["proxy"]
-        """
     elif request.method == "GET":
         if "url" in request.GET:
             url = request.GET["url"]
@@ -62,6 +60,7 @@ def ghost_api(request):
                 "output":output,
             }
 
+    response = None
     if url:
         cli = docker.Client(base_url='unix://var/run/docker.sock')
         cid = contra_container(cli)
@@ -73,7 +72,6 @@ def ghost_api(request):
             fh = open(result, 'rb')
             logger.debug(len(fh.read()))
             fh.seek(0)
-            response = None
             if request.method == "POST":
                 response = FileResponse(fh)
                 response['Content-Disposition'] = 'attachment; filename=ghost.pkl'
@@ -98,7 +96,7 @@ def ghost_api(request):
             logger.error(str(e))
             #return HttpResponse(str(e), status=400)
             response = HttpResponse(str(e), status=400)
-        #cli.remove_container(cid, force=True)
+        cli.remove_container(cid, force=True)
 
     if response:
         return response
@@ -132,7 +130,7 @@ def run_ghost(cid, url, output, option={}):
     logger.debug(e)
     result = cli.exec_start(e["Id"], stream=False)
     #logger.debug(result.decode())
-    logger.debug(result)
+    logger.debug(result.decode("utf-8"))
     cli.stop(cid, timeout=300)
     #cli.remove_container(cid)
 
