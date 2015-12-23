@@ -30,8 +30,8 @@ $(document).ready(
 <tr><th class="col-md-3">id</th><td><a class="btn btn-sm btn-primary" href="/query/{{q.id}}">{{q.id}}</a></td></tr>
 <tr><th>input</th><td>{{q.input}}</td></tr>
 <tr><th>registered_by</th><td>{{q.registered_by}}</td></tr>
-<tr><th >created_at</th><td>{{q.created_at|date:"c"}}</td></tr>
-<tr><th >updated_at</th><td>{{q.updated_at|date:"c"}}</td></tr>
+<tr><th >created_at</th><td>{{q.created_at}}</td></tr>
+<tr><th >updated_at</th><td>{{q.updated_at}}</td></tr>
 </table>
 </div><!--table-->
 <div class="col-md-6">
@@ -92,56 +92,41 @@ Are you sure?
 <div id="list" class="col-md-12">
 
 <ul class="nav nav-pills">
-<!--<li ><a data-toggle="pill" href="#page">Page({{page|length}})</a></li>-->
-<li class="active"><a data-toggle="pill" href="#job">Job({{job|length}})</a></li>
-{% if capture %}<li ><a data-toggle="pill" href="#capture">Capture({{capture|length}})</a></li>{% endif %}
+<li class="active"><a data-toggle="pill" href="#page">Page</a></li>
+<li ><a data-toggle="pill" href="#job">Job</a></li>
 </ul>
 
 <div class="tab-content">
 
-{% if capture %}
-<div id="capture" class="panel panel-primary tab-pane">
+<div id="page" class="panel panel-primary tab-pane in active">
 <div class="panel-heading"></div>
 <div class="panel-body">
-<table id="capture_table" class="table table-condensed table-striped table-hover">
-<thead><tr>
-<th class="col-md-1">id</th>
-<th class="col-md-2">capture</th>
-</tr></thead>
-<tbody>{% for c in capture %}
-<td>{{c.created_at}}</td>
-<td><a class="colorbox" href="/{{c.path}}"><img src="data:image/png;base64,{{c.b64thumb}}"></a></td>
-</tr>
-{% endfor %}</tbody>
-</table>
-</div><!--.panel-body-->
-</div><!--job-->
-{% endif %}
-
-
-<div id="job" class="panel panel-primary tab-pane in active">
-<div class="panel-heading"></div>
-<div class="panel-body">
-<table id="job_table" class="table table-condensed table-striped table-hover">
+<table id="page_table" class="table table-condensed table-striped table-hover">
 <thead><tr>
 <th class="col-md-1">id</th>
 <th class="col-md-2">created_at</th>
-<th class="col-md-1">result</th>
-<th class="col-md-2">page_url</th>
+<th class="col-md-3">page_url</th>
 <th class="col-md-2">ip</th>
 <th class="col-md-1">status</th>
 <th class="col-md-1">length</th>
 <th class="col-md-2">capture</th>
 </tr></thead>
 <tbody>{% for j in job %}
+{% if j.page %}
 {% if j.page.http_status in "403 404" %}
 <tr style="background-color:lightgrey">
+{% elif j.page.analysis.rule.all %}
+<tr class="warning" >
 {% else %}
 <tr>
 {% endif %}
-<td><a class="btn btn-md btn-primary" href="/job/{{j.id}}">{{j.id}}</td>
-<td>{{j.created_at|date:"c"}}</td>
-<td>{{j.status}}</td>
+<td>
+<a class="btn btn-sm btn-primary" href="/page/{{j.page.id}}">{{j.page.id}}</a>
+{% if j.page.analysis.rule.all %}
+<i class="fa fa-warning fa-lg" title="signature matched"></i> 
+{% endif %}
+</td>
+<td>{{j.page.created_at|date:"c"}}</td>
 <td>{{j.page.url.url}}</td>
 <td>
 {% for i in j.page.host_info.ip_whois.all %}
@@ -151,6 +136,35 @@ Are you sure?
 <td>{{j.page.http_status}}</td>
 <td>{{j.page.content.length}}</td>
 <td><a class="colorbox" href="/{{j.capture.path}}"><img src="data:image/png;base64,{{j.capture.b64thumb}}"></a></td>
+</tr>
+{% endif %}
+{% endfor %}</tbody>
+</table>
+</div><!--.panel-body-->
+</div><!--page-->
+
+<div id="job" class="panel panel-primary tab-pane">
+<div class="panel-heading"></div>
+<div class="panel-body">
+<table id="job_table" class="table table-condensed table-striped table-hover">
+<thead><tr>
+<th class="col-md-1">id</th>
+<th class="col-md-3">created_at</th>
+<th class="col-md-4">result</th>
+<th class="col-md-1">new</th>
+<th class="col-md-1">out</th>
+<th class="col-md-1">changed</th>
+<th class="col-md-1">not_changed</th>
+</tr></thead>
+<tbody>{% for j in job %}
+<tr>
+<td><a class="btn btn-md btn-primary" href="/job/{{j.id}}">{{j.id}}</td>
+<td>{{j.created_at|date:"c"}}</td>
+<td>{{j.status}}</td>
+<td>{{j.new.all|length}}</td>
+<td>{{j.out.all|length}}</td>
+<td>{{j.changed.all|length}}</td>
+<td>{{j.not_changed.all|length}}</td>
 </tr>
 {% endfor %}</tbody>
 </table>

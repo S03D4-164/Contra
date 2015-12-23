@@ -62,7 +62,7 @@ def git_commit(filepath, repo):
             'log', '-1', '--pretty=format:%H', '--', filepath
         ).strip()
     except Exception as e:
-        logger.error(str(filepath))
+        logger.error(filepath)
         #logger.error(str(e))
         commit = git(
             "--git-dir", repo + "/.git",

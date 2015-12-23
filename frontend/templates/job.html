@@ -54,7 +54,11 @@ $(document).ready(
 {% if p %}
 <div id="page" class="col-md-12">
 
+{% if p.analysis.rule.all %}
+<div class="panel panel-warning">
+{% else %}
 <div class="panel panel-info">
+{% endif %}
 <div class="panel-heading">Page</div>
 {% if p.http_status in "403 404" %}
 <div class="panel-body" style="background-color:lightgrey;">
@@ -66,8 +70,7 @@ $(document).ready(
 
 <div class="col-md-6">
 <table id="page_table" class="table table-condensed ">
-<tr><th >id</th><td><a class="btn btn-sm btn-info" href="/page/{{p.id}}">{{p.id}}</a></td></tr>
-<tr><th >created_at</th><td>{{p.created_at|date:"c"}}</td>
+<tr><th class="col-md-3">id</th><td><a class="btn btn-sm btn-info" href="/page/{{p.id}}">{{p.id}}</a></td></tr>
 <tr><th>url</th><td>{{j.page.url.url}}</td></tr>
 <tr><th>ip</th>
 <td>
@@ -79,6 +82,7 @@ $(document).ready(
 <tr><th >status</th><td>{{p.http_status}}</td></tr>
 <tr><th >type</th><td>{{p.content.type}}</td></tr>
 <tr><th >length</th><td>{{p.content.length}}</td></tr>
+<tr><th >signature</th><td>{% for a in p.analysis.rule.all %}{{a}}<br>{% endfor %}</td>
 </table>
 </div><!--page-left-->
 
@@ -102,6 +106,7 @@ $(document).ready(
 <ul class="nav nav-pills">
 <li class="active"><a data-toggle="pill" href="#resource">Resource({{notimage|length}})</a></li>
 <li ><a data-toggle="pill" href="#image">image({{image|length}})</a></li>
+<li ><a data-toggle="pill" href="#out">Out({{j.out.all|length}})</a></li>
 </ul>
 
 <div class="tab-content ">
@@ -113,17 +118,20 @@ $(document).ready(
 <thead><tr>
 <th class="col-md-1">seq</th>
 <th class="col-md-1">id</th>
-<th class="col-md-2">timestamp</th>
-<th class="col-md-3">url</th>
+<th class="col-md-2">url</th>
 <th class="col-md-2">ip</th>
 <th class="col-md-1">status</th>
 <th class="col-md-1">type</th>
 <th class="col-md-1">length</th>
+<th class="col-md-1">content</th>
+<th class="col-md-2">signature</th>
 </tr></thead>
 <tbody>
 {% for r in notimage %}
 {% if r.http_status in "403 404" or not r.content %}
 <tr style="background-color:lightgrey;">
+{% elif r.analysis.rule.all %}
+<tr style="background-color:orange;">
 {% elif r.url == p.url %}
 <tr class="info">
 {% elif r.url.hostname == p.url.hostname %}
@@ -133,7 +141,6 @@ $(document).ready(
 {% endif %}
 <td><a class="btn btn-sm btn-default">{{r.seq}}</a></td>
 <td><a class="btn btn-sm btn-primary" href="/resource/{{r.id}}">{{r.id}}</a></td>
-<td>{{r.created_at|date:"c"}}</td>
 <td>{{r.url.url}}</td>
 <td>
 {% for i in r.host_info.ip_whois.all %}
@@ -143,12 +150,23 @@ $(document).ready(
 <td>{{r.http_status}}</td>
 <td>{{r.content.type}}</td>
 <td>{{r.content.length}}</td>
+<td>
+{% if r in j.new.all %}new
+{% elif r in j.changed.all %}changed
+{% elif r in j.not_changed.all %}not changed
+{% endif %}
+</td>
+<td>
+{% for a in r.analysis.rule.all %}
+{{a.name}}<br>
+{% endfor%}
+</td>
 </tr>
 {% endfor %}
 </tbody>
 </table>
 </div><!--.panel-body-->
-</div><!--.resource-->
+</div><!--.notimage-->
 
 <div id="image" class="panel panel-primary tab-pane">
 <div class="panel-heading"></div>
@@ -157,12 +175,13 @@ $(document).ready(
 <thead><tr>
 <th class="col-md-1">seq</th>
 <th class="col-md-1">id</th>
-<th class="col-md-2">timestamp</th>
-<th class="col-md-3">url</th>
+<th class="col-md-2">url</th>
 <th class="col-md-2">ip</th>
 <th class="col-md-1">status</th>
 <th class="col-md-1">type</th>
 <th class="col-md-1">length</th>
+<th class="col-md-1">content</th>
+<th class="col-md-2">signature</th>
 </tr></thead>
 <tbody>
 {% for r in image %}
@@ -177,7 +196,6 @@ $(document).ready(
 {% endif %}
 <td><a class="btn btn-sm btn-default">{{r.seq}}</a></td>
 <td><a class="btn btn-sm btn-primary" href="/resource/{{r.id}}">{{r.id}}</a></td>
-<td>{{r.created_at|date:"c"}}</td>
 <td>{{r.url.url}}</td>
 <td>
 {% for i in r.host_info.ip_whois.all %}
@@ -187,13 +205,79 @@ $(document).ready(
 <td>{{r.http_status}}</td>
 <td>{{r.content.type}}</td>
 <td>{{r.content.length}}</td>
+<td>
+{% if r in j.new.all %}new
+{% elif r in j.changed.all %}changed
+{% elif r in j.not_changed.all %}not changed
+{% endif %}
+</td>
+<td>
+{% for a in r.analysis.rule.all %}
+{{a.name}}<br>
+{% endfor%}
+</td>
 </tr>
 {% endfor %}
 </tbody>
 </table>
 </div><!--.panel-body-->
-</div><!--.resource-->
+</div><!--.image-->
 
+<div id="out" class="panel panel-primary tab-pane">
+<div class="panel-heading"></div>
+<div class="panel-body">
+<table class="table table-condensed table-hover " style="table-layout: fixed;">
+<thead><tr>
+<th class="col-md-1">seq</th>
+<th class="col-md-1">id</th>
+<th class="col-md-2">url</th>
+<th class="col-md-2">ip</th>
+<th class="col-md-1">status</th>
+<th class="col-md-1">type</th>
+<th class="col-md-1">length</th>
+<th class="col-md-1">content</th>
+<th class="col-md-2">signature</th>
+</tr></thead>
+<tbody>
+{% for r in j.out.all %}
+{% if r.http_status in "403 404" or not r.content %}
+<tr style="background-color:lightgrey;">
+{% elif r.url == p.url %}
+<tr class="info">
+{% elif r.url.hostname == p.url.hostname %}
+<tr class="warning">
+{% else %}
+<tr>
+{% endif %}
+<td><a class="btn btn-sm btn-default">{{r.seq}}</a></td>
+<td><a class="btn btn-sm btn-primary" href="/resource/{{r.id}}">{{r.id}}</a></td>
+<td>{{r.url.url}}</td>
+<td>
+{% for i in r.host_info.ip_whois.all %}
+<span class="flag-icon flag-icon-{{i.country|lower}}" title="{{i.country}}"></span><a href="/whois_ip/{{i.id}}">{{i.ip.ip}}</a><br>
+{% endfor %}
+</td>
+<td>{{r.http_status}}</td>
+<td>{{r.content.type}}</td>
+<td>{{r.content.length}}</td>
+<td>
+{% if r in j.new.all %}new
+{% elif r in j.changed.all %}changed
+{% elif r in j.not_changed.all %}not changed
+{% elif r in j.out.all %}out
+{% endif %}
+</td>
+<td>
+{% for a in r.analysis.rule.all %}
+{{a.name}}<br>
+{% endfor%}
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div><!--.panel-body-->
+</div><!--.out-->
 
 </div><!--tab-->
 

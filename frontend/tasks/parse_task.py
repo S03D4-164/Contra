@@ -21,8 +21,11 @@ def init_parse(url):
     server = None
     path = None
     if protocol != "data":
-        server = url.split('/')[2]
-        path = url.split('/')[3:]
+        try:
+            server = url.split('/')[2]
+            path = url.split('/')[3:]
+        except Exception as e:
+            logger.error(str(e))
     parsed = {
         "url":url,
         "protocol":protocol,
@@ -52,6 +55,7 @@ def parse_ipv6url(p):
                     protocol = p["protocol"],
                     path = p["path"],
                     md5 = hashlib.md5(p["url"].encode("utf-8")).hexdigest()
+                    #md5 = hashlib.md5(p["url"]).hexdigest()
                 )
         except Exception as e:
             logger.error(e)
@@ -76,6 +80,7 @@ def parse_ipv4url(p):
                 protocol = p["protocol"],
                 path = p["path"],
                 md5 = hashlib.md5(p["url"].encode("utf-8")).hexdigest()
+                #md5 = hashlib.md5(p["url"]).hexdigest()
             )
     except Exception as e:
         logger.error(e)
@@ -84,7 +89,8 @@ def parse_ipv4url(p):
 
 def parse_hostname(hostname):
     no_fetch_extract = tldextract.TLDExtract(suffix_list_url=False)
-    ext = no_fetch_extract(str(hostname))
+    #ext = no_fetch_extract(str(hostname))
+    ext = no_fetch_extract(hostname)
     #logger.debug(ext)
     suffix = ext.suffix
     domain = None
@@ -135,6 +141,7 @@ def parse_standard(p):
                 protocol = p["protocol"],
                 path = p["path"],
                 md5 = hashlib.md5(p["url"].encode("utf-8")).hexdigest()
+                #md5 = hashlib.md5(p["url"]).hexdigest()
             )
     except Exception as e:
         logger.error(e)
@@ -155,6 +162,7 @@ def parse_datauri(p):
                 type = type,
                 #data = data,
                 md5 = hashlib.md5(p["url"].encode("utf-8")).hexdigest()
+                #md5 = hashlib.md5(p["url"]).hexdigest()
             )
             #if url:
             #    url.type = type
@@ -171,7 +179,7 @@ def parse_url(url):
 
     if p["protocol"]== "data":
         u = parse_datauri(p)
-    else:
+    elif p["server"]:
         if re.search("[0-9a-f]*:[0-9a-f]*:[0-9a-f]+", p["server"]):
             u = parse_ipv6url(p)
         elif re.search("^([0-9]{1,3}\.){3}[0-9]{1,3}:?", p["server"]):

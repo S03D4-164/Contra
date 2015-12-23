@@ -31,7 +31,7 @@ def whois_ip(input):
             ip = input
         )
     except Exception as e:
-        logger.debug(str(e))
+        #logger.debug(str(e))
         try:
             ip = IPAddress.objects.get(
                 ip = input
@@ -106,7 +106,11 @@ def whois_ip(input):
         w.description = nets["description"]
     if not w.reverse and "reverse" in result:
         if result["reverse"]:
-            w.reverse = result["reverse"][0]
+            r = result["reverse"]
+            if type(r) is list:
+                w.reverse = r[0]
+            else:
+                w.reverse = r
     w.save()
 
     return w

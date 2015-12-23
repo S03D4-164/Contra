@@ -21,7 +21,8 @@ def _dns_resolve(query):
                 if not str(a) in rdata:
                     rdata.append(str(a))
         except Exception as e:
-            logger.debug(str(e))
+            #logger.debug(str(e))
+            pass
         if rdata:
             rdata.sort()
         result[r] = rdata

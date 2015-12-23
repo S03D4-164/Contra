@@ -19,28 +19,39 @@ appdir = os.path.abspath(
 
 @csrf_exempt
 def thug_api(request):
+    res = None
     if request.method == "POST":
+        content = None
+        id = None
         if "content" in request.POST:
-            target = request.POST["content"]
+            content = request.POST["content"]
+        if "id" in request.POST:
             id = request.POST["id"]
-            result = None
-            if re.match("^[0-9]+$", id):
-                output = str(id)
-                res = run_thug.delay(target, output)
-                result = res.get()
-            if result:
-                fh = open(result, 'rb')
-                logger.debug(len(fh.read()))
-                fh.seek(0)
-                res = FileResponse(fh)
-                return res
+        if content and id:
+            cli = docker.Client(base_url='unix://var/run/docker.sock')
+            cid = contra_container(cli)
+            print(cid)
+            try:
+                if re.match("^[0-9]+$", id):
+                    output = str(id)
+                    res = run_thug.delay(cid, content, output)
+                    result = res.get()
+                    fh = open(result, 'rb')
+                    logger.debug(len(fh.read()))
+                    fh.seek(0)
+                    res = FileResponse(fh)
+            except Exception as e:
+                res = HttpResponse(str(e), status=400)
+            if cli and cid:
+                cli.remove_container(cid)
+    if res:
+        return res  
 
     return HttpResponse("Invalid Request", status=400)
 
 @app.task
-def run_thug(content, output=None):
+def run_thug(cid, content, output=None):
     cli = docker.Client(base_url='unix://var/run/docker.sock')
-    cid = contra_container(cli)
     #cid = "contra"
     logger.debug(cid)
 
@@ -75,9 +86,8 @@ def run_thug(content, output=None):
 
     json = contentdir + "/analysis/json/analysis.json"
     logger.debug(json)
-    cli.remove_container(cid)
+    #cli.remove_container(cid)
     if  os.path.isfile(json):
         return json
     return None
-
 

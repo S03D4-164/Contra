@@ -5,7 +5,7 @@ RUN useradd -g users -d /home/contra -m -u 1000 contra
 
 COPY ["./files/", "/home/contra/files/"]
 
-RUN mv /opt/thug/src/Logging /opt/thug/src/Logging.bk && mv /home/contra/files/Logging /opt/thug/src/
+RUN mv /opt/thug/src/Logging /opt/thug/src/Logging.bk && mv /home/contra/files/Logging /opt/thug/src && cat /dev/null > /opt/thug/src/Classifier/rules/urlclassifier.yar
 
 RUN chown -R contra:users /home/contra
 

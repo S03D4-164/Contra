@@ -1,8 +1,5 @@
 from ..celery import app
 
-#from django.db import transaction
-from django.utils import timezone
-
 from ..forms import *
 from ..models import *
 
@@ -11,8 +8,10 @@ from .repository import *
 from .wappalyze import wappalyze
 from .host_inspect import host_inspect
 from .ghost_task import ghost_api
+from .thug_task import content_analysis
+from .alert_task import job_alert
 
-import requests, hashlib, chardet, base64, re, magic, json, datetime
+import requests, hashlib, chardet, base64, re, magic, json
 from PIL import Image
 
 try:
@@ -53,7 +52,7 @@ def create_payload(jid):
     if job.proxy:
         proxy = job.proxy.url
     payload = {
-        'url': str(u.url),
+        'url': u.url,
         'query': job.query.id,
         'job': job.id,
         'user_agent':user_agent,
@@ -117,7 +116,7 @@ def execute_job(jid):
                         cap = save_capture(res["capture"], savedir, job.id)
                         job.capture = cap
                         job.save()
-
+        """
         if "resources" in res:
             total = len(res["resources"])
             count = 0
@@ -128,8 +127,14 @@ def execute_job(jid):
                 
                 #set_resource.delay(job.id, r, is_page=False)
                 job = set_resource(job.id, r, is_page=False)
-
+        """
         job.status = "Completed"
+        #try:
+        if True:
+            job_diff(job.id)
+            job_alert(job.id)
+        #except:
+        #    pass
         job.save()
 
 @app.task
@@ -138,6 +143,7 @@ def set_resource(jid, data, is_page=False):
 
     url = None
     content = None
+    ccreated = None
     http_status = None
     try:
     #if True:
@@ -147,15 +153,15 @@ def set_resource(jid, data, is_page=False):
             http_status = data["error"]
         #if http_status:
         savedir = get_savedir(data["url"], is_page=is_page)
-        content = save_content(data, savedir, is_page=is_page)
+        content, ccreated = save_content(data, savedir, is_page=is_page)
     except Exception as e:
         logger.error(str(e))
         return job
 
     resource = None
-    created = None
+    rcreated = None
     try:
-        resource, created = Resource.objects.get_or_create(
+        resource, rcreated = Resource.objects.get_or_create(
         #resource = Resource.objects.create(
             url = url,
             http_status = http_status,
@@ -164,6 +170,14 @@ def set_resource(jid, data, is_page=False):
             is_page = is_page,
             seq = data["seq"],
         )
+        if ccreated:
+            try:
+                aid = content_analysis(content.id)
+                a = Analysis.objects.get(id=aid)
+                resource.analysis = a
+                resource.save()
+            except Exception as e:
+                logger.error(str(e))
     except Exception as e:
         logger.error(str(e))
         try:
@@ -248,23 +262,22 @@ def get_savedir(url, is_page=False):
     else:
         comdir = "resource/"
     if u.protocol == "data" and u.type:
-        #comdir += "data/" + u.type + "/" + str(u.md5)
         comdir += "data/" + u.type
     elif re.match("^[0-9a-f]*:[0-9a-f]*:[0-9a-f]+$", str(hostname)):
-        comdir += "ipv6/" + str(hostname)
+        comdir += "ipv6/" + hostname
     elif re.match("^([0-9]{1,3}\.){3}[0-9]{1,3}$", str(hostname)):
-        comdir += "ipv4/" + str(hostname)
+        comdir += "ipv4/" + hostname
     else:
         if domain:
             comdir += "domain"
             #if suffix:
             #    comdir += "/" + str(suffix)
             if domain:
-                comdir += "/" + str(domain)
+                comdir += "/" + domain
             if subdomain:
-                comdir += "/" + str(subdomain)
+                comdir += "/" + subdomain
         else:
-            comdir += "hostname/" + str(hostname)
+            comdir += "hostname/" + hostname
     contentdir = repodir + "/" + comdir
     fullpath = appdir + "/" + contentdir
     if not os.path.exists(fullpath):
@@ -326,6 +339,7 @@ def save_content(data, savedir, is_page=False):
         #path = d["contentpath"].decode("utf-8")
         path = d["contentpath"]
     c = None
+    created = None
     try:
         c, created = Content.objects.get_or_create(
             content = decoded,
@@ -353,7 +367,7 @@ def save_content(data, savedir, is_page=False):
             )
         except Exception as e:
             logger.error(str(e))
-    return c
+    return c, created
 
 
 @app.task
@@ -424,21 +438,20 @@ def save_capture(capture, d, jid):
 #@app.task
 def job_diff(jid):
     job = Job.objects.get(pk=jid)
-    jrs = Job_Resource.objects.filter(job=job)
+    rs = job.resources.all()
 
     old_jobs = Job.objects.filter(query=job.query, pk__lt=jid, status="Completed").order_by("-id")
-    old_jrs = None
+    old_rs = None
     if old_jobs:
         old_job = old_jobs[0]
-        old_jrs = Job_Resource.objects.filter(job=old_job)
+        old_rs = old_job.resources.all()
 
-    for jr in jrs:
-        r = jr.resource
-        if old_jrs:
-            same_urls = old_jrs.filter(resource__url=r.url).order_by("-id")
+    for r in rs:
+        if old_rs:
+            same_urls = old_rs.filter(url=r.url).order_by("-id")
             if same_urls:
                 same_url = same_urls[0]
-                if r.content == same_url.resource.content:
+                if r.content == same_url.content:
                     job.not_changed.add(r)
                 else:
                     job.changed.add(r)
@@ -447,9 +460,10 @@ def job_diff(jid):
 
         else:
             job.new.add(r)
-    if old_jrs:
-        for jr in old_jrs:
-            r = jr.resource
-            if not jrs.filter(resource__url=r.url):
+    if old_rs:
+        for r in old_rs:
+            if not rs.filter(url=r.url):
                 job.out.add(r)
     job.save()
+    return
+

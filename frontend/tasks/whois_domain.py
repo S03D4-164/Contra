@@ -25,7 +25,8 @@ def whois_domain(input):
         return None
 
     no_fetch_extract = tldextract.TLDExtract(suffix_list_url=False)
-    ext = no_fetch_extract(str(input))
+    #ext = no_fetch_extract(str(input))
+    ext = no_fetch_extract(input)
     suffix = ext.suffix
     name = None
     if suffix:
@@ -34,11 +35,11 @@ def whois_domain(input):
     domain = None
     if name:
         try:
-            with transaction.atomic():
-                domain, created = Domain.objects.get_or_create(
-                    name = name,
-                    suffix = suffix
-                )
+            #with transaction.atomic():
+            domain, created = Domain.objects.get_or_create(
+                name = name,
+                suffix = suffix
+            )
         except Exception as e:
             logger.error(str(e))
             try:

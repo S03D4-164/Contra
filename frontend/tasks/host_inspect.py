@@ -23,8 +23,6 @@ def host_inspect(host):
         return None
 
     host_dr = dns_resolve(hostname.name)
-    print(host_dr)
-    print(host_dr.a.all())
     ips = []
     if re.search("\[?([0-9a-f]*:[0-9a-f]*:[0-9a-f]+)\]?:?([0-9]{,5})?", hostname.name):
         try:
@@ -83,7 +81,6 @@ def host_inspect(host):
     if host_info:
         if created or not host_info.ip_whois.all():
             for i in ips:
-                print(i)
                 w = whois_ip(i.ip)
                 if w:
                     host_info.ip_whois.add(w)

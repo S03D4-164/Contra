@@ -18,8 +18,7 @@ METHOD_CHOICES = (
 class InputForm(forms.Form):
     input = forms.CharField()
 
-header = """Accept-Language: ja; q=1.0, en; q=0.5
-"""
+header = "Accept-Language: ja; q=1.0, en; q=0.5"
 #Accept: text/html; q=1.0, text/*; q=0.8, image/gif; q=0.6, image/jpeg; q=0.6, image/*; q=0.5, */*; q=0.1
 
 class QueryForm(forms.Form):

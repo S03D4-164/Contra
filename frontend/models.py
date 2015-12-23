@@ -213,7 +213,7 @@ class Query(models.Model):
 class UserAgent(models.Model):
     name = models.CharField(max_length=200)
     strings = models.CharField(max_length=2000)
-    created_at = models.DateTimeField(auto_now_add=True)
+    #created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
        return self.name
     class Meta:
@@ -249,11 +249,9 @@ class Job(models.Model):
     capture = models.ForeignKey(Capture, blank=True, null=True)
     page = models.ForeignKey(Resource, blank=True, null=True, related_name="page")
     resources = models.ManyToManyField(Resource, related_name="resources")
-
-
-    #new = models.ManyToManyField(Resource, related_name="new")
-    #out = models.ManyToManyField(Resource, related_name="out")
-    #changed = models.ManyToManyField(Resource, related_name="changed")
-    #not_changed = models.ManyToManyField(Resource, related_name="not_changed")
+    new = models.ManyToManyField(Resource, related_name="new")
+    out = models.ManyToManyField(Resource, related_name="out")
+    changed = models.ManyToManyField(Resource, related_name="changed")
+    not_changed = models.ManyToManyField(Resource, related_name="not_changed")
 
 

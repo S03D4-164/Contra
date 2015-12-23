@@ -70,7 +70,12 @@ class JobData(BaseDatatableView):
 
     def render_column(self, row, column):
         if column == 'id':
-            return '<a class="btn btn-primary" href="/job/{0}">{0}</a>'.format(row.id)
+            a = '<a class="btn btn-primary" href="/job/{0}">{0}</a>'.format(row.id)
+            if row.page:
+                if row.page.analysis:
+                    if row.page.analysis.rule.all():
+                        a += '<i class="fa fa-warning fa-lg" title="signature matched">'
+            return a
         elif column == 'query':
             i = None
             if row.query:
@@ -252,8 +257,8 @@ class HostInfoData(BaseDatatableView):
 
 class UAData(BaseDatatableView):
     model = UserAgent
-    columns = ['id', 'created_at', 'name', 'strings']
-    order_columns = ['id', 'created_at', 'name', 'strings']
+    columns = ['id', 'name', 'strings']
+    order_columns = ['id', 'name', 'strings']
     max_display_length = 100
 
     def render_column(self, row, column):

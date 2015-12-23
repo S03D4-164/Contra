@@ -64,6 +64,7 @@ def ghost_api(request):
     if url:
         cli = docker.Client(base_url='unix://var/run/docker.sock')
         cid = contra_container(cli)
+        #cid = "lonely_allen"
         try:
         #if True:
             #res = run_ghost(url, output, option=option)
@@ -96,7 +97,7 @@ def ghost_api(request):
             logger.error(str(e))
             #return HttpResponse(str(e), status=400)
             response = HttpResponse(str(e), status=400)
-        cli.remove_container(cid, force=True)
+        #cli.remove_container(cid, force=True)
 
     if response:
         return response
