@@ -6,4 +6,3 @@ rule Angler : Exploit_Kit
   condition:
     $s1 and $s2
 }
-

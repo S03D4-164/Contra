@@ -103,7 +103,7 @@ def main(url, output, option={}):
         resources =None
         try:
             page, resources = session.open(
-                url,
+                url.decode("utf-8"),
                 method = http_method,
                 headers = headers,
                 body = body
