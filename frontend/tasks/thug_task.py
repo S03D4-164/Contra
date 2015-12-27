@@ -12,7 +12,6 @@ logger = getlogger(logging.DEBUG)
 
 @app.task(soft_time_limit=30)
 def content_analysis(cid):
-
     c = Content.objects.get(pk=cid)
     payload = {
         'content': c.content.encode('utf-8'),
@@ -20,10 +19,9 @@ def content_analysis(cid):
     }
     raw = {}
     result = {}
-    yara = None
+    yara = {}
     try:
         api = ContraAPI()
-        #res = requests.post(api.local_thug, data=payload)
         res = requests.post(api.docker_thug, data=payload)
         raw = res.content
         result = res.json()

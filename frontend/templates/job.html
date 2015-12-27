@@ -131,7 +131,7 @@ $(document).ready(
 {% if r.http_status in "403 404" or not r.content %}
 <tr style="background-color:lightgrey;">
 {% elif r.analysis.rule.all %}
-<tr style="background-color:orange;">
+<tr style="background-color:yellow;">
 {% elif r.url == p.url %}
 <tr class="info">
 {% elif r.url.hostname == p.url.hostname %}

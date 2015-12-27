@@ -77,10 +77,10 @@ $(document).ready(
 <div class="col-md-12">
 <ul class="nav nav-pills">
 <li class="active"><a data-toggle="pill" href="#content">Content</a></li>
-<li ><a data-toggle="pill" href="#diff">Diff</a></li>
+{% if diff %}<li ><a data-toggle="pill" href="#diff">Diff</a></li>{% endif %}
+{% if analysis %}<li ><a data-toggle="pill" href="#analysis">Analysis</a></li>{% endif %}
 <li ><a data-toggle="pill" href="#headers">Headers</a></li>
 <li ><a data-toggle="pill" href="#job">Job</a></li>
-{% if analysis %}<li ><a data-toggle="pill" href="#analysis">analysis</a></li>{% endif %}
 </ul>
 </div>
 
@@ -90,7 +90,6 @@ $(document).ready(
 
 <div class="panel panel-primary">
 <div class="panel-heading">
-Job
 </div>
 <div class="panel-body">
 <table id="job_table" class="table table-condensed">
@@ -122,7 +121,6 @@ Job
 
 <div class="panel panel-primary">
 <div class="panel-heading">
-Header
 </div>
 <div class="panel-body">
 <pre class="prettyprint linenums" style="white-space: pre-wrap;">{% for k,v in headers.items %}{{k}}: {{v}}
@@ -138,7 +136,6 @@ Header
 
 <div class="panel panel-primary">
 <div class="panel-heading">
-Analysis
 </div>
 <div class="panel-body">
 <table class="table">
@@ -149,17 +146,17 @@ Analysis
 </td></tr>
 <tr><th>yara matched</th><td>
 {% for r in analysis.rule.all %}
-{{r.name}}(
+{{r.name}}{% if r.tag.all %}(
 {% for t in r.tag.all %}
 {{t.name}},
 {% endfor %}
-)
+){% endif %}
 {% endfor %}
 </td></tr>
 <tr><th>matched</th>
 <td>
 {% for m in matched %}
-<pre>{{m}}</pre></br>
+<pre>{{m}}</pre>
 {% endfor %}
 </td>
 </tr>
@@ -178,24 +175,32 @@ Analysis
 
 <div class="panel panel-primary">
 <div class="panel-heading">
-Content
 </div>
 <div class="panel-body">
 <form method="post" action="/page/{{resource.id}}">{% csrf_token %}
 <input type="submit" value="analysis" name="analysis">
 <!--<input type="submit" value="wappalyze" name="wappalyze">-->
 </form>
+<div class="row">
+<div class="col-md-6">
 <table class="table">
-<tr><th  class="col-md-1">id</th><td>{{resource.content.id}}</td></tr>
+<tr><th  class="col-md-3">id</th><td>{{resource.content.id}}</td></tr>
 <tr><th>created_at</th><td>{{resource.content.created_at|date:"c"}}</td></tr>
 <tr><th>type</th><td>{{resource.content.type}}</td></tr>
 <tr><th>length</th><td>{{resource.content.length}}</td></tr>
-<tr><th>md5</th><td>{{resource.content.md5}}</td></tr>
-<tr><th>sha1</th><td>{{resource.content.sha1}}</td></tr>
-<tr><th>sha256</th><td>{{resource.content.sha256}}</td></tr>
 <tr><th>path</th><td>{{resource.content.path}}</td></tr>
 <tr><th>commit</th><td>{{resource.content.commit}}</td></tr>
 </table>
+</div>
+<div class="col-md-6">
+<table class="table">
+<tr><th class="col-md-3">md5</th><td>{{resource.content.md5}}</td></tr>
+<tr><th>sha1</th><td>{{resource.content.sha1}}</td></tr>
+<tr><th>sha256</th><td>{{resource.content.sha256}}</td></tr>
+<tr><th>ssdeep</th><td>{{resource.content.ssdeep}}</td></tr>
+</table>
+</div>
+</div>
 <pre class="prettyprint linenums" style="white-space: pre-wrap;">{{resource.content.content}}</pre>
 </div>
 </div><!--.panel-->

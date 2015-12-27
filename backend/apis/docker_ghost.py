@@ -9,8 +9,8 @@ from .docker_container import contra_container
 
 import logging
 from ..logger import getlogger
-logger = getlogger(logging.DEBUG, logging.StreamHandler())
-#logger = getlogger()
+#logger = getlogger(logging.DEBUG, logging.StreamHandler())
+logger = getlogger()
     
 appdir = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..")
@@ -34,11 +34,13 @@ def ghost_api(request):
 
         if "url" in received:
             url = received["url"]
+        """
         if "query" in received and "job" in received :
             qid = received["query"]
             jid = received["job"]
             if type(qid) is int and type(jid) is int:
                 output = str(qid) + "/" + str(jid)
+        """
         if "method" in received:
             option["method"] = received["method"]
             if option["method"] == "POST" and "body" in received:
@@ -54,21 +56,18 @@ def ghost_api(request):
     elif request.method == "GET":
         if "url" in request.GET:
             url = request.GET["url"]
-            output = "get"
-            args = {
-                "url":url,
-                "output":output,
-            }
+        if "timeout" in request.GET:
+            option["wait_timeout"] = request.GET["timeout"]
 
     response = None
     if url:
         cli = docker.Client(base_url='unix://var/run/docker.sock')
         cid = contra_container(cli)
-        #cid = "lonely_allen"
         try:
         #if True:
-            #res = run_ghost(url, output, option=option)
-            res = run_ghost.delay(cid, url, output, option=option)
+            if option:
+                option = json.dumps(option)
+            res = run_ghost.delay(cid, url, option=option)
             result = res.get()
             fh = open(result, 'rb')
             logger.debug(len(fh.read()))
@@ -85,42 +84,36 @@ def ghost_api(request):
                         "error":page[b"error"],
                         "http_status":page[b"http_status"],
                         "headers":page[b"headers"],
-                        #"content":page[b"content"].decode(),
                         "content":page[b"content"],
                     })
                 else:
                     response = JsonResponse({
                         "error":data[b"resources"][0][b"error"],
                     })
-            #return response
         except Exception as e:
             logger.error(str(e))
-            #return HttpResponse(str(e), status=400)
-            response = HttpResponse(str(e), status=400)
-        #cli.remove_container(cid, force=True)
+            #response = HttpResponse(str(e), status=400)
+            response = JsonResponse({
+                "error":str(e),
+            })
+        cli.stop(cid, timeout=300)
+        cli.remove_container(cid, force=True)
 
     if response:
         return response
 
     return HttpResponse("Invalid Request", status=400)
 
-@app.task
-def run_ghost(cid, url, output, option={}):
+@app.task(soft_time_limit=3600)
+def run_ghost(cid, url, option={}):
     cli = docker.Client(base_url='unix://var/run/docker.sock')
-    #cid = contra_container(cli)
-    #cid = "contra"
     logger.debug(cid)
 
     response = cli.start(container=cid)
-    #logger.debug(response)
 
-    command = ["./run_ghost.py", url]
-    if output:
-        command.append(output)
+    command = ["./run_ghost.py", url, cid]
     if option:
-        opt = json.dumps(option)
-        command.append(opt)
-        #command.append(json.dumps(option))
+        command.append(option)
 
     logger.debug(command)
     e = cli.exec_create(
@@ -130,12 +123,10 @@ def run_ghost(cid, url, output, option={}):
     )
     logger.debug(e)
     result = cli.exec_start(e["Id"], stream=False)
-    #logger.debug(result.decode())
+    #result = cli.exec_start(e["Id"], stream=True)
     logger.debug(result.decode("utf-8"))
-    cli.stop(cid, timeout=300)
-    #cli.remove_container(cid)
 
-    pkl = appdir + "/static/artifacts/ghost/" + output + "/ghost.pkl"
+    pkl = appdir + "/static/artifacts/ghost/" + cid + "/ghost.pkl"
     if os.path.isfile(pkl):
         logger.debug(pkl)
         return pkl

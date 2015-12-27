@@ -17,7 +17,7 @@ class IPAddress(models.Model):
 class Domain(models.Model):
     name = models.CharField(max_length=2000, unique=True)
     suffix = models.CharField(max_length=200, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    #created_at = models.DateTimeField(auto_now_add=True)
     whitelisted = models.BooleanField(default=False)
     def __str__(self):
        return self.name
@@ -67,11 +67,15 @@ class Person(models.Model):
     organization = models.CharField(max_length=2000, blank=True, null=True)
     country = models.TextField(max_length=20, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        unique_together = (('email', 'name', 'organization', 'country'))
 
 class Contact(models.Model):
     type = models.TextField(max_length=200, blank=True, null=True)
     person = models.ForeignKey(Person)
     created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        unique_together = (('type', 'person'))
 
 class Domain_Whois(models.Model):
     domain = models.ForeignKey(Domain)
@@ -166,10 +170,13 @@ class Analysis(models.Model):
 
 class Capture(models.Model):
     path = models.FilePathField(path=os.path.abspath(os.path.dirname(__file__)), max_length=2000)
-    #commit = models.CharField(max_length=200, blank=True, null=True)
+    commit = models.CharField(max_length=200, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     base64 = models.TextField(blank=True, null=True)
     b64thumb = models.TextField(blank=True, null=True)
+    class Meta:
+        unique_together = (('path', 'commit'))
+
 
 @python_2_unicode_compatible
 class Webapp(models.Model):

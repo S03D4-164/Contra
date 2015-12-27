@@ -1,4 +1,3 @@
-from django.db import transaction
 from ..celery import app
 
 from ..api import ContraAPI
@@ -11,7 +10,7 @@ from ..logger import getlogger
 import logging
 logger = getlogger()
 
-@app.task
+@app.task(soft_time_limit=60)
 def dns_resolve(query):
     api = ContraAPI()
     payload = {'query':query}
@@ -30,7 +29,6 @@ def dns_resolve(query):
         logger.debug(serialized)
         md5 = hashlib.md5(serialized).hexdigest()
         try:
-            #with transaction.atomic():
             d, created = DNSRecord.objects.get_or_create(
                 query = query,
                 md5 = md5,

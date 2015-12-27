@@ -20,15 +20,31 @@ app.conf.update(
     CELERY_QUEUES = (
         Queue('frontend', Exchange('frontend'), routing_key='frontend'),
     ),
-    CELERY_IGNORE_RESULT = True,
+    #CELERY_IGNORE_RESULT = True,
     CELERY_TASK_RESULT_EXPIRES = 600,
-    CELERY_MAX_CACHED_RESULTS = -1,
+    #CELERY_MAX_CACHED_RESULTS = -1,
+    CELERY_MAX_TASKS_PER_CHILD = 1,
     CELERYD_TASK_TIME_LIMIT = 600,
     CELERYBEAT_SCHEDULE = {
+        '30m': {
+            'task': 'Contra.frontend.tasks.crawl_task.crawl',
+            'schedule': timedelta(seconds=1800),
+            'args': [1800]
+        },
         '1h': {
             'task': 'Contra.frontend.tasks.crawl_task.crawl',
             'schedule': timedelta(seconds=3600),
             'args': [3600]
+        },
+        '3h': {
+            'task': 'Contra.frontend.tasks.crawl_task.crawl',
+            'schedule': timedelta(seconds=10800),
+            'args': [10800]
+        },
+        '6h': {
+            'task': 'Contra.frontend.tasks.crawl_task.crawl',
+            'schedule': timedelta(seconds=21600),
+            'args': [21600]
         },
     },
     CELERY_ACCEPT_CONTENT = ['json', 'pickle'],

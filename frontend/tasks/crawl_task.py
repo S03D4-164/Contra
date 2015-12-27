@@ -7,7 +7,7 @@ logger = getlogger()
 
 from ..celery import app
 
-@app.task
+@app.task(soft_time_limit=600)
 def crawl(interval):
     query = Query.objects.filter(interval=interval)
     for q in query:

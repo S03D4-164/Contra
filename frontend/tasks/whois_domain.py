@@ -12,7 +12,7 @@ from ..logger import getlogger
 import logging
 logger = getlogger()
 
-@app.task
+@app.task(soft_time_limit=60)
 def whois_domain(input):
     api = ContraAPI()
     payload = {'domain':input}
@@ -35,7 +35,6 @@ def whois_domain(input):
     domain = None
     if name:
         try:
-            #with transaction.atomic():
             domain, created = Domain.objects.get_or_create(
                 name = name,
                 suffix = suffix
@@ -60,14 +59,14 @@ def whois_domain(input):
 
     w = None
     try:
-        with transaction.atomic():
-            w, created = Domain_Whois.objects.get_or_create(
-                domain = domain,
-                creation_date = cdate[0],
-                updated_date = udate[0],
-            )
-            if not created:
-                logger.debug("domain whois already exists: " + domain.name)
+        #with transaction.atomic():
+        w, created = Domain_Whois.objects.get_or_create(
+            domain = domain,
+            creation_date = cdate[0],
+            updated_date = udate[0],
+        )
+        if not created:
+            logger.debug("domain whois already exists: " + domain.name)
     except Exception as e:
         logger.debug(str(e))
         try:
@@ -100,41 +99,53 @@ def whois_domain(input):
 def set_contact(w, result):
     for type in result["contacts"]:
         c = result["contacts"][type]
-        try:
-            with transaction.atomic():
-                person, created = Person.objects.get_or_create(
-                    email = c["email"],
-                    name = c["name"],
-                    organization = c["organization"],
-                )
-                contact, created = Contact.objects.get_or_create(
-                    type = type,
-                    person = person,
-                )
-                w.contact.add(contact)
-                w.save()
-                if "country" in c:
-                    person.country = c["country"]
-                    person.save()
-        except Exception as e:
-            logger.debug(e)
+        person = None
+        pcreated = None
+        if c:
+            email = None
+            if "email" in c:
+                email = c["email"]
+            name = None
+            if "name" in c:
+                name = c["name"]
+            org = None
+            if "organization" in c:
+                org = c["organization"]
+            country = None
+            if "country" in c:
+                country = c["country"]
+            if email:
+                try:
+                    person, pcreated = Person.objects.get_or_create(
+                        email = email,
+                        name = name,
+                        organization = org,
+                        country = country,
+                    )
+                except:
+                    person = Person.objects.get(
+                        email = email,
+                        name = name,
+                        organization = org,
+                        country = country,
+                    )
+
+        contact = None
+        if person:
             try:
-                person = Person.objects.get(
-                    email = c["email"],
-                    name = c["name"],
-                    organization = c["organization"],
-                )
-                contact = Contact.objects.get_or_create(
+                contact, ccreated = Contact.objects.get_or_create(
                     type = type,
                     person = person,
                 )
-                w.contact.add(contact)
-                w.save()
-                if "country" in c:
-                    person.country = c["country"]
-                    person.save()
             except:
-                logger.debug(e)
+                contact = Contact.objects.get(
+                    type = type,
+                    person = person,
+                )
+
+        if contact:
+            w.contact.add(contact)
+            w.save()
 
     return w
 

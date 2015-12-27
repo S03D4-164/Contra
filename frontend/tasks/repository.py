@@ -16,11 +16,10 @@ def get_repo(repodir):
     return repo
 
 
-def git_diff(filepath, commit):
+def git_log(filepath, commit):
     repo = appdir + "/static/repository"
     d = None
     try:
-        """
         d = git(
             "--git-dir", repo + "/.git",
             "--work-tree", repo,
@@ -28,8 +27,17 @@ def git_diff(filepath, commit):
             "log", "--oneline", commit, "-2",
             '--pretty=format:%H', '--', appdir + "/" + filepath
         )
-        c = "..".join(d.split("\n"))
-        """
+        #c = "..".join(d.split("\n"))
+    except Exception as e:
+        #d = str(e)
+        return None
+    return d
+
+
+def git_diff(filepath, commit):
+    repo = appdir + "/static/repository"
+    d = None
+    try:
         d = git(
             "--git-dir", repo + "/.git",
             "--work-tree", repo,

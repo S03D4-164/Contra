@@ -22,43 +22,45 @@ def thug_api(request):
     res = None
     if request.method == "POST":
         content = None
-        id = None
+        #id = None
         if "content" in request.POST:
             content = request.POST["content"]
-        if "id" in request.POST:
-            id = request.POST["id"]
+        #if "id" in request.POST:
+        #    id = request.POST["id"]
         if content and id:
             cli = docker.Client(base_url='unix://var/run/docker.sock')
             cid = contra_container(cli)
-            print(cid)
+            logger.debug(cid)
             try:
-                if re.match("^[0-9]+$", id):
-                    output = str(id)
-                    res = run_thug.delay(cid, content, output)
-                    result = res.get()
-                    fh = open(result, 'rb')
-                    logger.debug(len(fh.read()))
-                    fh.seek(0)
-                    res = FileResponse(fh)
+                #if re.match("^[0-9]+$", id):
+                #    output = str(id)
+                #res = run_thug.delay(cid, content, output)
+                res = run_thug.delay(cid, content)
+                result = res.get()
+                fh = open(result, 'rb')
+                logger.debug(len(fh.read()))
+                fh.seek(0)
+                res = FileResponse(fh)
             except Exception as e:
                 res = HttpResponse(str(e), status=400)
             if cli and cid:
+                cli.stop(cid, timeout=300)
                 cli.remove_container(cid)
     if res:
         return res  
 
     return HttpResponse("Invalid Request", status=400)
 
-@app.task
-def run_thug(cid, content, output=None):
+@app.task(soft_time_limit=60)
+def run_thug(cid, content):
+#def run_thug(cid, content, output=None):
     cli = docker.Client(base_url='unix://var/run/docker.sock')
     #cid = "contra"
-    logger.debug(cid)
 
     response = cli.start(container=cid)
-    #logger.debug(response)
 
-    contentdir = appdir + "/static/artifacts/thug/" + output
+    #contentdir = appdir + "/static/artifacts/thug/" + output
+    contentdir = appdir + "/static/artifacts/thug/" + cid
     logger.debug(contentdir)
     if not os.path.exists(contentdir):
         os.makedirs(contentdir)
@@ -70,23 +72,22 @@ def run_thug(cid, content, output=None):
 
     command = [
         "./run_thug.py",
-        "/home/contra/artifacts/thug/" + output + "/content"
+        "/home/contra/artifacts/thug/" + cid + "/content",
+        cid,
     ]
-    if output:
-        command.append(output)
+    #if output:
+    #    command.append(output)
     logger.debug(command)
     e = cli.exec_create(
         cid,
         command,
-        #user="contra",
+        user="contra",
     )
     logger.debug(e)
     logger.debug(cli.exec_start(e["Id"], stream=False))
-    cli.stop(cid, timeout=300)
 
     json = contentdir + "/analysis/json/analysis.json"
     logger.debug(json)
-    #cli.remove_container(cid)
     if  os.path.isfile(json):
         return json
     return None

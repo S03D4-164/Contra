@@ -144,9 +144,16 @@ class DomainWhoisData(BaseDatatableView):
         elif column == 'contact':
             t = '<table class="table display" cellspacing="0" width="100%">'
             for c in row.contact.all():
+                type = ""
+                if c.type:
+                    type = c.type
+                name = ""
+                if c.person:
+                    if c.person.email:
+                        org = c.person.email
                 t += '<tr>'
-                t += '<td>' + c.type + '</td>'
-                t += '<td>' + c.person.organization + '</td>'
+                t += '<td>' + type + '</td>'
+                t += '<td>' + org + '</td>'
                 t += '</tr>'
             t += '</table>'
             return '{0}'.format(t)

@@ -42,21 +42,24 @@ class QueryRunForm(forms.Form):
 
 class UserAgentForm(forms.ModelForm):
     class Meta:
-            model = UserAgent
-            fields = ['name', 'strings']
+        model = UserAgent
+        fields = ['name', 'strings']
     def __init__(self, *args, **kwargs):
-            super(UserAgentForm, self).__init__(*args, **kwargs)
-            self.fields['name'].widget.attrs['style'] = 'width:30%;'
-            self.fields['strings'].widget.attrs['style'] = 'width:30%;'
+        super(UserAgentForm, self).__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs['style'] = 'width:30%;'
+        self.fields['strings'].widget.attrs['style'] = 'width:30%;'
 
 class DomainConfigForm(forms.ModelForm):
     class Meta:
-            model = Domain
-            fields = ['whitelisted']
+        model = Domain
+        fields = ['whitelisted']
 
 INTERVAL_CHOICES = (
     (0, 'disable'),
+    (1800, '30m'),
     (3600, '1h'),
+    (10800, '3h'),
+    (21600, '6h'),
 )
 
 RESTRICTION_CHOICES = (
@@ -67,12 +70,12 @@ RESTRICTION_CHOICES = (
 
 class QueryConfigForm(forms.ModelForm):
     class Meta:
-            model = Query
-            fields = ['restriction', 'interval', 'counter']
+        model = Query
+        fields = ['restriction', 'interval', 'counter']
     def __init__(self, *args, **kwargs):
-            super(QueryConfigForm, self).__init__(*args, **kwargs)
-            self.fields['interval'].widget = forms.Select(choices=INTERVAL_CHOICES)
-            self.fields['restriction'].widget = forms.Select(choices=RESTRICTION_CHOICES)
+        super(QueryConfigForm, self).__init__(*args, **kwargs)
+        self.fields['interval'].widget = forms.Select(choices=INTERVAL_CHOICES)
+        self.fields['restriction'].widget = forms.Select(choices=RESTRICTION_CHOICES)
 
 class SearchForm(forms.Form):
     url = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
@@ -80,8 +83,8 @@ class SearchForm(forms.Form):
     payload = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
     webapp = forms.ModelMultipleChoiceField(queryset=Webapp.objects.all().order_by("name"), required=False)
     def __init__(self, *args, **kwargs):
-            super(SearchForm, self).__init__(*args, **kwargs)
-            self.fields['webapp'].widget.attrs['style'] = 'height:150px;width:30%;'
+        super(SearchForm, self).__init__(*args, **kwargs)
+        self.fields['webapp'].widget.attrs['style'] = 'height:150px;width:30%;'
 
 class UserEmailForm(forms.ModelForm):
     class Meta:
