@@ -37,4 +37,7 @@ Also, you must install Docker. Please refer "Install Docker Engine" on Docker of
     Run following in project directory (I think I should use Supervisor...)
     $ celery worker -A Contra.frontend -l info -d
     $ celery worker -A Contra.backend -l info -d
-    $ python manage.py runserver
+    $ python manage.py runserver <ipaddress:port>
+
+### Web UI
+You can create user accounts from /admin.
