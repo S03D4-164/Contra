@@ -27,7 +27,7 @@ This is a tool for getting contents and screenshots of web pages, and viewing it
     $ sh Contra/createdb.sh (Please edit the script to be suitable for your environment.)
   
 ### Create Docker
-    $ cd Contra/backend/
+    $ cd Contra/backend/docker
     $ sh build.sh
 
 ### Run
