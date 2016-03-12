@@ -5,10 +5,8 @@ This is a tool for getting contents and screenshots of web pages, and viewing it
 
 ## Quick Start
 ### Requirements
-    postgresql
-    redis-server
-    docker
-    libfuzzy-dev
+    $ sudo aptitude install postgresql redis-server libfuzzy-dev
+Also, you must install Docker. Please refer "Install Docker Engine" on Docker official.
 
 ### Setup Environment
     $ virtualenv venv && cd venv
@@ -23,7 +21,12 @@ This is a tool for getting contents and screenshots of web pages, and viewing it
     'Contra.backend',
     2. Change ROOT_URLCONF to 'Contra.urls'
     3. Edit DATABASES (postgresql is recommended)
-
+    eg.
+    'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    'NAME': <db name>,
+    'USER': <db user name>,
+    'PASSWORD': <db password>,
+    
     $ sh Contra/createdb.sh (Please edit the script to be suitable for your environment.)
   
 ### Create Docker
