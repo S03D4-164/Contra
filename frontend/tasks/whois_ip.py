@@ -19,6 +19,7 @@ def whois_ip(input):
     payload = {'ip':input}
     result = None
     try:
+        print api.whois_ip
         res = requests.get(api.whois_ip, params=payload, verify=False)
         result = res.json()
     except Exception as e:

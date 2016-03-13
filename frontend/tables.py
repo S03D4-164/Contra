@@ -1,5 +1,3 @@
-from django.shortcuts import render_to_response
-from django.template import RequestContext
 from django.contrib.auth.models import User 
 
 from django_datatables_view.base_datatable_view import BaseDatatableView
@@ -8,8 +6,8 @@ from .models import *
 
 class QueryData(BaseDatatableView):
     model = Query
-    columns = ['id', 'input', 'updated_at', 'registered_by', 'restriction', 'interval', 'counter']
-    order_columns = ['id', 'input', 'updated_at', 'registered_by', 'restriction', 'interval', 'counter']
+    columns = ['id', 'input', 'updated_at', 'interval', 'counter', 'status', 'capture']
+    order_columns = ['id', 'input', 'updated_at', 'interval', 'counter', 'status', 'capture']
     max_display_length = 100
 
     def get_initial_queryset(self):
@@ -33,6 +31,22 @@ class QueryData(BaseDatatableView):
             if row.registered_by:
                 r = row.registered_by.username
             return '{0}'.format(r)
+        elif column == 'capture':
+            job = Job.objects.filter(query=row.id).order_by("-id")
+            c = None
+            if job:
+                capture = job[0].capture
+                if capture:
+                    c = '<a class="colorbox" href="/{0}"><img src="data:image/png;base64,{1}"></a>'.format(capture.path, capture.b64thumb)
+            return c
+        elif column == 'status':
+            s = None
+            job = Job.objects.filter(query=row.id).order_by("-id")
+            if job:
+                page = job[0].page
+                if page:
+                    s = page.http_status
+            return '{0}'.format(s)
         else:
             return super(QueryData, self).render_column(row, column)
 

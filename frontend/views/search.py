@@ -1,4 +1,4 @@
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, render
 from django.template import RequestContext
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
@@ -47,12 +47,13 @@ def view(request):
             r_ids = Job.objects.filter(query=query).values_list('resources', flat=True)
             r = result.filter(id__in=r_ids).distinct()
 
-    c = RequestContext(request, {
+    #c = RequestContext(request, {
+    c = {
         'form': QueryForm(),
         'authform': AuthenticationForm(),
         'redirect': request.path,
         'resource': r,
         'sform': sform,
-    })
-    return render_to_response("search.html", c) 
+    }
+    return render(request, "search.html", c)
 

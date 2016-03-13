@@ -122,7 +122,8 @@ def execute_job(jid):
                     if res["capture"]:
                         if job.page:
                             try:
-                                savedir = get_savedir(job.page.url, is_page=True)
+                                #savedir = get_savedir(job.page.url, is_page=True)
+                                savedir = get_savedir(job.page.url, "capture")
                                 cap = save_capture(res["capture"], savedir, job.id)
                                 job.capture = cap
                                 job.save()
@@ -159,7 +160,12 @@ def set_resource(jid, data, is_page=False):
         u = parse_url(data["url"])
     if u:
         if u.url:
-            savedir = get_savedir(u, is_page=is_page)
+            #savedir = get_savedir(u, is_page=is_page)
+            savedir = None
+            if is_page:
+                savedir = get_savedir(u, "page")
+            else:
+                savedir = get_savedir(u, "resource")
             if savedir and "content" in data:
                 content, ccreated = save_content(data["content"], u, savedir, is_page=is_page)
 
@@ -229,7 +235,7 @@ def set_resource(jid, data, is_page=False):
             if hostname:
                 domain = resource.url.hostname.domain
 
-    if not resource.is_page and hostname:
+    if hostname:
         r = None
         try:
             r = job.page.get(host_info__hostname=hostname)
@@ -249,11 +255,11 @@ def set_resource(jid, data, is_page=False):
                 if domain.whitelisted:
                     logger.debug("host_inspect skipped: whitelisted domain" + str(domain.name))
                 else:
-                    host_info = host_inspect(hostname.name)
-                    #set_hostinfo.delay(resource.id)
+                    #host_info = host_inspect(hostname.name)
+                    set_hostinfo.delay(resource.id)
             else:
-                host_info = host_inspect(hostname.name)
-                #set_hostinfo.delay(resource.id)
+                #host_info = host_inspect(hostname.name)
+                set_hostinfo.delay(resource.id)
             if host_info:
                 resource.host_info = host_info
                 resource.save()
@@ -292,7 +298,7 @@ def set_hostinfo(rid):
     return host_info
 
 
-def get_savedir(u, is_page=False):
+def get_savedir(u, d):
     hostname = None
     subdomain = None
     domain = None
@@ -307,13 +313,19 @@ def get_savedir(u, is_page=False):
 
     repodir = "static/repository"
     repopath = appdir + "/" + repodir
-    repository = get_repo(repopath)
+    #repository = get_repo(repopath)
 
     comdir = None
+    """
     if is_page:
         comdir = "page/"
     else:
         comdir = "resource/"
+    """
+    if d:
+        comdir = d + "/"
+    else:
+        comdir = "unknown/"
     if u.protocol == "data" and u.type:
         comdir += "data/" + u.type
     elif re.match("^[0-9a-f]*:[0-9a-f]*:[0-9a-f]+$", str(hostname)):
@@ -338,6 +350,7 @@ def get_savedir(u, is_page=False):
             os.makedirs(fullpath)
         except Exception as e:
             logger.error(str(e))
+    repository = get_repo(fullpath)
     d = {
         "appdir": appdir,
         "repodir": repodir,
@@ -382,8 +395,9 @@ def save_content(content, url, savedir, is_page=False):
     if os.path.isfile(file):
         type = magic.from_file(file, mime=True)
         logger.debug(type)
-        d["compath"] = d["comdir"] + "/" + str(url.md5)
-        commit = git_commit(d["compath"], d["repopath"])
+        #d["compath"] = d["comdir"] + "/" + str(url.md5)
+        #commit = git_commit(d["compath"], d["repopath"])
+        commit = git_commit(str(url.md5), d["fullpath"])
         d["contentpath"] = d["contentdir"] + "/" + str(url.md5)
         #path = d["contentpath"].decode("utf-8")
         path = d["contentpath"]
@@ -434,7 +448,8 @@ def set_hash(cid):
 
 def save_capture(capture, d, jid):
     job = Job.objects.get(id=jid)
-    capdir = d["fullpath"] + "/capture/" + job.page.url.md5
+    #capdir = d["fullpath"] + "/capture/" + job.page.url.md5
+    capdir = d["fullpath"] + "/" + job.page.url.md5
     if not os.path.exists(capdir):
         try:
             os.makedirs(capdir)
@@ -455,9 +470,11 @@ def save_capture(capture, d, jid):
     commit = None
     if os.path.isfile(file):
         try:
-            compath = d["comdir"] + "/capture/" + job.page.url.md5 + "/" + filename 
-            commit = git_commit(compath, d["repopath"])
-            cappath = d["contentdir"] + "/capture/" + job.page.url.md5 + "/" + filename
+            #compath = d["comdir"] + "/capture/" + job.page.url.md5 + "/" + filename 
+            compath = d["comdir"] + "/" +job.page.url.md5 + "/" + filename 
+            #commit = git_commit(compath, d["repopath"])
+            #cappath = d["contentdir"] + "/capture/" + job.page.url.md5 + "/" + filename
+            cappath = d["contentdir"] + "/" + job.page.url.md5 + "/" + filename
             path = cappath
             im = Image.open(file)
             im.thumbnail((150,150))
@@ -474,7 +491,7 @@ def save_capture(capture, d, jid):
                 path = path,
                 base64 = base64.b64encode(capture),
                 b64thumb = base64.b64encode(thumb),
-                commit = commit,
+                #commit = commit,
             )
     except Exception as e:
         logger.error(str(e))
@@ -483,7 +500,7 @@ def save_capture(capture, d, jid):
                 path = path,
                 base64 = base64.b64encode(capture),
                 b64thumb = base64.b64encode(thumb),
-                commit = commit,
+                #commit = commit,
             )
         except Exception as e:
             logger.error(str(e))

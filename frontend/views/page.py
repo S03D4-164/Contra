@@ -1,5 +1,4 @@
-from django.shortcuts import render_to_response, redirect
-from django.template import RequestContext
+from django.shortcuts import render, redirect
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 
@@ -33,9 +32,11 @@ def view(request, id):
     else:
         j = Job.objects.filter(resources=resource).distinct().order_by("-id")
 
-    if not j.filter(query__registered_by=user):
-        messages.error(request, "Cannot access Resource " + str(resource.id))
-        return redirect("/")
+    for i in j:
+        check_permission(request, i.query.id)
+    #if not j.filter(query__registered_by=user):
+    #    messages.error(request, "Cannot access Resource " + str(resource.id))
+    #    return redirect("/")
 
     content = resource.content
     analysis = resource.analysis
@@ -97,7 +98,7 @@ def view(request, id):
         pass
     """
     
-    c = RequestContext(request, {
+    c = {
         'resource': resource,
         #'size':size,
         'job': j,
@@ -109,6 +110,6 @@ def view(request, id):
         'form':QueryForm(),
         'authform': AuthenticationForm(),
         'redirect': request.path,
-    })
-    return render_to_response("page.html", c) 
+    }
+    return render(request, "page.html", c) 
 

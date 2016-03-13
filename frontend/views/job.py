@@ -1,5 +1,4 @@
-from django.shortcuts import render_to_response, redirect
-from django.template import RequestContext
+from django.shortcuts import render, redirect
 from django.contrib import messages
 
 from ..forms import *
@@ -69,7 +68,7 @@ def view(request, id):
     notimage = job.resources.exclude(content__type__startswith="image").order_by("seq")
     image = job.resources.filter(content__type__startswith="image").order_by("seq")
 
-    c = RequestContext(request, {
+    c = {
         'form': QueryForm(),
         'q': job.query,
         'j': job,
@@ -79,6 +78,6 @@ def view(request, id):
         'image': image,
         'redirect': request.path,
         'thumbnail': thumbnail,
-    })
-    return render_to_response("job.html", c) 
+    }
+    return render(request, "job.html", c) 
 

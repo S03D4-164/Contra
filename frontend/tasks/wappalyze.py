@@ -1,6 +1,6 @@
 from ..celery import app
 
-from .Wappalyzer import Wappalyzer, WebPage
+from Wappalyzer import Wappalyzer, WebPage
 
 from ..models import *
 

@@ -1,5 +1,4 @@
-from django.shortcuts import render_to_response, redirect
-from django.template import RequestContext
+from django.shortcuts import render_to_response, redirect, render
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 
@@ -64,10 +63,14 @@ def view(request, id):
                 query.counter = counter
                 query.restriction = restriction
                 query.save()
+                return redirect("/query/"+id)
 
     job = Job.objects.filter(query=query)
+    pids = Job.objects.filter(query=query).values_list('page', flat=True)
+    cids = Resource.objects.filter(id__in=pids).values_list('content_id', flat=True).distinct()
+    content = Content.objects.filter(id__in=cids)
 
-    c = RequestContext(request, {
+    c = {
         'form': QueryForm(),
         'authform': AuthenticationForm(),
         'redirect': request.path,
@@ -75,6 +78,7 @@ def view(request, id):
         'q': query,
         'job': job,
         'cform': cform,
-    })
-    return render_to_response("query.html", c) 
+        "content":content,
+    }
+    return render(request, "query.html", c) 
 

@@ -8,6 +8,9 @@
 <script>
 $(document).ready(
         function(){
+                $('a[data-toggle="tab"]').on( 'shown.bs.tab', function (e) {
+                    $.fn.dataTable.tables( {visible: true, api: true} ).columns.adjust();
+                } );
                 $('#query_table').dataTable({
                     "processing": true,
                     "serverSide": true,  
@@ -64,13 +67,13 @@ $(document).ready(
 <div id="list" class="col-md-12">
 
 <ul class="nav nav-pills">
-<li class="active"><a data-toggle="pill" href="#query">Query</a></li>
-<li><a data-toggle="pill" href="#job">Job</a></li>
-<li><a data-toggle="pill" href="#dns">DNS</a></li>
-<li><a data-toggle="pill" href="#whois_domain">Whois(Domain)</a></li>
-<li><a data-toggle="pill" href="#whois_ip">Whois(IP)</a></li>
-<li><a data-toggle="pill" href="#host_info">Host_Info</a></li>
-<li><a data-toggle="pill" href="#ua">User Agent</a></li>
+<li class="active"><a data-toggle="tab" href="#query">Query</a></li>
+<li><a data-toggle="tab" href="#job">Job</a></li>
+<li><a data-toggle="tab" href="#dns">DNS</a></li>
+<li><a data-toggle="tab" href="#whois_domain">Whois(Domain)</a></li>
+<li><a data-toggle="tab" href="#whois_ip">Whois(IP)</a></li>
+<li><a data-toggle="tab" href="#host_info">Host_Info</a></li>
+<li><a data-toggle="tab" href="#ua">User Agent</a></li>
 </ul>
 
 <div class="tab-content">
@@ -82,11 +85,11 @@ $(document).ready(
 <thead><tr>
 <th class="col-md-1">id</th>
 <th class="col-md-3">input</th>
-<th class="col-md-2">updated_at</th>
-<th class="col-md-2">owner</th>
-<th class="col-md-2">restriction</th>
+<th class="col-md-3">updated_at</th>
 <th class="col-md-1">interval</th>
 <th class="col-md-1">counter</th>
+<th class="col-md-1">status</th>
+<th class="col-md-2">capture</th>
 </tr></thead>
 </table>
 </div>
@@ -122,8 +125,8 @@ $(document).ready(
 <th class="col-md-1" >id</th>
 <th class="col-md-2">creation_date</th>
 <th class="col-md-2">updated_date</th>
-<th class="col-md-1">domain</th>
-<th class="col-md-6">contact</th>
+<th class="col-md-2">domain</th>
+<th class="col-md-5">contact</th>
 </tr></thead>
 </table>
 </div>
@@ -142,10 +145,10 @@ $(document).ready(
 <table id="dns_table" class="table table-striped table-hover display" cellspacing="0" width="100%">
 <thead><tr>
 <th class="col-md-1">id</th>
-<th class="col-md-2">first_seen</th>
+<th class="col-md-3">first_seen</th>
 <th class="col-md-2">query</th>
 <th class="col-md-2">A</th>
-<th class="col-md-5">TXT</th>
+<th class="col-md-4">TXT</th>
 </tr></thead>
 </table>
 </div>

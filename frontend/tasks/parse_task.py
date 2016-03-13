@@ -100,21 +100,23 @@ def parse_hostname(hostname):
     ext = no_fetch_extract(hostname)
     suffix = ext.suffix
     domain = None
-    if suffix:
-        domain = ext.domain + '.'+ suffix
-        
-    subdomain = ext.subdomain
+    subdomain = None
     d = None
-    try:
-        d, created = Domain.objects.get_or_create(
-            name = domain,
-            suffix = suffix
-        )
-    except:
-        d = Domain.objects.get(
-            name = domain,
-            suffix = suffix
-        )
+    if ext and suffix:
+        domain = ext.domain + '.'+ suffix
+        subdomain = ext.subdomain
+        if domain:
+            try:
+                d, created = Domain.objects.get_or_create(
+                    name = domain,
+                    suffix = suffix
+                )
+            except:
+                d = Domain.objects.get(
+                    name = domain,
+                    suffix = suffix
+                )
+
     h = None
     try:
         h, created = Hostname.objects.get_or_create(

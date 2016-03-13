@@ -1,5 +1,4 @@
-from django.shortcuts import render_to_response, redirect
-from django.template import RequestContext
+from django.shortcuts import render, redirect
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 
@@ -22,13 +21,14 @@ def view(request, id):
                 domain.whitelisted = w
                 domain.save()
                 messages.success(request, "Updated.")
-    c = RequestContext(request, {
+    #c = RequestContext(request, {
+    c = {
         'form': QueryForm(),
         'authform': AuthenticationForm(),
         'redirect': request.path,
         'domain': domain,
         'dw': dw,
         'dform': dform,
-    })
-    return render_to_response("domain.html", c) 
+    }
+    return render(request, "domain.html", c)
 

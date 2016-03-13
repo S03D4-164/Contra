@@ -1,5 +1,4 @@
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from django.shortcuts import render
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 
@@ -10,11 +9,11 @@ from .auth import check_permission
 def view(request, id):
     w = IP_Whois.objects.get(pk=id)
 
-    c = RequestContext(request, {
+    c = {
         'form': QueryForm(),
         'authform': AuthenticationForm(),
         'redirect': request.path,
         'wi': w,
-    })
-    return render_to_response("whois_ip.html", c) 
+    }
+    return render(request, "whois_ip.html", c) 
 

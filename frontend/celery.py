@@ -19,6 +19,7 @@ app.conf.update(
     CELERY_DEFAULT_QUEUE = 'frontend',
     CELERY_QUEUES = (
         Queue('frontend', Exchange('frontend'), routing_key='frontend'),
+        #Queue('frontend2', Exchange('frontend2'), routing_key='frontend2'),
     ),
     #CELERY_IGNORE_RESULT = True,
     CELERY_TASK_RESULT_EXPIRES = 600,

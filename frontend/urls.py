@@ -2,7 +2,7 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from .views import index, query, job, page, \
             search, domain, dns, whois_domain, whois_ip, \
-            progress, auth
+            progress, auth, content
 
 from .tables import DomainWhoisData, IPWhoisData, HostInfoData, \
                     QueryData, JobData, UAData, DNSData
@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^query/(?P<id>[0-9]+)$', query.view),
     url(r'^job/(?P<id>[0-9]+)$', job.view),
     url(r'^page/(?P<id>[0-9]+)$', page.view),
+    url(r'^content/(?P<id>[0-9]+)$', content.view),
     url(r'^resource/(?P<id>[0-9]+)$', page.view),
     url(r'^search/$', search.view),
     url(r'^domain/(?P<id>[0-9]+)$', domain.view),

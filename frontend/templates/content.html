@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}
+<title>
+Content
+</title>
+{% endblock %}
+
+{% block script %}
+<script src="/static/js/jquery.highlight.js"></script>
+<script>
+$(document).ready(
+        function(){
+                $('a.colorbox').colorbox({'photo':true});
+                $('#job_table').DataTable({"order":[0, 'desc']});
+                var list = [{% for m in matched %}"{{m}}",{% endfor %}];
+                $.each(list, function(index, value){
+                    v = $("<div/>").html(value).text();
+                    $("pre").highlight(v);
+                });
+		//prettyPrint();
+        }
+);
+</script>
+{% endblock %}
+
+{% block container %}
+
+<div class="row">
+
+<div class="col-md-12">
+<ul class="nav nav-pills">
+<li class="active"><a data-toggle="pill" href="#content">Content</a></li>
+<li ><a data-toggle="pill" href="#job">Related_Job</a></li>
+</ul>
+</div>
+
+<div class="tab-content">
+
+<div id="job" class="col-md-12 tab-pane">
+
+<div class="panel panel-primary">
+<div class="panel-heading">
+</div>
+<div class="panel-body">
+<table id="job_table" class="table table-condensed">
+<thead>
+<tr>
+<th class="col-md-1">Job</th>
+<th class="col-md-6">Query</th>
+<th class="col-md-3">timestamp</th>
+<th class="col-md-2">status</th>
+</tr>
+</thead>
+<tbody>
+{% for j in job %}
+<tr>
+<td><a class="btn btn-sm btn-primary" href="/job/{{j.id}}">{{j.id}}</a></td>
+<td><a href="/query/{{j.query.id}}">{{j.query.input}}</a></td>
+<td>{{j.created_at|date:"c"}}</td>
+<td>{{j.status}}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div><!--.panel-body-->
+</div><!--.panel-->
+</div><!--job-->
+
+{% if content %}
+<div id="content" class="col-md-12 tab-pane in active">
+
+<div class="panel panel-primary">
+<div class="panel-heading">
+</div>
+<div class="panel-body">
+<div class="row">
+<div class="col-md-6">
+<table class="table">
+<tr><th  class="col-md-3">id</th><td><a class="btn btn-sm btn-primary" href="/content/{{content.id}}">{{content.id}}</a></td></tr>
+<tr><th>created_at</th><td>{{content.created_at|date:"c"}}</td></tr>
+<tr><th>url</th><td>{{content.url.url}}</td></tr>
+<tr><th>type</th><td>{{content.type}}</td></tr>
+<tr><th>length</th><td>{{content.length}}</td></tr>
+<tr><th>path</th><td>{{content.path}}</td></tr>
+<tr><th>commit</th><td>{{content.commit}}</td></tr>
+</table>
+</div>
+<div class="col-md-6">
+<table class="table">
+<tr><th class="col-md-3">md5</th><td>{{content.md5}}</td></tr>
+<tr><th>sha1</th><td>{{content.sha1}}</td></tr>
+<tr><th>sha256</th><td>{{content.sha256}}</td></tr>
+<tr><th>ssdeep</th><td>{{content.ssdeep}}</td></tr>
+</table>
+</div>
+</div>
+<pre class="prettyprint linenums" style="white-space: pre-wrap;">{{content.content}}</pre>
+</div>
+</div><!--.panel-->
+
+</div><!--.content-->
+{% endif %}
+
+
+</div><!--.tab-content-->
+
+</div><!--.row-->
+
+{% endblock %}

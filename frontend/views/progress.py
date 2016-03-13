@@ -1,4 +1,4 @@
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, render
 from django.template import RequestContext
 
 from ..forms import *
@@ -6,13 +6,14 @@ from ..models import *
 import re, logging
 
 def view(request):
-    rc = None
+    c = None
     if request.method == "GET":
         jobs = request.GET.getlist("job[]")
         if not jobs:
             jobs = request.GET.get("job")
-        rc = main(request, jobs)
-    return render_to_response("progress.html", rc)
+        c = main(request, jobs)
+    #return render_to_response("progress.html", rc)
+    return render(request, "progress.html", c)
 
     
 def main(request, jobs):
@@ -27,10 +28,11 @@ def main(request, jobs):
     if status == None:
         status = "Finished"
 
-    rc = RequestContext(request, {
+    #rc = RequestContext(request, {
+    c = {
         'form': QueryForm(),
         'job': job,
         'status': status,
-    })
-    return rc 
+    }
+    return c
 

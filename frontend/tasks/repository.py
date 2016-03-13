@@ -17,7 +17,8 @@ def get_repo(repodir):
 
 
 def git_log(filepath, commit):
-    repo = appdir + "/static/repository"
+    #repo = appdir + "/static/repository"
+    repo = appdir + "/" + "/".join(filepath.split("/")[0:-1])
     d = None
     try:
         d = git(

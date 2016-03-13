@@ -81,7 +81,7 @@ $(document).ready(
 </tr>
 <tr><th >status</th><td>{{p.http_status}}</td></tr>
 <tr><th >type</th><td>{{p.content.type}}</td></tr>
-<tr><th >length</th><td>{{p.content.length}}</td></tr>
+<tr><th >length</th><td><a href="/content/{{p.content.id}}">{{p.content.length}}</a></td></tr>
 <tr><th >signature</th><td>{% for a in p.analysis.rule.all %}{{a}}<br>{% endfor %}</td>
 </table>
 </div><!--page-left-->

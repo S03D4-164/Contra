@@ -37,7 +37,7 @@ def main(url, output):
     #t.set_mongodb_address("172.17.42.1:27017")
     t.log_init(url)
 
-    t.add_urlclassifier(logdir + "/rule")
+    t.add_urlclassifier(appdir + "/artifacts/rule")
     if output:
         logdir = logdir + "/" + output
     t.set_log_dir(logdir)

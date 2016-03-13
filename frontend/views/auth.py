@@ -1,4 +1,4 @@
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render, redirect
 from django.template import RequestContext
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -62,14 +62,16 @@ def user(request):
         else:
             messages.warning(request, "Invalid Email Address.")
 
-    rc = RequestContext(request, {
+    #rc = RequestContext(request, {
+    c = {
         'form': QueryForm(),
         'authform': AuthenticationForm(),
         'passform': SetPasswordForm(request.user),
         'emailform': UserEmailForm(instance=u),
         'redirect': request.path,
-    })
-    return render_to_response("account.html", rc)
+    }
+    #return render_to_response("account.html", rc)
+    return render(request, "account.html", c)
 
 def log_in(request, next="/"):
     try:
