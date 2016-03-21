@@ -35,8 +35,8 @@ Also, you must install Docker. Please refer "Install Docker Engine" on Docker of
 
 ### Run
     Run following in project directory (I think I should use Supervisor...)
-    $ celery worker -A Contra.frontend -l info -d
-    $ celery worker -A Contra.backend -l info -d
+    $ celery multi start frontend -A Contra.frontend -B
+    $ celery multi start backend -A Contra.backend -B
     $ python manage.py runserver <ipaddress:port>
 
 ### Web UI
