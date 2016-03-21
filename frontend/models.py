@@ -103,6 +103,7 @@ class DNSRecord(models.Model):
     soa = models.TextField(blank=True, null=True)
     axfr = models.TextField(blank=True, null=True)
     txt = models.TextField(blank=True, null=True)
+    resolver = models.ManyToManyField(IPAddress, related_name="resolver")
     #timestamp = models.DateTimeField(auto_now_add=True)
     first_seen = models.DateTimeField(auto_now_add=True)
     last_seen = models.DateTimeField(auto_now=True)

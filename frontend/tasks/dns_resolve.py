@@ -11,9 +11,11 @@ import logging
 logger = getlogger()
 
 @app.task(soft_time_limit=60)
-def dns_resolve(query):
+def dns_resolve(query, resolver=None):
     api = ContraAPI()
     payload = {'query':query}
+    if resolver:
+        payload['resolver'] = resolver
     result = None
     try:
         res = requests.get(api.dns, params=payload, verify=False)
@@ -72,7 +74,15 @@ def dns_resolve(query):
             except:
                 ip = IPAddress.objects.get(ip = a)
             if ip:
-                d.a.add(ip)
+                d.aaaa.add(ip)
+        for a in result["resolver"]:
+            ip = None
+            try:
+                ip = IPAddress.objects.create(ip = a)
+            except:
+                ip = IPAddress.objects.get(ip = a)
+            if ip:
+                d.resolver.add(ip)
         for a in result["CNAME"]:
             h = parse_hostname(a)
             if h:

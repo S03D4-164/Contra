@@ -137,7 +137,7 @@ $(document).ready(
 <div class="panel-body">
 <div>
 <form method="post">{% csrf_token %}
-{{iform}}
+{{dform}}
 <input type="submit" name="dns_resolve" value="resolve">
 </form>
 <hr>
@@ -147,8 +147,8 @@ $(document).ready(
 <th class="col-md-1">id</th>
 <th class="col-md-3">first_seen</th>
 <th class="col-md-2">query</th>
-<th class="col-md-2">A</th>
-<th class="col-md-4">TXT</th>
+<th class="col-md-2">resolver</th>
+<th class="col-md-4">A</th>
 </tr></thead>
 </table>
 </div>

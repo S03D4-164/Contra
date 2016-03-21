@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-import os, sys, pickle, gzip, json, shutil
-import umsgpack
+import os, sys, pickle, gzip, json, shutil, base64
+#import umsgpack
 
 try:
     from StringIO import StringIO as BytesIO
@@ -28,14 +28,17 @@ def main(url, output, option={}):
         "resources":[],
         "capture":None,
     }
-    savedir = appdir + "/artifacts/ghost/" +  output
-    dump = savedir +  "/ghost.pkl"
+    #savedir = appdir + "/artifacts/ghost/" +  output
+    #dump = savedir +  "/ghost.pkl"
+    savedir = os.path.join(appdir, "artifacts/ghost")
+    dump = savedir +  "/" + output
     try:
-    	if os.path.exists(savedir):
-            shutil.rmtree(savedir)
-        os.makedirs(savedir)
+    	#if os.path.exists(savedir):
+        #    shutil.rmtree(savedir)
+        #os.makedirs(savedir)
         with open(dump, 'wb') as d:
-            umsgpack.dump(result, d)
+            #umsgpack.dump(result, d)
+            json.dump(result, d)
     except Exception as e:
         logger.error(str(e))
         result["error"].append(str(e))
@@ -120,7 +123,7 @@ def main(url, output, option={}):
                 "http_status":page.http_status,
                 "headers":page.headers,
                 #"content":session.content.encode("utf-8"),
-                "content":session.content,
+                "content":base64.b64encode(session.content.encode("utf-8")),
                 "seq":0,
                 #"error":page.error.encode("utf-8").split(".")[-1],
                 "error":page.error.split(".")[-1],
@@ -133,14 +136,12 @@ def main(url, output, option={}):
                 image.save(buffer, "PNG")
                 bio = BytesIO(ba)
                 bio.seek(0)
-                result["capture"] = bio.read()
+                #result["capture"] = bio.read()
+                result["capture"] = base64.b64encode(bio.read())
                 bio.flush()
                 bio.close()
                 ba.clear()
                 buffer.close()
-                #capture = savedir + "/capture.png"
-                #with open(capture, 'wb') as c:
-                #    c.write(result["capture"])
             except Exception as e:
                 logger.error(str(e))
                 result["error"].append(str(e))
@@ -148,21 +149,21 @@ def main(url, output, option={}):
             seq = 0
             for r in resources:
                 seq += 1
+                #logger.debug(r.url)
                 dict = {
                     "url":r.url,
                     "http_status":r.http_status,
                     "headers":r.headers,
                     #"content":r.content.encode("utf-8"),
-                    "content":r.content,
+                    "content":base64.b64encode(r.content),
                     "seq":seq,
                     #"error":r.error.encode("utf-8").split(".")[-1],
                     "error":r.error.split(".")[-1],
                 }
                 result["resources"].append(dict)
-                #logger.debug(r.url)
-
     with open(dump, 'wb') as d:
-        umsgpack.dump(result, d)
+        #umsgpack.dump(result, d)
+        json.dump(result, d)
         logger.debug(dump)
     ghost.exit()
     return dump

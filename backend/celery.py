@@ -2,7 +2,10 @@ from __future__ import absolute_import
 from kombu import Queue, Exchange
 
 import os
-os.environ['DJANGO_SETTINGS_MODULE'] = 'myproject.settings'
+try:
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'myproject.settings'
+except:
+    pass
 
 from celery import Celery
 from datetime import timedelta
@@ -15,6 +18,7 @@ app = Celery(
         'Contra.backend.apis.dns_resolve',
         'Contra.backend.apis.whois_domain',
         'Contra.backend.apis.whois_ip',
+        'Contra.backend.tasks.docker_tasks',
     ],
     )
 
@@ -31,6 +35,13 @@ app.conf.update(
     CELERY_ACCEPT_CONTENT = ['json', 'pickle'],
     CELERY_TASK_SERIALIZER = 'pickle',
     CELERY_RESULT_SERIALIZER = 'pickle',
+    CELERYBEAT_SCHEDULE = {
+        '1h': {
+            'task': 'Contra.backend.tasks.docker_tasks.container_killer',
+            'schedule': timedelta(seconds=3600),
+            'args': [3600]  
+        },
+    },
 )
 
 if __name__ == '__main__':

@@ -20,12 +20,12 @@
 <tr><th>first_seen</th><td>{{dns.first_seen}}</td></tr>
 <tr><th>last_seen</th><td>{{dns.last_seen}}</td></tr>
 <tr><th>md5</th><td>{{dns.md5}}</td></tr>
-<tr><th>serialized</th><td>{{dns.serialized}}</td></tr>
 </table>
 </div>
 <div class="col-md-6">
 <table class="table">
 <tr><th class="col-md-3">query</th><td>{{dns.query}}</td></tr>
+<tr><th >resolver</th><td>{% for r in dns.resolver.all %}{{r.ip}}<br>{% endfor%}</td></tr>
 <tr><th >A</th><td>{% for a in dns.a.all %}{{a.ip}}<br>{% endfor%}</td></tr>
 <tr><th>AAAA</th><td>{% for aaaa in dns.aaaa.all %}{{aaaa}}<br>{% endfor%}</td></tr>
 <tr><th>NS</th><td>{% for n in dns.ns.all %}{{n.name}}<br>{% endfor%}</td></tr>
@@ -38,6 +38,7 @@
 <tr><th>SOA</th><td><pre class="prettyprint linenums">{{dns.soa}}</pre></td></tr>
 <tr><th>TXT</th><td><pre class="prettyprint linenums">{{dns.txt}}</pre></td></tr>
 <tr><th>AXFR</th><td><pre class="prettyprint linenums">{{dns.axfr}}</pre></td></tr>
+<tr><th>serialized</th><td>{{dns.serialized}}</td></tr>
 </table>
 </div>
 </div><!--.panel-body-->

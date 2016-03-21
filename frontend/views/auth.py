@@ -49,8 +49,8 @@ def user(request):
         if pform.is_valid():
             pform.save()
             messages.success(request, "Password Updated.")
-        else:
-            messages.warning(request, "Invalid Password.")
+        #else:
+        #    messages.warning(request, "Invalid Password.")
 
         mform = UserEmailForm(request.POST)
         if mform.is_valid():
@@ -61,6 +61,7 @@ def user(request):
                 messages.success(request, "Email Address Updated.")
         else:
             messages.warning(request, "Invalid Email Address.")
+        return redirect(".")
 
     #rc = RequestContext(request, {
     c = {

@@ -37,7 +37,10 @@ class QueryData(BaseDatatableView):
             if job:
                 capture = job[0].capture
                 if capture:
-                    c = '<a class="colorbox" href="/{0}"><img src="data:image/png;base64,{1}"></a>'.format(capture.path, capture.b64thumb)
+                    path = None
+                    if capture.path:
+                        path = capture.path.encode("utf-8")
+                    c = '<a class="colorbox" href="/{0}"><img src="data:image/png;base64,{1}"></a>'.format(path, capture.b64thumb)
             return c
         elif column == 'status':
             s = None
@@ -93,12 +96,15 @@ class JobData(BaseDatatableView):
         elif column == 'query':
             i = None
             if row.query:
-                i = row.query.input
+                i = row.query.input.encode("utf-8")
             return '{0}'.format(i)
         elif column == 'capture':
             c = None
             if row.capture:
-                c = '<a class="colorbox" href="/{0}"><img src="data:image/png;base64,{1}"></a>'.format(row.capture.path, row.capture.b64thumb)
+                path = None
+                if row.capture.path:
+                    path = row.capture.path.encode("utf-8")
+                c = '<a class="colorbox" href="/{0}"><img src="data:image/png;base64,{1}"></a>'.format(path, row.capture.b64thumb)
             return c
         else:
             return super(JobData, self).render_column(row, column)
@@ -114,8 +120,9 @@ class JobData(BaseDatatableView):
 
 class DNSData(BaseDatatableView):
     model = DNSRecord
-    columns = ['id', 'first_seen', 'query', 'a', 'txt']
-    order_columns = ['id', 'first_seen', 'query', 'a', 'txt']
+    #columns = ['id', 'first_seen', 'query', 'a', 'txt']
+    columns = ['id', 'first_seen', 'query', 'resolver', 'a']
+    order_columns = ['id', 'first_seen', 'query', 'resolver', 'a']
     max_display_length = 100
 
     def render_column(self, row, column):
@@ -126,6 +133,11 @@ class DNSData(BaseDatatableView):
             for i in row.a.all():
                 td += i.ip + "<br>"
             return '{0}'.format(td)
+        elif column == 'resolver':
+            td = ""
+            for i in row.resolver.all():
+                td += i.ip + "<br>"
+            return '{0}'.format(td)
         else:
             return super(DNSData, self).render_column(row, column)
 
@@ -134,7 +146,7 @@ class DNSData(BaseDatatableView):
         if search:
             qs = qs.filter(query__iregex=search) \
                 | qs.filter(a__ip__iregex=search) \
-                | qs.filter(txt__iregex=search) \
+                | qs.filter(resolver__ip__iregex=search) \
                 | qs.filter(first_seen__iregex=search)
         return qs.distinct()
 
@@ -153,7 +165,7 @@ class DomainWhoisData(BaseDatatableView):
             n = None
             if row.domain:
                 i = row.domain.id
-                n = row.domain.name
+                n = row.domain.name.encode("utf-8")
             return '<a href="/domain/{0}">{1}</a>'.format(i, n)
         elif column == 'contact':
             t = '<table class="table display" cellspacing="0" width="100%">'
@@ -236,7 +248,7 @@ class HostInfoData(BaseDatatableView):
         elif column == 'hostname':
             n = None
             if row.hostname:
-                n = row.hostname.name
+                n = row.hostname.name.encode("utf-8")
             return '{0}'.format(n)
         elif column == 'ip_whois':
             td = ""
@@ -250,7 +262,7 @@ class HostInfoData(BaseDatatableView):
             if row.domain_dns:
                 #d = row.domain_dns.serialized
                 i = row.domain_dns.id
-                n = row.domain_dns.query
+                n = row.domain_dns.query.encode("utf-8")
             #return '{0}'.format(d)
             return '<a href="/dns/{0}">{1}</a>'.format(i, n)
         elif column == 'domain_whois':
@@ -258,7 +270,7 @@ class HostInfoData(BaseDatatableView):
             n = None
             if row.domain_whois:
                 i = row.domain_whois.id
-                n = row.domain_whois.domain.name
+                n = row.domain_whois.domain.name.encode("utf-8")
             return '<a href="/whois_domain/{0}">{1}</a>'.format(i, n)
         else:
             return super(HostInfoData, self).render_column(row, column)

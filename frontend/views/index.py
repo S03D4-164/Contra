@@ -82,7 +82,8 @@ def view(request):
             if form.is_valid():
                 request, jobs = _query_job(request, form, jobs)
             rc = progress(request, jobs)
-            return render_to_response("progress.html", rc) 
+            #return render_to_response("progress.html", rc) 
+            return render(request, "progress.html", rc) 
         elif "login" in request.POST:
             next = "/"
             try:
@@ -106,12 +107,16 @@ def view(request):
                     elif ua and not created:
                         messages.success(request, 'User Agent Already Exists: ' + str(ua.name))
         elif "dns_resolve" in request.POST:
-            iform = InputForm(request.POST)
-            if iform.is_valid():
-                input = iform.cleaned_data["input"]
+            #iform = InputForm(request.POST)
+            dform = DNSForm(request.POST)
+            if dform.is_valid():
+                #input = iform.cleaned_data["input"]
+                query = dform.cleaned_data["query"]
+                resolver = dform.cleaned_data["resolver"]
                 #res = dns_resolve.delay(input.strip())
                 #d = res.get()
-                d = dns_resolve(input.strip())
+                #d = dns_resolve(input.strip())
+                d = dns_resolve(query.strip(), resolver.strip())
                 if d:
                     return redirect("/dns/" + str(d.id))
                 else:
@@ -159,6 +164,7 @@ def view(request):
         "redirect":request.path,
         'uaform': UserAgentForm(),
         'iform': InputForm(),
+        'dform': DNSForm(),
     }
     return render(request, "index.html", c)
 

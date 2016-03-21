@@ -78,18 +78,20 @@ def view(request, id):
         headers = ast.literal_eval(resource.headers)
 
     diff = ""
-    c = git_log(content.path, content.commit)
-    c = c.split("\n")
-    if len(c) == 2:
-        a = Content.objects.get(commit=c[0])
-        b = Content.objects.get(commit=c[1])
-        for i in unified_diff(b.content.split("\n"),a.content.split("\n")):
-            diff += i + "\n"
-    elif len(c) == 1:
-        a = Content.objects.get(commit=c[0])
-        for i in unified_diff([], a.content.split("\n")):
-            diff += i + "\n"
-        
+    try:
+        c = git_log(content.path, content.commit)
+        c = c.split("\n")
+        if len(c) == 2:
+            a = Content.objects.get(commit=c[0])
+            b = Content.objects.get(commit=c[1])
+            for i in unified_diff(b.content.split("\n"),a.content.split("\n")):
+                diff += i + "\n"
+        elif len(c) == 1:
+            a = Content.objects.get(commit=c[0])
+            for i in unified_diff([], a.content.split("\n")):
+                diff += i + "\n"
+    except:
+        pass 
     """
     diff = None
     try:

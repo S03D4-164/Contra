@@ -12,9 +12,16 @@ def search(sform):
     ip = sform.cleaned_data["ip"]
     payload = sform.cleaned_data["payload"]
     webapp = sform.cleaned_data["webapp"]
+    date_from = sform.cleaned_data["date_from"]
+    date_to = sform.cleaned_data["date_to"]
+    signature = sform.cleaned_data["signature"]
 
     res = Resource.objects.all()
-    print(res)
+    #print(res)
+    if date_from:
+        res = res.filter(created_at__gte=date_from)
+    if date_to:
+        res = res.filter(created_at__lte=date_to)
     if url:
         res = res.filter(url__url__iregex=url)
     if ip:
@@ -23,6 +30,8 @@ def search(sform):
         res = res.filter(content__content__iregex=payload)
     if webapp:
         res = res.filter(webapp__in=webapp)
+    if signature:
+        res = res.filter(analysis__rule__in=signature)
 
     return res
 
@@ -39,15 +48,17 @@ def view(request):
         except:
             pass
 
+    p = None
     r = None
     if request.method == "POST":
         sform = SearchForm(request.POST)
         if sform.is_valid():
             result = search(sform)
-            r_ids = Job.objects.filter(query=query).values_list('resources', flat=True)
+            r_ids = Job.objects.filter(query__in=query).values_list('resources', flat=True)
             r = result.filter(id__in=r_ids).distinct()
+            p_ids = Job.objects.filter(query__in=query).values_list('page', flat=True)
+            p = result.filter(id__in=p_ids).distinct()
 
-    #c = RequestContext(request, {
     c = {
         'form': QueryForm(),
         'authform': AuthenticationForm(),

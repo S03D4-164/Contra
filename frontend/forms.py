@@ -16,7 +16,11 @@ METHOD_CHOICES = (
 )
 
 class InputForm(forms.Form):
-    input = forms.CharField()
+    input = forms.CharField(max_length=200)
+
+class DNSForm(forms.Form):
+    query = forms.CharField(max_length=200)
+    resolver = forms.CharField(max_length=200, required=False)
 
 header = "Accept-Language: ja; q=1.0, en; q=0.5"
 #Accept: text/html; q=1.0, text/*; q=0.8, image/gif; q=0.6, image/jpeg; q=0.6, image/*; q=0.5, */*; q=0.1
@@ -82,9 +86,12 @@ class SearchForm(forms.Form):
     ip = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
     payload = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'size': 40}), required=False)
     webapp = forms.ModelMultipleChoiceField(queryset=Webapp.objects.all().order_by("name"), required=False)
+    date_from = forms.DateTimeField(required=False)
+    date_to = forms.DateTimeField(required=False)
+    signature = forms.ModelMultipleChoiceField(queryset=YaraRule.objects.all().order_by("name"), required=False)
     def __init__(self, *args, **kwargs):
         super(SearchForm, self).__init__(*args, **kwargs)
-        self.fields['webapp'].widget.attrs['style'] = 'height:150px;width:30%;'
+        self.fields['webapp'].widget.attrs['style'] = 'height:100px;width:30%;'
 
 class UserEmailForm(forms.ModelForm):
     class Meta:

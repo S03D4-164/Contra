@@ -10,9 +10,13 @@ appdir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 def get_repo(repodir):
     repo = None
-    if not os.path.exists(repodir):
-        os.makedirs(repodir)
-    repo = git.init(repodir)
+    try:
+        if not os.path.exists(repodir):
+            os.makedirs(repodir)
+        repo = git.init(repodir)
+    except Exception as e:
+        logger.error(str(e))
+        
     return repo
 
 

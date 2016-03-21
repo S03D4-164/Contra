@@ -195,7 +195,8 @@ def set_resource(jid, data, is_page=False):
             seq = seq,
         )
         if ccreated:
-            #set_analysis.delay(resource.id)
+            set_analysis.delay(resource.id)
+            """
             try:
                 if content.length > 0 and not re.match("^image/", content.type):
                     aid = content_analysis(content.id)
@@ -204,6 +205,16 @@ def set_resource(jid, data, is_page=False):
                     resource.save()
             except Exception as e:
                 logger.error(str(e))
+            """
+        else:
+            try:
+                a = Analysis.objects.get(content=content)
+                if a:
+                    resource.analysis = a
+                    resource.save()
+            except:
+                set_analysis.delay(resource.id)
+
     except Exception as e:
         logger.error(str(e))
         try:
@@ -226,15 +237,15 @@ def set_resource(jid, data, is_page=False):
         if resource.is_page == True:
             job.page = resource
             job.status = "Page Created"
-            job.save()
+            job.save(update_fields=["page", "status"])
         elif resource.is_page == False:
             job.resources.add(resource)
+            #job.save(update_fields=["resources"])
             job.save()
         if resource.url.hostname:
             hostname = resource.url.hostname
             if hostname:
                 domain = resource.url.hostname.domain
-
     if hostname:
         r = None
         try:
@@ -246,23 +257,29 @@ def set_resource(jid, data, is_page=False):
             if rs:
                 r = rs[0]
         if r:
-            logger.debug("host_info already created in same job.")
+            logger.debug("host_info already created in same job.: " + hostname.name.encode("utf-8"))
             resource.host_info = r.host_info
-            resource.save()
+            resource.save(update_fields=["host_info"])
         else:
             host_info = None
             if domain:
                 if domain.whitelisted:
-                    logger.debug("host_inspect skipped: whitelisted domain" + str(domain.name))
+                    logger.debug("host_inspect skipped: whitelisted domain" + domain.name.encode("utf-8"))
                 else:
                     #host_info = host_inspect(hostname.name)
                     set_hostinfo.delay(resource.id)
+                    #host_info = set_hostinfo(resource.id)
             else:
                 #host_info = host_inspect(hostname.name)
                 set_hostinfo.delay(resource.id)
+                #host_info = set_hostinfo(resource.id)
+            """
             if host_info:
+                logger.debug("host_info created: " + str(hostname.name))
+                print host_info.id
                 resource.host_info = host_info
                 resource.save()
+            """
     #wappalyze.delay(resource.id)
     resource = wappalyze(resource.id)
 
@@ -275,11 +292,12 @@ def set_analysis(rid):
         resource = Resource.objects.get(id=rid)
         content = resource.content
         if content.length > 0 and not re.match("^image/", content.type):
-            logger.debug(content.url)
+            #logger.debug(content.url)
             aid = content_analysis(content.id)
             a = Analysis.objects.get(id=aid)
+            #resource = Resource.objects.get(id=rid)
             resource.analysis = a
-            resource.save()
+            resource.save(update_fields=["analysis"])
     except Exception as e:
         logger.error(str(e))
     return resource
@@ -287,12 +305,12 @@ def set_analysis(rid):
 @app.task(soft_time_limit=600)
 def set_hostinfo(rid):
     r = Resource.objects.get(id=rid)
-    hostname = r.url.hostname.name
+    hostname = r.url.hostname.name.encode("utf-8")
     host_info = None
     try:
         host_info = host_inspect(hostname)
         r.host_info = host_info
-        r.save()
+        r.save(update_fields=["host_info"])
     except Exception as e:
         logger.error(str(e))
     return host_info
@@ -305,11 +323,11 @@ def get_savedir(u, d):
     suffix = None
     if u:
         if u.hostname:
-            hostname = u.hostname.name
-            subdomain = u.hostname.subdomain
+            hostname = u.hostname.name.encode("utf-8")
+            subdomain = u.hostname.subdomain.encode("utf-8")
             if u.hostname.domain:
-                domain = u.hostname.domain.name
-                suffix = u.hostname.domain.suffix
+                domain = u.hostname.domain.name.encode("utf-8")
+                suffix = u.hostname.domain.suffix.encode("utf-8")
 
     repodir = "static/repository"
     repopath = appdir + "/" + repodir
@@ -364,6 +382,7 @@ def get_savedir(u, d):
 
 
 def save_content(content, url, savedir, is_page=False):
+    content = base64.b64decode(content)
     result = {}
     length = len(content)
     logger.debug(length)
@@ -399,8 +418,8 @@ def save_content(content, url, savedir, is_page=False):
         #commit = git_commit(d["compath"], d["repopath"])
         commit = git_commit(str(url.md5), d["fullpath"])
         d["contentpath"] = d["contentdir"] + "/" + str(url.md5)
-        #path = d["contentpath"].decode("utf-8")
-        path = d["contentpath"]
+        path = d["contentpath"].decode("utf-8")
+        #path = d["contentpath"]
     c = None
     created = None
     try:
@@ -447,9 +466,10 @@ def set_hash(cid):
 
 
 def save_capture(capture, d, jid):
+    capture = base64.b64decode(capture)
     job = Job.objects.get(id=jid)
     #capdir = d["fullpath"] + "/capture/" + job.page.url.md5
-    capdir = d["fullpath"] + "/" + job.page.url.md5
+    capdir = d["fullpath"].decode("utf-8") + "/" + job.page.url.md5
     if not os.path.exists(capdir):
         try:
             os.makedirs(capdir)
@@ -471,11 +491,11 @@ def save_capture(capture, d, jid):
     if os.path.isfile(file):
         try:
             #compath = d["comdir"] + "/capture/" + job.page.url.md5 + "/" + filename 
-            compath = d["comdir"] + "/" +job.page.url.md5 + "/" + filename 
+            #compath = d["comdir"] + "/" +job.page.url.md5 + "/" + filename 
             #commit = git_commit(compath, d["repopath"])
             #cappath = d["contentdir"] + "/capture/" + job.page.url.md5 + "/" + filename
-            cappath = d["contentdir"] + "/" + job.page.url.md5 + "/" + filename
-            path = cappath
+            path = d["contentdir"].decode("utf-8") + "/" + job.page.url.md5 + "/" + filename
+            #path = cappath
             im = Image.open(file)
             im.thumbnail((150,150))
             s = BytesIO()
@@ -485,7 +505,7 @@ def save_capture(capture, d, jid):
             s.close()
         except Exception as e:
             logger.error(str(e))
-
+    c = None
     try:
         c, created = Capture.objects.get_or_create(
                 path = path,
