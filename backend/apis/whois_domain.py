@@ -18,7 +18,7 @@ def _whois_domain(domain):
         pythonwhois.net.socket.setdefaulttimeout(10)
         result = pythonwhois.get_whois(domain)
     except Exception as e:
-        logger.debug("domain whois error: " + str(domain) + " - " + str(e))
+        logger.debug("domain whois error: " + domain.encode("utf-8") + " - " + str(e))
         result["error"] = str(e)
     return result
 
